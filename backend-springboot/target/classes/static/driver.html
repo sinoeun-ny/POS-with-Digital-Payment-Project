@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodEats - Driver Dispatch & Tracking Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        forest: { 800: '#114b5f', 900: '#0d3b4b', 950: '#082530' },
+                        mint: { 50: '#f4faf6', 100: '#e1f5e8', 400: '#88d498', 500: '#1a936f', 600: '#157a5c', 700: '#114b5f' },
+                        amber: { 500: '#1a936f', 600: '#114b5f' },
+                        teal: { 950: '#082530', 900: '#114b5f', 800: '#155d76', 700: '#1a936f', 600: '#22ad83', 500: '#88d498' },
+                        sage: { 100: '#f3e9d2', 200: '#c6dabf', 300: '#a8c69f' },
+                        cream: { 50: '#fcfaf6', 100: '#f3e9d2', 200: '#e8dcbd' }
+                    },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="h-screen w-screen m-0 p-0 text-slate-800 bg-[#f8fafc] overflow-hidden antialiased">
+<div id="root" class="w-full h-full overflow-hidden flex flex-col"></div>
+
+<script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const SEED_ORDERS = [
+        { id: 101, customer: "Dominica Reed", merchant: "Zando Burger & Grill", items: [{ name: "Double Truffle Smash Burger", qty: 2 }], totalAmount: 14.50, status: "ACCEPTED", destination: "Building 42, St. 302, BKK1", driver: null },
+        { id: 102, customer: "Chan Dara", merchant: "Sakura Sushi & Ramen Bar", items: [{ name: "Signature Tonkotsu Black Ramen", qty: 2 }], totalAmount: 19.00, status: "ACCEPTED", destination: "Monivong Blvd, Tower 4", driver: null },
+        { id: 100, customer: "Sreymom Sok", merchant: "Khmer Coffee & Patisserie", items: [{ name: "Mondulkiri Iced Latte", qty: 3 }], totalAmount: 8.60, status: "DELIVERED", destination: "Toul Kork, St 598", driver: "Dara K. Express" }
+    ];
+
+    function DriverApp() {
+        const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('foodeats_orders')) || SEED_ORDERS);
+        const [activeTab, setActiveTab] = useState('board'); // 'board' | 'active' | 'history'
+        const [driverName] = useState("Dara K. Express");
+        const [toast, setToast] = useState(null);
+
+        const showToast = (msg) => {
+            setToast(msg);
+            setTimeout(() => setToast(null), 3000);
+        };
+
+        const saveOrders = (newOrders) => {
+            setOrders(newOrders);
+            localStorage.setItem('foodeats_orders', JSON.stringify(newOrders));
+        };
+
+        useEffect(() => {
+            lucide.createIcons();
+        }, [activeTab, orders, toast]);
+
+        const acceptJob = (orderId) => {
+            const updated = orders.map(o => o.id === orderId ? { ...o, status: 'IN_TRANSIT', driver: driverName } : o);
+            saveOrders(updated);
+            setActiveTab('active');
+            showToast(`Accepted Delivery Job #${orderId}!`);
+        };
+
+        const markDelivered = (orderId) => {
+            const updated = orders.map(o => o.id === orderId ? { ...o, status: 'DELIVERED' } : o);
+            saveOrders(updated);
+            showToast(`Order #${orderId} marked as DELIVERED!`);
+        };
+
+        const availableJobs = orders.filter(o => (o.status === 'ACCEPTED' || o.status === 'PENDING') && !o.driver);
+        const myActiveDeliveries = orders.filter(o => o.driver === driverName && o.status === 'IN_TRANSIT');
+        const myHistory = orders.filter(o => o.driver === driverName && o.status === 'DELIVERED');
+        const totalDriverEarnings = myHistory.length * 1.50; // $1.50 per delivery fee payout
+
+        return (
+            <div class="w-full h-full flex flex-col bg-[#f8fafc]">
+                {toast && (
+                    <div class="fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl bg-forest-950 text-mint-400 font-bold text-xs shadow-xl border border-forest-800 flex items-center gap-2">
+                        <i data-lucide="check-circle" class="w-4 h-4 text-mint-400"></i> {toast}
+                    </div>
+                )}
+
+                {/* Header */}
+                <header class="bg-forest-950 text-white px-6 py-3.5 flex items-center justify-between border-b border-forest-900 shrink-0">
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center text-forest-950 font-black shadow-md">
+                                <i data-lucide="bike" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h1 class="font-black text-base tracking-tight text-white leading-tight">FoodEats</h1>
+                                <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Driver Portal (Sprint 5)</span>
+                            </div>
+                        </div>
+
+                        <nav class="hidden md:flex items-center gap-2 text-xs font-bold">
+                            <button onClick={() => setActiveTab('board')} class={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${activeTab === 'board' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                <span>Available Jobs</span>
+                                {availableJobs.length > 0 && <span class="px-1.5 py-0.2 rounded-full bg-forest-900 text-amber-300 text-[10px]">{availableJobs.length}</span>}
+                            </button>
+                            <button onClick={() => setActiveTab('active')} class={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${activeTab === 'active' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                <span>In Transit</span>
+                                {myActiveDeliveries.length > 0 && <span class="px-1.5 py-0.2 rounded-full bg-mint-500 text-forest-950 text-[10px] font-black">{myActiveDeliveries.length}</span>}
+                            </button>
+                            <button onClick={() => setActiveTab('history')} class={`px-3 py-1.5 rounded-xl transition ${activeTab === 'history' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                Earnings & History
+                            </button>
+                        </nav>
+                    </div>
+
+                    {/* Right Portal Switcher / Links */}
+                    <div class="flex items-center gap-3">
+                        <div class="hidden lg:flex items-center gap-1 bg-white/10 p-1 rounded-xl text-[11px] font-bold text-white/80">
+                            <span class="px-2 text-white/50">Routes:</span>
+                            <a href="/main/customer" class="px-2 py-1 hover:bg-white/10 rounded-lg text-mint-300">🛒 /main/customer</a>
+                            <a href="/main/merchant" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🏪 /main/merchant</a>
+                            <a href="/main/driver" class="px-2 py-1 bg-amber-500/20 text-amber-300 rounded-lg">🛵 Driver</a>
+                            <a href="/main/admin" class="px-2 py-1 hover:bg-white/10 rounded-lg text-sky-300">⚙️ /main/admin</a>
+                        </div>
+
+                        <div class="flex items-center gap-2 pl-3 border-l border-white/15 text-xs font-bold text-white">
+                            <span>🛵 {driverName}</span>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Main Workspace */}
+                <main class="flex-1 overflow-y-auto p-6 space-y-6">
+                    {activeTab === 'board' ? (
+                        <div class="space-y-6">
+                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg">
+                                <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold uppercase">Driver Job Board (US-019 & US-020)</span>
+                                <h2 class="text-2xl font-black mt-2">Available Delivery Orders</h2>
+                                <p class="text-xs text-white/70 mt-1">Accept open delivery runs and navigate directly to customer destinations.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {availableJobs.length === 0 ? (
+                                    <div class="col-span-full bg-white rounded-3xl border p-12 text-center text-slate-400">
+                                        <i data-lucide="check-check" class="w-10 h-10 mx-auto text-mint-500 mb-2"></i>
+                                        <p class="text-xs font-bold">All available customer deliveries are currently assigned!</p>
+                                    </div>
+                                ) : (
+                                    availableJobs.map(job => (
+                                        <div key={job.id} class="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-sm space-y-3 flex flex-col justify-between">
+                                            <div>
+                                                <div class="flex justify-between items-center pb-2 border-b">
+                                                    <span class="font-black text-slate-900 text-xs">Job #{job.id}</span>
+                                                    <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold">{job.status}</span>
+                                                </div>
+                                                <div class="mt-3 space-y-1 text-xs">
+                                                    <p class="font-bold text-slate-900">Pickup: <span class="text-forest-900 font-extrabold">{job.merchant}</span></p>
+                                                    <p class="text-slate-600">Dropoff: <span class="font-bold text-slate-800">{job.destination}</span></p>
+                                                    <p class="text-slate-400 text-[11px]">Customer: {job.customer}</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="pt-3 border-t flex items-center justify-between">
+                                                <span class="font-black text-mint-700 text-xs">Payout: +$1.50 USD</span>
+                                                <button onClick={() => acceptJob(job.id)} class="px-4 py-2 bg-forest-950 hover:bg-forest-900 text-mint-400 font-black text-xs rounded-2xl shadow-sm">
+                                                    Accept Delivery Job
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    ) : activeTab === 'active' ? (
+                        <div class="space-y-6">
+                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg">
+                                <span class="px-3 py-1 rounded-full bg-mint-500/20 text-mint-400 text-xs font-bold uppercase">Real-Time Status Broadcasts (US-021)</span>
+                                <h2 class="text-2xl font-black mt-2">Active In-Transit Deliveries</h2>
+                            </div>
+
+                            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                                {myActiveDeliveries.length === 0 ? (
+                                    <p class="text-xs text-slate-400 py-8 text-center">No active deliveries assigned. Go to the Job Board to accept jobs.</p>
+                                ) : (
+                                    myActiveDeliveries.map(job => (
+                                        <div key={job.id} class="p-4 rounded-2xl border bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                            <div>
+                                                <span class="font-black text-slate-900 text-sm">Order #{job.id} • {job.merchant}</span>
+                                                <p class="text-xs text-slate-600 mt-1">📍 Destination: <strong>{job.destination}</strong></p>
+                                                <p class="text-xs text-mint-700 font-bold mt-0.5">🛵 Status: In Transit with {driverName}</p>
+                                            </div>
+                                            <button onClick={() => markDelivered(job.id)} class="px-5 py-2.5 bg-mint-500 hover:bg-mint-600 text-forest-950 font-black text-xs rounded-2xl shadow-md">
+                                                ✓ Mark as Completed & Delivered
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div class="space-y-6">
+                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg flex justify-between items-center">
+                                <div>
+                                    <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold uppercase">Driver Earnings</span>
+                                    <h2 class="text-2xl font-black mt-2">Total Delivery Earnings</h2>
+                                </div>
+                                <div class="text-3xl font-black text-mint-400">${totalDriverEarnings.toFixed(2)} USD</div>
+                            </div>
+
+                            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                                <h3 class="font-black text-slate-900 text-base">Completed Dropoff Log ({myHistory.length})</h3>
+                                <div class="divide-y divide-slate-100">
+                                    {myHistory.map(job => (
+                                        <div key={job.id} class="py-3 flex justify-between items-center text-xs">
+                                            <div>
+                                                <span class="font-bold text-slate-900">Order #{job.id} • {job.merchant}</span>
+                                                <p class="text-slate-400 text-[11px]">Delivered to: {job.destination}</p>
+                                            </div>
+                                            <span class="font-black text-mint-700">+$1.50 USD</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </main>
+            </div>
+        );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<DriverApp />);
+</script>
+</body>
+</html>

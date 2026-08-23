@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodEats - Merchant Kitchen & Menu Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        forest: { 800: '#114b5f', 900: '#0d3b4b', 950: '#082530' },
+                        mint: { 50: '#f4faf6', 100: '#e1f5e8', 400: '#88d498', 500: '#1a936f', 600: '#157a5c', 700: '#114b5f' },
+                        amber: { 500: '#1a936f', 600: '#114b5f' },
+                        teal: { 950: '#082530', 900: '#114b5f', 800: '#155d76', 700: '#1a936f', 600: '#22ad83', 500: '#88d498' },
+                        sage: { 100: '#f3e9d2', 200: '#c6dabf', 300: '#a8c69f' },
+                        cream: { 50: '#fcfaf6', 100: '#f3e9d2', 200: '#e8dcbd' }
+                    },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="h-screen w-screen m-0 p-0 text-slate-800 bg-[#f8fafc] overflow-hidden antialiased">
+<div id="root" class="w-full h-full overflow-hidden flex flex-col"></div>
+
+<script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const DEFAULT_STORE = {
+        id: 1,
+        name: "Zando Burger & Grill",
+        category: "Gourmet American",
+        ownerEmail: "merchant@example.com",
+        address: "Street 271, Phnom Penh",
+        deliveryFee: 1.50,
+        deliveryTimeMins: 20,
+        isOpen: true,
+        imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80",
+        menu: [
+            { id: 101, name: "Double Truffle Smash Burger", category: "Burgers", price: 6.50, description: "Two 100% Angus patties, black truffle mayo", imageUrl: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&auto=format&fit=crop&q=80", isAvailable: true },
+            { id: 102, name: "Crispy Bacon Stack", category: "Burgers", price: 7.20, description: "Applewood bacon, sharp cheddar", imageUrl: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=400&auto=format&fit=crop&q=80", isAvailable: true },
+            { id: 103, name: "Garlic Parmesan Waffle Fries", category: "Sides", price: 2.80, description: "Crispy waffle fries tossed in roasted garlic", imageUrl: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&auto=format&fit=crop&q=80", isAvailable: false }
+        ]
+    };
+
+    function MerchantApp() {
+        const [store, setStore] = useState(() => {
+            const merchants = JSON.parse(localStorage.getItem('foodeats_merchants'));
+            return merchants?.[0] || DEFAULT_STORE;
+        });
+
+        const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('foodeats_orders')) || [
+            { id: 101, customer: "Dominica Reed", merchantId: 1, items: [{ name: "Double Truffle Smash Burger", qty: 2, price: 6.50 }], totalAmount: 14.50, status: "PENDING", time: "5m ago", destination: "Building 42, St. 302, BKK1" }
+        ]);
+
+        const [activeTab, setActiveTab] = useState('menu'); // 'menu' | 'orders' | 'profile'
+        const [showAddModal, setShowAddModal] = useState(false);
+        const [dishName, setDishName] = useState('');
+        const [dishCat, setDishCat] = useState('Burgers');
+        const [dishPrice, setDishPrice] = useState('5.50');
+        const [dishDesc, setDishDesc] = useState('');
+        const [dishImage, setDishImage] = useState('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80');
+        const [toast, setToast] = useState(null);
+
+        const showToast = (msg) => {
+            setToast(msg);
+            setTimeout(() => setToast(null), 3000);
+        };
+
+        useEffect(() => {
+            lucide.createIcons();
+        }, [activeTab, store, orders, showAddModal, toast]);
+
+        const toggleAvailability = (itemId) => {
+            const updatedMenu = store.menu.map(item => item.id === itemId ? { ...item, isAvailable: !item.isAvailable } : item);
+            const updatedStore = { ...store, menu: updatedMenu };
+            setStore(updatedStore);
+
+            // Sync with all merchants in localStorage
+            const allMerchants = JSON.parse(localStorage.getItem('foodeats_merchants')) || [updatedStore];
+            const newAll = allMerchants.map(m => m.id === store.id ? updatedStore : m);
+            localStorage.setItem('foodeats_merchants', JSON.stringify(newAll));
+            showToast("Item inventory status updated!");
+        };
+
+        const handleAddDish = (e) => {
+            e.preventDefault();
+            const newDish = {
+                id: Date.now(),
+                name: dishName,
+                category: dishCat,
+                price: parseFloat(dishPrice) || 5.0,
+                description: dishDesc || "Freshly cooked to perfection",
+                imageUrl: dishImage,
+                isAvailable: true
+            };
+
+            const updatedStore = { ...store, menu: [newDish, ...(store.menu || [])] };
+            setStore(updatedStore);
+
+            const allMerchants = JSON.parse(localStorage.getItem('foodeats_merchants')) || [updatedStore];
+            const newAll = allMerchants.map(m => m.id === store.id ? updatedStore : m);
+            localStorage.setItem('foodeats_merchants', JSON.stringify(newAll));
+
+            setShowAddModal(false);
+            setDishName('');
+            showToast(`Added "${dishName}" to store menu!`);
+        };
+
+        const updateOrderStatus = (orderId, newStatus) => {
+            const updated = orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+            setOrders(updated);
+            localStorage.setItem('foodeats_orders', JSON.stringify(updated));
+            showToast(`Order #${orderId} marked as ${newStatus}!`);
+        };
+
+        const kitchenOrders = orders.filter(o => o.merchantId === store.id || !o.merchantId);
+        const pendingTickets = kitchenOrders.filter(o => o.status === 'PENDING').length;
+
+        return (
+            <div class="w-full h-full flex flex-col bg-[#f8fafc]">
+                {toast && (
+                    <div class="fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl bg-forest-950 text-mint-400 font-bold text-xs shadow-xl border border-forest-800 flex items-center gap-2">
+                        <i data-lucide="check-circle" class="w-4 h-4 text-mint-400"></i> {toast}
+                    </div>
+                )}
+
+                {/* Header */}
+                <header class="bg-forest-950 text-white px-6 py-3.5 flex items-center justify-between border-b border-forest-900 shrink-0">
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center text-forest-950 font-black shadow-md">
+                                <i data-lucide="store" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h1 class="font-black text-base tracking-tight text-white leading-tight">FoodEats</h1>
+                                <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Merchant Portal (Sprint 2 & 4)</span>
+                            </div>
+                        </div>
+
+                        <nav class="hidden md:flex items-center gap-2 text-xs font-bold">
+                            <button onClick={() => setActiveTab('menu')} class={`px-3 py-1.5 rounded-xl transition ${activeTab === 'menu' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                Menu & Dishes ({store.menu?.length || 0})
+                            </button>
+                            <button onClick={() => setActiveTab('orders')} class={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${activeTab === 'orders' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                <span>Kitchen Tickets</span>
+                                {pendingTickets > 0 && <span class="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] animate-pulse">{pendingTickets}</span>}
+                            </button>
+                            <button onClick={() => setActiveTab('profile')} class={`px-3 py-1.5 rounded-xl transition ${activeTab === 'profile' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                Store Details
+                            </button>
+                        </nav>
+                    </div>
+
+                    {/* Right Portal Switcher / Links */}
+                    <div class="flex items-center gap-3">
+                        <div class="hidden lg:flex items-center gap-1 bg-white/10 p-1 rounded-xl text-[11px] font-bold text-white/80">
+                            <span class="px-2 text-white/50">Routes:</span>
+                            <a href="/main/customer" class="px-2 py-1 hover:bg-white/10 rounded-lg text-mint-300">🛒 /main/customer</a>
+                            <a href="/main/merchant" class="px-2 py-1 bg-amber-500/20 text-amber-300 rounded-lg">🏪 Merchant</a>
+                            <a href="/main/driver" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🛵 /main/driver</a>
+                            <a href="/main/admin" class="px-2 py-1 hover:bg-white/10 rounded-lg text-sky-300">⚙️ /main/admin</a>
+                        </div>
+
+                        <div class="flex items-center gap-2 pl-3 border-l border-white/15 text-xs font-bold text-white">
+                            <span class="text-amber-400">🏪 {store.name}</span>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Main Workspace */}
+                <main class="flex-1 overflow-y-auto p-6 space-y-6">
+                    {activeTab === 'menu' ? (
+                        <div class="space-y-6">
+                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                    <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-wider">Storefront Menu Builder (US-007 & US-008)</span>
+                                    <h2 class="text-2xl font-black mt-2">{store.name} Menu</h2>
+                                    <p class="text-xs text-white/70 mt-1">Manage food items, prices, high-res photos, and real-time inventory toggles.</p>
+                                </div>
+                                <button onClick={() => setShowAddModal(true)} class="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-forest-950 font-black text-xs flex items-center gap-2 shadow-md">
+                                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Add New Dish
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {store.menu?.map(item => (
+                                    <div key={item.id} class="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-sm flex flex-col justify-between space-y-3">
+                                        <div>
+                                            <div class="relative rounded-2xl overflow-hidden mb-3">
+                                                <img src={item.imageUrl} class="w-full h-44 object-cover" />
+                                                <span class={`absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-[10px] font-black ${item.isAvailable ? 'bg-mint-500 text-forest-950' : 'bg-rose-500 text-white'}`}>
+                                                        {item.isAvailable ? '✓ In Stock' : '✕ Sold Out'}
+                                                    </span>
+                                            </div>
+                                            <div class="flex justify-between items-start">
+                                                <h4 class="font-extrabold text-slate-900 text-sm">{item.name}</h4>
+                                                <span class="font-black text-forest-900 text-sm">${item.price.toFixed(2)}</span>
+                                            </div>
+                                            <p class="text-xs text-slate-500 mt-1">{item.description}</p>
+                                            <span class="inline-block mt-2 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold">{item.category}</span>
+                                        </div>
+
+                                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                                            <span class="text-xs font-bold text-slate-600">Inventory Status:</span>
+                                            <button
+                                                onClick={() => toggleAvailability(item.id)}
+                                                class={`px-3 py-1.5 rounded-xl font-black text-xs transition ${
+                                                    item.isAvailable ? 'bg-rose-50 hover:bg-rose-100 text-rose-700' : 'bg-mint-50 hover:bg-mint-100 text-mint-700'
+                                                }`}
+                                            >
+                                                {item.isAvailable ? 'Toggle Sold Out' : 'Toggle In Stock'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : activeTab === 'orders' ? (
+                        <div class="space-y-6">
+                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg">
+                                <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold uppercase">Kitchen Ticket Dispatch (US-016 & US-017)</span>
+                                <h2 class="text-2xl font-black mt-2">Incoming Customer Orders</h2>
+                                <p class="text-xs text-white/70 mt-1">Accept tickets to send them to preparation and trigger driver job broadcasts.</p>
+                            </div>
+
+                            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                                {kitchenOrders.length === 0 ? (
+                                    <p class="text-xs text-slate-400 py-8 text-center">No active kitchen tickets for this restaurant.</p>
+                                ) : (
+                                    <div class="divide-y divide-slate-100">
+                                        {kitchenOrders.map(o => (
+                                            <div key={o.id} class="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-black text-slate-900 text-sm">Order #{o.id}</span>
+                                                        <span class="text-xs text-slate-500">• Customer: <strong>{o.customer}</strong></span>
+                                                    </div>
+                                                    <p class="text-xs text-slate-600 font-medium mt-1">
+                                                        Items: <strong>{o.items?.map(i => `${i.qty}x ${i.name}`).join(', ')}</strong>
+                                                    </p>
+                                                    <span class="text-[11px] text-slate-400">Total: ${parseFloat(o.totalAmount).toFixed(2)} • Destination: {o.destination}</span>
+                                                </div>
+
+                                                <div class="flex items-center gap-2">
+                                                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold mr-2">
+                                                            Status: {o.status}
+                                                        </span>
+
+                                                    {o.status === 'PENDING' && (
+                                                        <>
+                                                            <button onClick={() => updateOrderStatus(o.id, 'ACCEPTED')} class="px-4 py-2 rounded-2xl bg-mint-500 hover:bg-mint-600 text-forest-950 font-black text-xs shadow-sm">
+                                                                ✓ Accept Order
+                                                            </button>
+                                                            <button onClick={() => updateOrderStatus(o.id, 'REJECTED')} class="px-4 py-2 rounded-2xl bg-rose-50 text-rose-700 font-bold text-xs hover:bg-rose-100">
+                                                                ✕ Reject
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm max-w-lg space-y-4 text-xs">
+                            <h3 class="font-black text-slate-900 text-base">Store Profile & Operating Settings</h3>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Restaurant Name</label>
+                                <input type="text" value={store.name} onChange={e => setStore({...store, name: e.target.value})} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Cuisine Category</label>
+                                <input type="text" value={store.category} onChange={e => setStore({...store, category: e.target.value})} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Delivery Fee (USD)</label>
+                                <input type="number" value={store.deliveryFee} onChange={e => setStore({...store, deliveryFee: parseFloat(e.target.value) || 0})} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
+                            </div>
+                            <button onClick={() => showToast("Store profile saved successfully!")} class="px-5 py-2.5 bg-forest-950 text-mint-400 font-black text-xs rounded-2xl">
+                                Update Store Profile
+                            </button>
+                        </div>
+                    )}
+                </main>
+
+                {/* Add Dish Modal */}
+                {showAddModal && (
+                    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-black text-slate-900 text-base">Add Menu Item</h3>
+                                <button onClick={() => setShowAddModal(false)} class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <form onSubmit={handleAddDish} class="space-y-3">
+                                <div>
+                                    <label class="block font-bold text-slate-700 mb-1">Dish Name</label>
+                                    <input type="text" required value={dishName} onChange={e=>setDishName(e.target.value)} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" placeholder="e.g. Truffle Bacon Burger" />
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Category</label>
+                                        <input type="text" value={dishCat} onChange={e=>setDishCat(e.target.value)} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Price ($)</label>
+                                        <input type="number" step="0.10" value={dishPrice} onChange={e=>setDishPrice(e.target.value)} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-700 mb-1">Description</label>
+                                    <textarea value={dishDesc} onChange={e=>setDishDesc(e.target.value)} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" rows="2" placeholder="Ingredients and details..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-700 mb-1">Image URL</label>
+                                    <input type="text" value={dishImage} onChange={e=>setDishImage(e.target.value)} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
+                                </div>
+                                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-forest-950 font-black text-xs rounded-2xl shadow-md transition">
+                                    Publish Item to Store Menu
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<MerchantApp />);
+</script>
+</body>
+</html>

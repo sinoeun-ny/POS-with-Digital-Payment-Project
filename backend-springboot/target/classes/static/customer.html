@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodEats - Customer Ordering Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        forest: { 800: '#114b5f', 900: '#0d3b4b', 950: '#082530' },
+                        mint: { 50: '#f4faf6', 100: '#e1f5e8', 400: '#88d498', 500: '#1a936f', 600: '#157a5c', 700: '#114b5f' },
+                        amber: { 500: '#1a936f', 600: '#114b5f' },
+                        teal: { 950: '#082530', 900: '#114b5f', 800: '#155d76', 700: '#1a936f', 600: '#22ad83', 500: '#88d498' },
+                        sage: { 100: '#f3e9d2', 200: '#c6dabf', 300: '#a8c69f' },
+                        cream: { 50: '#fcfaf6', 100: '#f3e9d2', 200: '#e8dcbd' }
+                    },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="h-screen w-screen m-0 p-0 text-slate-800 bg-[#f8fafc] overflow-hidden antialiased">
+<div id="root" class="w-full h-full overflow-hidden flex flex-col"></div>
+
+<script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const INITIAL_MERCHANTS = [
+        {
+            id: 1,
+            name: "Zando Burger & Grill",
+            category: "Gourmet American",
+            rating: 4.9,
+            deliveryFee: 1.50,
+            deliveryTimeMins: 20,
+            address: "Street 271, Phnom Penh",
+            imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80",
+            description: "Handcrafted smash burgers, caramelized onions, smoked cheddar, and waffle fries.",
+            menu: [
+                { id: 101, name: "Double Truffle Smash Burger", category: "Burgers", price: 6.50, description: "Two 100% Angus patties, black truffle mayo", imageUrl: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&auto=format&fit=crop&q=80", isAvailable: true },
+                { id: 102, name: "Crispy Bacon Stack", category: "Burgers", price: 7.20, description: "Applewood bacon, sharp cheddar", imageUrl: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=400&auto=format&fit=crop&q=80", isAvailable: true },
+                { id: 103, name: "Garlic Parmesan Waffle Fries", category: "Sides", price: 2.80, description: "Crispy waffle fries tossed in roasted garlic", imageUrl: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&auto=format&fit=crop&q=80", isAvailable: true }
+            ]
+        },
+        {
+            id: 2,
+            name: "Sakura Sushi & Ramen Bar",
+            category: "Japanese Artisan",
+            rating: 4.8,
+            deliveryFee: 2.00,
+            deliveryTimeMins: 25,
+            address: "Monivong Blvd, BKK2, Phnom Penh",
+            imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&auto=format&fit=crop&q=80",
+            description: "Authentic Tokyo-style tonkotsu ramen and fresh sashimi.",
+            menu: [
+                { id: 201, name: "Signature Tonkotsu Black Ramen", category: "Ramen", price: 8.50, description: "Rich pork bone broth, black garlic oil", imageUrl: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&auto=format&fit=crop&q=80", isAvailable: true },
+                { id: 202, name: "Supreme Salmon Nigiri (6 pcs)", category: "Sushi", price: 9.00, description: "Norwegian salmon with yuzu glaze", imageUrl: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=400&auto=format&fit=crop&q=80", isAvailable: true }
+            ]
+        },
+        {
+            id: 3,
+            name: "Khmer Coffee & Patisserie",
+            category: "Café & Bakery",
+            rating: 4.9,
+            deliveryFee: 1.00,
+            deliveryTimeMins: 15,
+            address: "Norodom Blvd, Daun Penh, Phnom Penh",
+            imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80",
+            description: "Mondulkiri specialty organic coffee and fresh baked butter croissants.",
+            menu: [
+                { id: 301, name: "Mondulkiri Iced Latte", category: "Coffee", price: 2.20, description: "Double espresso shot with palm syrup", imageUrl: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=400&auto=format&fit=crop&q=80", isAvailable: true },
+                { id: 302, name: "Almond Butter Croissant", category: "Bakery", price: 2.75, description: "Flaky golden croissant", imageUrl: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format&fit=crop&q=80", isAvailable: true }
+            ]
+        }
+    ];
+
+    function CustomerApp() {
+        const [merchants] = useState(() => JSON.parse(localStorage.getItem('foodeats_merchants')) || INITIAL_MERCHANTS);
+        const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('foodeats_orders')) || []);
+        const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('foodeats_cart')) || []);
+        const [cartStoreId, setCartStoreId] = useState(1);
+        const [selectedStore, setSelectedStore] = useState(null);
+        const [searchQuery, setSearchQuery] = useState('');
+        const [activeCategory, setActiveCategory] = useState('All');
+        const [tab, setTab] = useState('browse'); // 'browse' | 'orders' | 'profile'
+        const [deliveryAddress, setDeliveryAddress] = useState('Building 42, St. 302, BKK1, Phnom Penh');
+        const [paymentMethod, setPaymentMethod] = useState('KHQR');
+        const [showPaymentModal, setShowPaymentModal] = useState(false);
+        const [toast, setToast] = useState(null);
+
+        const showToast = (msg) => {
+            setToast(msg);
+            setTimeout(() => setToast(null), 3000);
+        };
+
+        const saveCart = (newCart) => { setCart(newCart); localStorage.setItem('foodeats_cart', JSON.stringify(newCart)); };
+        const saveOrders = (newOrders) => { setOrders(newOrders); localStorage.setItem('foodeats_orders', JSON.stringify(newOrders)); };
+
+        useEffect(() => {
+            lucide.createIcons();
+        }, [tab, selectedStore, cart, orders, toast]);
+
+        const addToCart = (item, store) => {
+            if (cart.length > 0 && cartStoreId !== store.id) {
+                if (!confirm(`Your cart contains items from another restaurant. Start a new cart with ${store.name}?`)) return;
+                saveCart([{ ...item, qty: 1 }]);
+                setCartStoreId(store.id);
+                showToast(`Added ${item.name} from ${store.name}!`);
+                return;
+            }
+            setCartStoreId(store.id);
+            const existing = cart.find(c => c.id === item.id);
+            if (existing) {
+                saveCart(cart.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c));
+            } else {
+                saveCart([...cart, { ...item, qty: 1 }]);
+            }
+            showToast(`Added ${item.name} to cart!`);
+        };
+
+        const updateQty = (id, delta) => {
+            const updated = cart.map(c => {
+                if (c.id === id) {
+                    const newQty = c.qty + delta;
+                    return newQty > 0 ? { ...c, qty: newQty } : null;
+                }
+                return c;
+            }).filter(Boolean);
+            saveCart(updated);
+        };
+
+        const activeStore = merchants.find(m => m.id === cartStoreId) || merchants[0];
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const deliveryFee = cart.length > 0 ? (activeStore?.deliveryFee || 1.50) : 0;
+        const total = subtotal + deliveryFee;
+
+        const handlePlaceOrder = () => {
+            if (cart.length === 0) return;
+            const newOrder = {
+                id: 100 + orders.length + 1,
+                customer: "Dominica Reed (Customer)",
+                customerEmail: "customer@example.com",
+                merchant: activeStore.name,
+                merchantId: activeStore.id,
+                items: cart.map(c => ({ name: c.name, qty: c.qty, price: c.price })),
+                totalAmount: total,
+                status: "PENDING",
+                time: "Just now",
+                destination: deliveryAddress,
+                paymentMethod: paymentMethod,
+                driver: null
+            };
+
+            saveOrders([newOrder, ...orders]);
+            saveCart([]);
+            setShowPaymentModal(false);
+            setTab('orders');
+            showToast(`Order #${newOrder.id} placed successfully!`);
+        };
+
+        const filteredMerchants = merchants.filter(m => {
+            const matchSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.category.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchCat = activeCategory === 'All' || m.category.toLowerCase().includes(activeCategory.toLowerCase());
+            return matchSearch && matchCat;
+        });
+
+        return (
+            <div class="w-full h-full flex flex-col bg-[#f8fafc]">
+                {toast && (
+                    <div class="fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl bg-forest-950 text-mint-400 font-bold text-xs shadow-xl border border-forest-800 flex items-center gap-2 animate-bounce">
+                        <i data-lucide="check-circle" class="w-4 h-4 text-mint-400"></i> {toast}
+                    </div>
+                )}
+
+                {/* Top Navigation Bar */}
+                <header class="bg-forest-950 text-white px-6 py-3.5 flex items-center justify-between border-b border-forest-900 shrink-0">
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-mint-500 flex items-center justify-center text-forest-950 font-black shadow-md">
+                                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h1 class="font-black text-base tracking-tight text-white leading-tight">FoodEats</h1>
+                                <span class="text-[10px] text-mint-400 font-bold uppercase tracking-wider">Customer Portal (Sprint 3)</span>
+                            </div>
+                        </div>
+
+                        <nav class="hidden md:flex items-center gap-2 text-xs font-bold">
+                            <button onClick={() => { setSelectedStore(null); setTab('browse'); }} class={`px-3 py-1.5 rounded-xl transition ${tab === 'browse' && !selectedStore ? 'bg-mint-500 text-forest-950' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                Browse Restaurants
+                            </button>
+                            <button onClick={() => { setSelectedStore(null); setTab('orders'); }} class={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${tab === 'orders' ? 'bg-mint-500 text-forest-950' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                <span>My Orders</span>
+                                {orders.length > 0 && <span class="px-1.5 py-0.2 rounded-full bg-forest-900 text-mint-300 text-[10px]">{orders.length}</span>}
+                            </button>
+                            <button onClick={() => { setSelectedStore(null); setTab('profile'); }} class={`px-3 py-1.5 rounded-xl transition ${tab === 'profile' ? 'bg-mint-500 text-forest-950' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                Delivery Addresses
+                            </button>
+                        </nav>
+                    </div>
+
+                    {/* Right Portal Switcher / Links */}
+                    <div class="flex items-center gap-3">
+                        <div class="hidden lg:flex items-center gap-1 bg-white/10 p-1 rounded-xl text-[11px] font-bold text-white/80">
+                            <span class="px-2 text-white/50">Routes:</span>
+                            <a href="/main/customer" class="px-2 py-1 bg-mint-500/20 text-mint-300 rounded-lg">🛒 Customer</a>
+                            <a href="/main/merchant" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🏪 /main/merchant</a>
+                            <a href="/main/driver" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🛵 /main/driver</a>
+                            <a href="/main/admin" class="px-2 py-1 hover:bg-white/10 rounded-lg text-sky-300">⚙️ /main/admin</a>
+                        </div>
+
+                        <div class="flex items-center gap-2 pl-3 border-l border-white/15 text-xs font-bold text-white">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" class="w-7 h-7 rounded-full ring-2 ring-mint-400" />
+                            <span class="hidden sm:inline">Dominica</span>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Main Layout Area */}
+                <div class="flex-1 overflow-hidden flex flex-col md:flex-row">
+                    {/* Center Content */}
+                    <main class="flex-1 overflow-y-auto p-6 space-y-6">
+                        {selectedStore ? (
+                            <div class="space-y-6">
+                                <button onClick={() => setSelectedStore(null)} class="px-3.5 py-1.5 bg-white border rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 shadow-sm">
+                                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Restaurants
+                                </button>
+
+                                <div class="relative rounded-3xl overflow-hidden shadow-lg h-56">
+                                    <img src={selectedStore.imageUrl} class="w-full h-full object-cover" />
+                                    <div class="absolute inset-0 bg-gradient-to-t from-forest-950 via-forest-950/40 to-transparent p-6 flex flex-col justify-end text-white">
+                                            <span class="px-2.5 py-0.5 rounded-full bg-mint-500 text-forest-950 font-black text-[10px] w-fit uppercase">
+                                                {selectedStore.category}
+                                            </span>
+                                        <h2 class="text-2xl font-black mt-1">{selectedStore.name}</h2>
+                                        <p class="text-xs text-white/80 mt-0.5">{selectedStore.description}</p>
+                                        <div class="flex gap-4 mt-2 text-xs font-bold text-mint-400">
+                                            <span>⭐ {selectedStore.rating} (300+ reviews)</span>
+                                            <span>⏱️ {selectedStore.deliveryTimeMins} mins</span>
+                                            <span>🛵 ${selectedStore.deliveryFee.toFixed(2)} delivery</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 class="text-base font-black text-slate-900 mb-4">Available Menu Items</h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {selectedStore.menu?.map(item => (
+                                            <div key={item.id} class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                                                <div>
+                                                    <img src={item.imageUrl} class="w-full h-36 object-cover rounded-xl mb-3" />
+                                                    <h4 class="font-bold text-slate-900 text-xs">{item.name}</h4>
+                                                    <p class="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{item.description}</p>
+                                                </div>
+                                                <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                                                    <span class="font-black text-forest-900 text-sm">${item.price.toFixed(2)}</span>
+                                                    <button onClick={() => addToCart(item, selectedStore)} class="px-3 py-1.5 rounded-xl bg-forest-950 hover:bg-forest-900 text-mint-400 font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition">
+                                                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : tab === 'browse' ? (
+                            <div class="space-y-6">
+                                {/* Search & Hero Banner */}
+                                <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                    <div class="relative z-10 max-w-lg">
+                                        <span class="px-3 py-1 rounded-full bg-mint-500/20 text-mint-400 text-xs font-bold uppercase tracking-wider">Fast Food Delivery</span>
+                                        <h2 class="text-2xl font-black mt-2">What are you craving today?</h2>
+                                        <p class="text-xs text-white/70 mt-1">Discover top-rated local restaurants delivered to your doorstep in 20 minutes.</p>
+                                    </div>
+                                    <div class="w-full sm:w-72 relative z-10">
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={e => setSearchQuery(e.target.value)}
+                                            placeholder="Search burgers, ramen, sushi..."
+                                            class="w-full bg-white/10 backdrop-blur border border-white/20 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-white/50 focus:outline-none focus:bg-white/20"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Restaurant Grid */}
+                                <div>
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h3 class="font-black text-slate-900 text-base">Popular Restaurants</h3>
+                                        <span class="text-xs text-slate-500 font-semibold">{filteredMerchants.length} restaurants found</span>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {filteredMerchants.map(m => (
+                                            <div
+                                                key={m.id}
+                                                onClick={() => setSelectedStore(m)}
+                                                class="bg-white rounded-3xl border border-slate-200/80 overflow-hidden cursor-pointer hover:shadow-lg transition group p-4 flex flex-col justify-between"
+                                            >
+                                                <div>
+                                                    <div class="relative rounded-2xl overflow-hidden mb-3">
+                                                        <img src={m.imageUrl} class="w-full h-44 object-cover group-hover:scale-105 transition duration-300" />
+                                                        <span class="absolute top-2.5 right-2.5 px-2.5 py-1 bg-forest-950/80 backdrop-blur-md text-white rounded-full text-[10px] font-extrabold flex items-center gap-1">
+                                                                ⭐ {m.rating}
+                                                            </span>
+                                                    </div>
+                                                    <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-mint-600 transition">{m.name}</h4>
+                                                    <p class="text-xs text-slate-500">{m.category} • {m.address}</p>
+                                                </div>
+                                                <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 text-xs font-bold text-slate-700">
+                                                    <span class="text-mint-700">⏱️ {m.deliveryTimeMins} mins</span>
+                                                    <span class="text-slate-500">Delivery: ${m.deliveryFee.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : tab === 'orders' ? (
+                            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                                <h3 class="font-black text-slate-900 text-base">Your Order History & Live Tracking</h3>
+                                {orders.length === 0 ? (
+                                    <p class="text-xs text-slate-400 py-8 text-center">You have not placed any orders yet.</p>
+                                ) : (
+                                    <div class="divide-y divide-slate-100">
+                                        {orders.map(o => (
+                                            <div key={o.id} class="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-black text-slate-900 text-xs">Order #{o.id}</span>
+                                                        <span class="text-xs font-bold text-mint-700">• {o.merchant}</span>
+                                                    </div>
+                                                    <p class="text-[11px] text-slate-500 mt-0.5">Delivering to: {o.destination}</p>
+                                                    <p class="text-[11px] text-slate-400">Items: {o.items?.map(i => `${i.qty}x ${i.name}`).join(', ')}</p>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <span class="font-black text-forest-950 text-sm">${parseFloat(o.totalAmount).toFixed(2)}</span>
+                                                    <span class={`px-3 py-1 rounded-full text-xs font-black ${
+                                                        o.status === 'DELIVERED' ? 'bg-mint-100 text-mint-800' :
+                                                            o.status === 'ACCEPTED' ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-800'
+                                                    }`}>
+                                                            {o.status}
+                                                        </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm max-w-lg space-y-4">
+                                <h3 class="font-black text-slate-900 text-base">Saved Delivery Address</h3>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Primary Street Address</label>
+                                    <input
+                                        type="text"
+                                        value={deliveryAddress}
+                                        onChange={e => setDeliveryAddress(e.target.value)}
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs focus:outline-none focus:border-mint-500"
+                                    />
+                                </div>
+                                <button onClick={() => showToast("Address updated successfully!")} class="px-5 py-2.5 bg-forest-950 text-mint-400 font-black text-xs rounded-2xl">
+                                    Save Default Address
+                                </button>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Right Shopping Cart Panel */}
+                    <aside class="w-full md:w-80 bg-white border-l border-slate-200/80 p-6 flex flex-col justify-between shrink-0 overflow-y-auto">
+                        <div>
+                            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+                                <div class="flex items-center gap-2 font-black text-slate-900 text-sm">
+                                    <i data-lucide="shopping-cart" class="w-4 h-4 text-mint-600"></i>
+                                    <span>Active Cart ({cart.reduce((s, i) => s + i.qty, 0)})</span>
+                                </div>
+                                {cart.length > 0 && (
+                                    <button onClick={() => saveCart([])} class="text-[11px] text-rose-600 font-bold hover:underline">
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+
+                            {cart.length === 0 ? (
+                                <div class="py-12 text-center text-slate-400 space-y-2">
+                                    <i data-lucide="shopping-bag" class="w-8 h-8 mx-auto stroke-1"></i>
+                                    <p class="text-xs">Your shopping cart is empty.<br/>Add dishes to get started.</p>
+                                </div>
+                            ) : (
+                                <div class="space-y-3">
+                                    <div class="text-xs font-bold text-mint-800 bg-mint-50 p-2.5 rounded-xl border border-mint-200">
+                                        Ordering from: <strong>{activeStore.name}</strong>
+                                    </div>
+                                    <div class="divide-y divide-slate-100 max-h-60 overflow-y-auto">
+                                        {cart.map(item => (
+                                            <div key={item.id} class="py-2.5 flex items-center justify-between text-xs">
+                                                <div class="flex-1 pr-2">
+                                                    <div class="font-bold text-slate-800">{item.name}</div>
+                                                    <div class="text-slate-500 font-semibold">${item.price.toFixed(2)}</div>
+                                                </div>
+                                                <div class="flex items-center gap-2 bg-slate-100 rounded-xl px-2 py-1">
+                                                    <button onClick={() => updateQty(item.id, -1)} class="text-slate-600 font-bold hover:text-rose-600">-</button>
+                                                    <span class="font-black text-xs">{item.qty}</span>
+                                                    <button onClick={() => updateQty(item.id, 1)} class="text-slate-600 font-bold hover:text-mint-600">+</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {cart.length > 0 && (
+                            <div class="pt-4 border-t border-slate-100 space-y-3 text-xs">
+                                <div class="space-y-1.5 text-slate-600">
+                                    <div class="flex justify-between">
+                                        <span>Subtotal</span>
+                                        <span class="font-bold text-slate-900">${subtotal.toFixed(2)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Delivery Fee</span>
+                                        <span class="font-bold text-slate-900">${deliveryFee.toFixed(2)}</span>
+                                    </div>
+                                    <div class="flex justify-between font-black text-sm text-forest-950 pt-2 border-t">
+                                        <span>Total (USD)</span>
+                                        <span class="text-mint-600">${total.toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => setShowPaymentModal(true)}
+                                    class="w-full py-3 bg-forest-950 hover:bg-forest-900 text-mint-400 font-black text-xs rounded-2xl shadow-lg transition flex items-center justify-center gap-2"
+                                >
+                                    <i data-lucide="credit-card" class="w-4 h-4"></i>
+                                    Proceed to Checkout
+                                </button>
+                            </div>
+                        )}
+                    </aside>
+                </div>
+
+                {/* Mock Payment & KHQR Checkout Modal */}
+                {showPaymentModal && (
+                    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-xs">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-black text-slate-900 text-base">Payment Checkout</h3>
+                                <button onClick={() => setShowPaymentModal(false)} class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+
+                            <div class="p-4 bg-slate-50 rounded-2xl border text-center space-y-2">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">Scan to Pay via Bakong / KHQR</span>
+                                <div class="w-40 h-40 bg-white mx-auto p-2 border-2 border-dashed border-mint-500 rounded-2xl flex flex-col items-center justify-center shadow-inner">
+                                    <i data-lucide="qr-code" class="w-24 h-24 text-forest-950"></i>
+                                    <span class="font-black text-xs text-forest-950 mt-1">${total.toFixed(2)} USD</span>
+                                </div>
+                                <p class="text-[10px] text-slate-500">Deliver to: {deliveryAddress}</p>
+                            </div>
+
+                            <button
+                                onClick={handlePlaceOrder}
+                                class="w-full py-3 bg-mint-500 hover:bg-mint-600 text-forest-950 font-black text-xs rounded-2xl shadow-md transition"
+                            >
+                                Confirm Mock Payment ($ {total.toFixed(2)})
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<CustomerApp />);
+</script>
+</body>
+</html>

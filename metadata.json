@@ -1,0 +1,6 @@
+{
+  "name": "Food Delivery",
+  "description": "Smart Food Delivery Mobile App - Sprint 1: Auth Engine, Database Schema, RBAC, Profile & Delivery Address Management",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

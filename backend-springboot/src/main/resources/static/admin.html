@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodEats - Executive Administrator Control Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        forest: { 800: '#114b5f', 900: '#0d3b4b', 950: '#082530' },
+                        mint: { 50: '#f4faf6', 100: '#e1f5e8', 400: '#88d498', 500: '#1a936f', 600: '#157a5c', 700: '#114b5f' },
+                        amber: { 500: '#1a936f', 600: '#114b5f' },
+                        teal: { 950: '#082530', 900: '#114b5f', 800: '#155d76', 700: '#1a936f', 600: '#22ad83', 500: '#88d498' },
+                        sage: { 100: '#f3e9d2', 200: '#c6dabf', 300: '#a8c69f' },
+                        cream: { 50: '#fcfaf6', 100: '#f3e9d2', 200: '#e8dcbd' }
+                    },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="h-screen w-screen m-0 p-0 text-slate-800 bg-[#f8fafc] overflow-hidden antialiased">
+<div id="root" class="w-full h-full overflow-hidden flex flex-col"></div>
+
+<script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const SEED_USERS = [
+        { id: 1, name: "Alex Williamson", email: "admin@example.com", phone: "+855 11 223 344", role: "ADMIN", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" },
+        { id: 2, name: "Dominica Reed", email: "customer@example.com", phone: "+855 12 345 678", role: "CUSTOMER", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80" },
+        { id: 3, name: "Bopha Culinary Co.", email: "merchant@example.com", phone: "+855 98 765 432", role: "MERCHANT", merchantId: 1, avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80" },
+        { id: 4, name: "Dara K. Express", email: "driver@example.com", phone: "+855 88 776 655", role: "DRIVER", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" }
+    ];
+
+    function AdminApp() {
+        const [users, setUsers] = useState(() => JSON.parse(localStorage.getItem('foodeats_users')) || SEED_USERS);
+        const [merchants, setMerchants] = useState(() => JSON.parse(localStorage.getItem('foodeats_merchants')) || []);
+        const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('foodeats_orders')) || []);
+        const [tab, setTab] = useState('dashboard'); // 'dashboard' | 'stores' | 'users' | 'linking'
+        const [toast, setToast] = useState(null);
+
+        const showToast = (msg) => {
+            setToast(msg);
+            setTimeout(() => setToast(null), 3000);
+        };
+
+        const saveMerchants = (m) => { setMerchants(m); localStorage.setItem('foodeats_merchants', JSON.stringify(m)); };
+        const saveUsers = (u) => { setUsers(u); localStorage.setItem('foodeats_users', JSON.stringify(u)); };
+
+        useEffect(() => {
+            lucide.createIcons();
+        }, [tab, users, merchants, orders, toast]);
+
+        const totalRevenue = orders.reduce((sum, o) => sum + (parseFloat(o.totalAmount) || 0), 0);
+
+        return (
+            <div class="w-full h-full flex flex-col bg-[#f8fafc]">
+                {toast && (
+                    <div class="fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl bg-forest-950 text-mint-400 font-bold text-xs shadow-xl border border-forest-800 flex items-center gap-2">
+                        <i data-lucide="check-circle" class="w-4 h-4 text-mint-400"></i> {toast}
+                    </div>
+                )}
+
+                {/* Header */}
+                <header class="bg-forest-950 text-white px-6 py-3.5 flex items-center justify-between border-b border-forest-900 shrink-0">
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center text-forest-950 font-black shadow-md">
+                                <i data-lucide="shield" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h1 class="font-black text-base tracking-tight text-white leading-tight">FoodEats</h1>
+                                <span class="text-[10px] text-sky-400 font-bold uppercase tracking-wider">Admin Dashboard (Sprint 6)</span>
+                            </div>
+                        </div>
+
+                        <nav class="hidden md:flex items-center gap-2 text-xs font-bold">
+                            <button onClick={() => setTab('dashboard')} class={`px-3 py-1.5 rounded-xl transition ${tab === 'dashboard' ? 'bg-sky-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                Overview & KPIs
+                            </button>
+                            <button onClick={() => setTab('stores')} class={`px-3 py-1.5 rounded-xl transition ${tab === 'stores' ? 'bg-sky-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                Merchant Stores ({merchants.length})
+                            </button>
+                            <button onClick={() => setTab('users')} class={`px-3 py-1.5 rounded-xl transition ${tab === 'users' ? 'bg-sky-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                User Directory ({users.length})
+                            </button>
+                            <button onClick={() => setTab('linking')} class={`px-3 py-1.5 rounded-xl transition ${tab === 'linking' ? 'bg-sky-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
+                                Merchant Ownership Link
+                            </button>
+                        </nav>
+                    </div>
+
+                    {/* Right Portal Switcher / Links */}
+                    <div class="flex items-center gap-3">
+                        <div class="hidden lg:flex items-center gap-1 bg-white/10 p-1 rounded-xl text-[11px] font-bold text-white/80">
+                            <span class="px-2 text-white/50">Routes:</span>
+                            <a href="/main/customer" class="px-2 py-1 hover:bg-white/10 rounded-lg text-mint-300">🛒 /main/customer</a>
+                            <a href="/main/merchant" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🏪 /main/merchant</a>
+                            <a href="/main/driver" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🛵 /main/driver</a>
+                            <a href="/main/admin" class="px-2 py-1 bg-sky-500/20 text-sky-300 rounded-lg">⚙️ Admin</a>
+                        </div>
+
+                        <div class="flex items-center gap-2 pl-3 border-l border-white/15 text-xs font-bold text-white">
+                            <span>⚙️ System Admin</span>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Main Workspace */}
+                <main class="flex-1 overflow-y-auto p-6 space-y-6">
+                    {tab === 'dashboard' ? (
+                        <div class="space-y-6">
+                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg">
+                                <span class="px-3 py-1 rounded-full bg-sky-500/20 text-sky-400 text-xs font-bold uppercase">Executive Analytics (US-024)</span>
+                                <h2 class="text-2xl font-black mt-2">Platform Overview & Velocity</h2>
+                                <p class="text-xs text-white/70 mt-1">Real-time metrics on gross volume, merchants, deliveries, and active accounts.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm">
+                                    <div class="text-xs font-bold text-slate-500">Gross Merchandise Value</div>
+                                    <div class="text-2xl font-black text-slate-900 mt-2">${totalRevenue.toFixed(2)} USD</div>
+                                    <span class="text-[11px] text-mint-600 font-bold mt-1 block">+34% this month</span>
+                                </div>
+                                <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm">
+                                    <div class="text-xs font-bold text-slate-500">Total System Orders</div>
+                                    <div class="text-2xl font-black text-slate-900 mt-2">{orders.length}</div>
+                                    <span class="text-[11px] text-slate-400 font-bold mt-1 block">Live DB pipeline</span>
+                                </div>
+                                <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm">
+                                    <div class="text-xs font-bold text-slate-500">Active Merchant Stores</div>
+                                    <div class="text-2xl font-black text-slate-900 mt-2">{merchants.length}</div>
+                                    <span class="text-[11px] text-sky-600 font-bold mt-1 block">100% active</span>
+                                </div>
+                                <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm">
+                                    <div class="text-xs font-bold text-slate-500">Registered Accounts</div>
+                                    <div class="text-2xl font-black text-slate-900 mt-2">{users.length}</div>
+                                    <span class="text-[11px] text-purple-600 font-bold mt-1 block">Multi-Role RBAC</span>
+                                </div>
+                            </div>
+                        </div>
+                    ) : tab === 'stores' ? (
+                        <div class="space-y-6">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-black text-slate-900 text-base">Partner Restaurants & Stores</h3>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                {merchants.map(m => (
+                                    <div key={m.id} class="bg-white rounded-3xl border p-5 shadow-sm space-y-2">
+                                        <img src={m.imageUrl} class="w-full h-36 object-cover rounded-2xl mb-2" />
+                                        <h4 class="font-black text-slate-900 text-sm">{m.name}</h4>
+                                        <p class="text-xs text-slate-500">{m.category} • {m.address}</p>
+                                        <div class="text-[11px] text-mint-700 font-bold pt-2 border-t">
+                                            Owner: {m.ownerEmail || 'Unassigned'}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : tab === 'users' ? (
+                        <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                            <h3 class="font-black text-slate-900 text-base">Registered System Users (Role-Based Access Control)</h3>
+                            <div class="divide-y divide-slate-100">
+                                {users.map(u => (
+                                    <div key={u.id} class="py-3 flex justify-between items-center text-xs">
+                                        <div class="flex items-center gap-3">
+                                            <img src={u.avatar} class="w-8 h-8 rounded-full object-cover" />
+                                            <div>
+                                                <span class="font-bold text-slate-900">{u.name}</span>
+                                                <p class="text-slate-400 text-[11px]">{u.email} • {u.phone}</p>
+                                            </div>
+                                        </div>
+                                        <span class="px-3 py-1 rounded-full bg-slate-100 font-black text-slate-800">
+                                                {u.role}
+                                            </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm max-w-xl space-y-4 text-xs">
+                            <h3 class="font-black text-slate-900 text-base">Assign Store Ownership to Merchant User</h3>
+                            <p class="text-slate-500">In Spring Boot / MySQL, this updates the relational foreign key <code class="bg-slate-100 px-1 py-0.5 rounded text-forest-900 font-bold">merchants.owner_id = users.id</code>.</p>
+
+                            <div class="divide-y divide-slate-100 pt-2">
+                                {merchants.map(m => (
+                                    <div key={m.id} class="py-3 flex justify-between items-center">
+                                        <div>
+                                            <span class="font-bold text-slate-900">{m.name}</span>
+                                            <p class="text-slate-400 text-[11px]">Current Owner: {m.ownerEmail || 'Unassigned'}</p>
+                                        </div>
+                                        <span class="px-2.5 py-1 rounded-full bg-mint-50 text-mint-700 font-black text-[10px]">
+                                                Linked ✓
+                                            </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </main>
+            </div>
+        );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<AdminApp />);
+</script>
+</body>
+</html>
