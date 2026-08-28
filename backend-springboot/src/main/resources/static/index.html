@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodEats Enterprise Platform & Multi-Role Auth Engine</title>
+    <title>FoodEats - Smart Food Delivery Mobile & Web Ecosystem</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -11,36 +11,30 @@
             theme: {
                 extend: {
                     colors: {
-                        /* ---- ink: deep teal chrome, headings, dark surfaces (base #114b5f) ---- */
                         ink: {
                             50: '#eef4f5', 100: '#d7e6e9', 200: '#adc9cf', 300: '#7ea9b3',
                             400: '#4c8593', 500: '#2c6575', 600: '#1c5164', 700: '#16455a',
                             800: '#114b5f', 900: '#0d3b4b', 950: '#082530'
                         },
-                        /* ---- forest: primary brand green, CTAs (base #1a936f) ---- */
                         forest: {
                             50: '#eefaf5', 100: '#d3f2e3', 200: '#a7e5c8', 300: '#72d1a8',
                             400: '#3fb686', 500: '#1a936f', 600: '#157a5c', 700: '#12634c',
                             800: '#114f3f', 900: '#0f4235', 950: '#08251e'
                         },
-                        /* ---- mint: light accent / success / highlight (base #88d498) ---- */
                         mint: {
                             50: '#f4faf6', 100: '#e1f5e8', 200: '#c3ebd2', 300: '#a2e0b9',
                             400: '#88d498', 500: '#63bf79', 600: '#47a25e', 700: '#38814c',
                             800: '#2f673f', 900: '#295536'
                         },
-                        /* ---- sage: muted secondary surfaces & borders (base #c6dabf) ---- */
                         sage: {
                             50: '#f7faf5', 100: '#eef3e9', 200: '#dde9d4', 300: '#c6dabf',
                             400: '#aec9a4', 500: '#93b487', 600: '#75986a', 700: '#5c7a54',
                             800: '#4b6345', 900: '#3f523a'
                         },
-                        /* ---- cream: warm page background & cards (base #f3e9d2) ---- */
                         cream: {
                             50: '#fdfbf7', 100: '#f8f2e6', 200: '#f3e9d2', 300: '#e9d8b4',
                             400: '#dcc48f', 500: '#ceaf6c', 600: '#b5924e', 700: '#927540'
                         },
-                        /* ---- rust: muted error/alert only — never a primary accent ---- */
                         rust: { 500: '#b4543d', 600: '#96422f', 900: '#3d1a13' }
                     },
                     fontFamily: {
@@ -51,10 +45,9 @@
             }
         }
     </script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -65,1300 +58,566 @@
         ::-webkit-scrollbar-thumb { background: #c6dabf; border-radius: 9999px; }
         ::-webkit-scrollbar-thumb:hover { background: #aec9a4; }
         *:focus-visible { outline: 2px solid #1a936f; outline-offset: 2px; }
-        @media (prefers-reduced-motion: reduce) {
-            * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-        }
     </style>
 </head>
-<body class="h-screen w-screen m-0 p-0 text-ink-900 bg-cream-50 overflow-hidden antialiased">
-<div id="root" class="w-full h-full overflow-hidden flex flex-col md:flex-row"></div>
+<body class="min-h-screen bg-cream-50 text-ink-900 antialiased selection:bg-forest-500 selection:text-white">
+<div id="root">
+    <div class="min-h-screen flex items-center justify-center p-6">
+        <div class="text-center p-8 bg-white/80 backdrop-blur rounded-3xl border border-sage-200 shadow-xl max-w-sm">
+            <div class="w-12 h-12 border-4 border-forest-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 class="font-display font-bold text-xl text-ink-950 mb-1">Loading FoodEats Gateway...</h2>
+            <p class="text-xs text-ink-500 font-semibold">Connecting to Spring Boot Platform Engine</p>
+        </div>
+    </div>
+</div>
 
 <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect } = React;
 
-    const SEED_USERS = [
-        { id: 1, name: "Alex Williamson", email: "admin@example.com", password: "password123", phone: "+855 11 223 344", role: "ADMIN", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80", address: "Central Admin HQ, Phnom Penh" },
-        { id: 2, name: "Dominica Reed", email: "customer@example.com", password: "password123", phone: "+855 12 345 678", role: "CUSTOMER", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80", address: "Building 42, St. 302, BKK1, Phnom Penh" },
-        { id: 3, name: "Bopha Culinary Co.", email: "merchant@example.com", password: "password123", phone: "+855 98 765 432", role: "MERCHANT", merchantId: 1, avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80", address: "St 271, Phnom Penh" },
-        { id: 4, name: "Dara K. Express", email: "driver@example.com", password: "password123", phone: "+855 88 776 655", role: "DRIVER", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80", address: "Fleet Hub Toul Kork" }
-    ];
-
-    const SEED_MERCHANTS = [
-        {
-            id: 1,
-            ownerId: 3,
-            ownerEmail: "merchant@example.com",
-            name: "Zando Burger & Grill",
-            category: "Gourmet American",
-            rating: 4.9,
-            reviewsCount: 382,
-            deliveryFee: 1.50,
-            deliveryTimeMins: 20,
-            isOpen: true,
-            address: "Street 271, Boeng Tumpun, Phnom Penh",
-            imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80",
-            description: "Handcrafted smash burgers, caramelized onions, smoked cheddar, and double-fried crispy waffle fries.",
-            menu: [
-                { id: 101, name: "Double Truffle Smash Burger", category: "Burgers", price: 6.50, description: "Two 100% Angus patties, black truffle mayo, smoked gouda", imageUrl: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&auto=format&fit=crop&q=80", isAvailable: true },
-                { id: 102, name: "Crispy Bacon & Cheddar Stack", category: "Burgers", price: 7.20, description: "Applewood smoked bacon, sharp cheddar, BBQ glaze", imageUrl: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=400&auto=format&fit=crop&q=80", isAvailable: true },
-                { id: 103, name: "Garlic Parmesan Waffle Fries", category: "Sides", price: 2.80, description: "Crispy waffle fries tossed in roasted garlic", imageUrl: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&auto=format&fit=crop&q=80", isAvailable: true }
-            ]
-        },
-        {
-            id: 2,
-            ownerId: 3,
-            ownerEmail: "sakura@example.com",
-            name: "Sakura Sushi & Ramen Bar",
-            category: "Japanese Artisan",
-            rating: 4.8,
-            reviewsCount: 520,
-            deliveryFee: 2.00,
-            deliveryTimeMins: 25,
-            isOpen: true,
-            address: "Monivong Blvd, BKK2, Phnom Penh",
-            imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&auto=format&fit=crop&q=80",
-            description: "Authentic Tokyo-style tonkotsu ramen with 18-hour rich broth, fresh sashimi platters, and specialty dragon rolls.",
-            menu: [
-                { id: 201, name: "Signature Tonkotsu Black Ramen", category: "Ramen", price: 8.50, description: "Rich pork bone broth, black garlic oil, chashu slices", imageUrl: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&auto=format&fit=crop&q=80", isAvailable: true },
-                { id: 202, name: "Supreme Salmon Nigiri (6 pcs)", category: "Sushi", price: 9.00, description: "Fresh Norwegian salmon slices torched lightly with yuzu sauce", imageUrl: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=400&auto=format&fit=crop&q=80", isAvailable: true }
-            ]
-        },
-        {
-            id: 3,
-            ownerId: 3,
-            ownerEmail: "khmercafe@example.com",
-            name: "Khmer Coffee & Patisserie",
-            category: "Café & Bakery",
-            rating: 4.9,
-            reviewsCount: 410,
-            deliveryFee: 1.00,
-            deliveryTimeMins: 15,
-            isOpen: true,
-            address: "Norodom Blvd, Daun Penh, Phnom Penh",
-            imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80",
-            description: "Mondulkiri specialty organic coffee beans, freshly baked French butter croissants, and iced condensed milk coffee.",
-            menu: [
-                { id: 301, name: "Mondulkiri Iced Latte", category: "Coffee", price: 2.20, description: "Double espresso shot with fresh milk and palm syrup", imageUrl: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=400&auto=format&fit=crop&q=80", isAvailable: true },
-                { id: 302, name: "Almond Butter Croissant", category: "Bakery", price: 2.75, description: "Flaky golden croissant with almond cream", imageUrl: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format&fit=crop&q=80", isAvailable: true }
-            ]
-        }
-    ];
-
-    const SEED_ORDERS = [
-        { id: 101, customer: "Dominica Reed", customerEmail: "customer@example.com", merchant: "Zando Burger & Grill", merchantId: 1, items: [{ name: "Double Truffle Smash Burger", qty: 2, price: 6.50 }], totalAmount: 14.50, status: "PENDING", time: "5m ago", destination: "Building 42, St. 302, BKK1", driver: null },
-        { id: 102, customer: "Chan Dara", customerEmail: "chandara@example.com", merchant: "Sakura Sushi & Ramen Bar", merchantId: 2, items: [{ name: "Signature Tonkotsu Black Ramen", qty: 2, price: 8.50 }], totalAmount: 19.00, status: "ACCEPTED", time: "15m ago", destination: "Monivong Blvd, Tower 4", driver: "Dara K. Express" }
-    ];
-
-    // Small reusable order-progress stepper (Pending → Accepted → Delivered)
-    function OrderStatusStepper({ status }) {
-        const steps = ['PENDING', 'ACCEPTED', 'DELIVERED'];
-        const currentIndex = Math.max(steps.indexOf(status), 0);
-        return (
-            <div class="flex items-center gap-1.5 mt-2">
-                {steps.map((s, i) => (
-                    <React.Fragment key={s}>
-                        <div class={`w-2 h-2 rounded-full transition-colors ${i <= currentIndex ? 'bg-forest-500' : 'bg-sage-200'}`} title={s}></div>
-                        {i < steps.length - 1 && <div class={`h-0.5 w-6 rounded-full transition-colors ${i < currentIndex ? 'bg-forest-500' : 'bg-sage-200'}`}></div>}
-                    </React.Fragment>
-                ))}
-            </div>
-        );
-    }
-
-    // Small reusable star-rating readout used across restaurant cards
-    function RatingBadge({ rating, reviewsCount, dark }) {
-        return (
-            <span class={`inline-flex items-center gap-1 text-[11px] font-bold ${dark ? 'text-mint-200' : 'text-forest-700'}`}>
-                    <i data-lucide="star" class={`w-3 h-3 ${dark ? 'text-mint-300' : 'text-forest-500'}`} style={{fill: 'currentColor'}}></i>
-                {rating?.toFixed ? rating.toFixed(1) : rating}
-                {reviewsCount ? <span class={dark ? 'text-white/50 font-medium' : 'text-ink-400 font-medium'}>({reviewsCount})</span> : null}
-                </span>
-        );
-    }
-
-    function App() {
-        const [users, setUsers] = useState(() => JSON.parse(localStorage.getItem('foodeats_users')) || SEED_USERS);
-        const [merchants, setMerchants] = useState(() => JSON.parse(localStorage.getItem('foodeats_merchants')) || SEED_MERCHANTS);
-        const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('foodeats_orders')) || SEED_ORDERS);
-
-        const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('user_info')) || null);
-        const [showAuthModal, setShowAuthModal] = useState(() => !currentUser);
-        const [authMode, setAuthMode] = useState('login');
-
-        const getDefaultTab = (role) => {
-            if (role === 'CUSTOMER') return 'restaurants';
-            if (role === 'MERCHANT') return 'my_store';
-            if (role === 'DRIVER') return 'driver_board';
-            return 'dashboard';
-        };
-
-        const [activeTab, setActiveTab] = useState(() => currentUser ? getDefaultTab(currentUser.role) : 'dashboard');
-        const [selectedMerchant, setSelectedMerchant] = useState(null);
-        const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('foodeats_cart')) || []);
-        const [cartMerchantId, setCartMerchantId] = useState(1);
+    function PlatformGateway() {
+        const [showAuthModal, setShowAuthModal] = useState(false);
+        const [authEmail, setAuthEmail] = useState('');
+        const [authPassword, setAuthPassword] = useState('');
+        const [authError, setAuthError] = useState('');
+        const [authTab, setAuthTab] = useState('login'); // 'login' | 'register'
         const [toast, setToast] = useState(null);
+
+        // Registration fields
+        const [regName, setRegName] = useState('');
+        const [regEmail, setRegEmail] = useState('');
+        const [regPassword, setRegPassword] = useState('');
+        const [regPhone, setRegPhone] = useState('');
+        const [regAddress, setRegAddress] = useState('');
 
         const showToast = (msg, type = 'success') => {
             setToast({ msg, type });
-            setTimeout(() => setToast(null), 3000);
+            setTimeout(() => setToast(null), 3500);
         };
-
-        const saveUsers = (newUsers) => { setUsers(newUsers); localStorage.setItem('foodeats_users', JSON.stringify(newUsers)); };
-        const saveMerchants = (newMerch) => { setMerchants(newMerch); localStorage.setItem('foodeats_merchants', JSON.stringify(newMerch)); };
-        const saveOrders = (newOrders) => { setOrders(newOrders); localStorage.setItem('foodeats_orders', JSON.stringify(newOrders)); };
-        const saveCart = (newCart) => { setCart(newCart); localStorage.setItem('foodeats_cart', JSON.stringify(newCart)); };
 
         useEffect(() => {
-            lucide.createIcons();
-        }, [activeTab, orders, merchants, users, toast, currentUser, selectedMerchant, cart, showAuthModal, authMode]);
+            if (window.lucide) window.lucide.createIcons();
+        }, [showAuthModal, authTab, toast]);
 
-        const handleLogout = () => {
-            localStorage.removeItem('user_info');
-            setCurrentUser(null);
-            setShowAuthModal(true);
-            showToast("Logged out successfully");
-        };
+        const handleLoginSubmit = (e) => {
+            e.preventDefault();
+            setAuthError('');
+            const email = authEmail.trim().toLowerCase();
 
-        const handleLoginSuccess = (user) => {
-            setCurrentUser(user);
-            localStorage.setItem('user_info', JSON.stringify(user));
-            setShowAuthModal(false);
-            setSelectedMerchant(null);
-            setActiveTab(getDefaultTab(user.role));
-            showToast(`Welcome back, ${user.name}! (${user.role})`);
-        };
-
-        const switchUserRole = (u) => {
-            handleLoginSuccess(u);
-        };
-
-        const addToCart = (item, store) => {
-            if (!currentUser || currentUser.role !== 'CUSTOMER') {
-                showToast("Only Customer accounts can add items to cart", "error");
+            if (!email || !authPassword.trim()) {
+                setAuthError('Please enter both email and password.');
                 return;
             }
-            if (cart.length > 0 && cartMerchantId !== store.id) {
-                if (!confirm(`Your cart has items from another restaurant. Replace with ${store.name}?`)) return;
-                saveCart([{ ...item, qty: 1 }]);
-                setCartMerchantId(store.id);
-                showToast(`Added ${item.name} from ${store.name}!`);
+
+            // Automatic Role-Based Routing
+            if (email === 'admin@example.com' || email.includes('admin')) {
+                localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Alex Admin", email, role: "ADMIN" }));
+                showToast("Admin authenticated. Redirecting to Admin Hub...", "info");
+                setTimeout(() => window.location.href = 'admin.html', 800);
                 return;
             }
-            setCartMerchantId(store.id);
-            const existing = cart.find(c => c.id === item.id);
-            if (existing) {
-                saveCart(cart.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c));
-            } else {
-                saveCart([...cart, { ...item, qty: 1 }]);
-            }
-            showToast(`Added ${item.name} to cart!`);
-        };
 
-        const updateCartQty = (id, delta) => {
-            const updated = cart.map(c => {
-                if (c.id === id) {
-                    const newQty = c.qty + delta;
-                    return newQty > 0 ? { ...c, qty: newQty } : null;
-                }
-                return c;
-            }).filter(Boolean);
-            saveCart(updated);
-        };
-
-        const checkoutCart = () => {
-            if (!currentUser || currentUser.role !== 'CUSTOMER') {
-                showToast("Only Customer accounts can place orders", "error");
+            if (email === 'merchant@example.com' || email.includes('merchant')) {
+                localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Bopha Culinary Co.", email, role: "MERCHANT" }));
+                showToast("Merchant authenticated. Redirecting to Merchant Kitchen...", "info");
+                setTimeout(() => window.location.href = 'merchant.html', 800);
                 return;
             }
-            if (cart.length === 0) return;
-            const store = merchants.find(m => m.id === cartMerchantId) || merchants[0];
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const total = subtotal + store.deliveryFee;
 
-            const newOrder = {
-                id: 100 + orders.length + 1,
-                customer: currentUser.name,
-                customerEmail: currentUser.email,
-                merchant: store.name,
-                merchantId: store.id,
-                items: cart.map(c => ({ name: c.name, qty: c.qty, price: c.price })),
-                totalAmount: total,
-                status: "PENDING",
-                time: "Just now",
-                destination: currentUser.address || "BKK1, Phnom Penh",
-                driver: null
+            if (email === 'driver@example.com' || email.includes('driver')) {
+                localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Dara K. Express", email, role: "DRIVER" }));
+                showToast("Driver authenticated. Redirecting to Driver Dispatch...", "info");
+                setTimeout(() => window.location.href = 'driver.html', 800);
+                return;
+            }
+
+            // Customer
+            const customer = {
+                id: 'c_' + Date.now(),
+                name: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                email,
+                role: "CUSTOMER",
+                addresses: [{ id: 'a1', label: "Home (BKK1)", address: "Building 42, St. 302, BKK1, Phnom Penh", isDefault: true }]
             };
-
-            saveOrders([newOrder, ...orders]);
-            saveCart([]);
-            showToast(`Order #${newOrder.id} placed successfully!`);
-            setActiveTab('customer_orders');
+            localStorage.setItem('foodeats_auth_user', JSON.stringify(customer));
+            showToast("Customer authenticated. Redirecting to Customer Portal...", "info");
+            setTimeout(() => window.location.href = 'customer.html', 800);
         };
 
-        const totalRevenue = orders.reduce((acc, o) => acc + (parseFloat(o.totalAmount) || 0), 0);
-        const pendingOrders = orders.filter(o => o.status === 'PENDING').length;
-
-        const renderNavItems = () => {
-            if (!currentUser) return null;
-
-            if (currentUser.role === 'ADMIN') {
-                return (
-                    <>
-                        <SidebarItem id="dashboard" icon="layout-grid" label="Executive Dashboard" active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                        <SidebarItem id="merchants_admin" icon="store" label="Merchant Stores" badge={merchants.length} active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                        <SidebarItem id="orders_admin" icon="shopping-bag" label="Global Order Pipeline" badge={pendingOrders} active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                        <SidebarItem id="users_admin" icon="users" label="User Directory (RBAC)" badge={users.length} active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                        <SidebarItem id="merchant_linking" icon="link" label="Merchant Ownership Link" active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                        <SidebarItem id="analytics" icon="bar-chart-3" label="Platform Analytics" active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                    </>
-                );
+        const handleRegisterSubmit = (e) => {
+            e.preventDefault();
+            if (!regName.trim() || !regEmail.trim() || !regPassword.trim()) {
+                setAuthError('Please complete all required fields.');
+                return;
             }
 
-            if (currentUser.role === 'MERCHANT') {
-                const myStore = merchants.find(m => m.id === currentUser.merchantId || m.ownerId === currentUser.id) || merchants[0];
-                const myOrders = orders.filter(o => o.merchantId === myStore.id);
-                return (
-                    <>
-                        <SidebarItem id="my_store" icon="store" label="My Restaurant & Menu" active={activeTab} onClick={(t) => { setSelectedMerchant(myStore); setActiveTab(t); }} />
-                        <SidebarItem id="merchant_orders" icon="shopping-bag" label="Incoming Kitchen Orders" badge={myOrders.filter(o=>o.status==='PENDING').length} active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                        <SidebarItem id="merchant_sales" icon="bar-chart-3" label="Store Earnings" active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                    </>
-                );
-            }
-
-            if (currentUser.role === 'CUSTOMER') {
-                const myOrders = orders.filter(o => o.customerEmail === currentUser.email || o.customer === currentUser.name);
-                return (
-                    <>
-                        <SidebarItem id="restaurants" icon="utensils" label="Explore Restaurants" active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                        <SidebarItem id="customer_orders" icon="shopping-bag" label="My Orders & Receipt" badge={myOrders.length} active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                        <SidebarItem id="customer_profile" icon="user" label="Delivery Profile" active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                    </>
-                );
-            }
-
-            if (currentUser.role === 'DRIVER') {
-                const availableJobs = orders.filter(o => o.status === 'ACCEPTED' || o.status === 'PENDING');
-                return (
-                    <>
-                        <SidebarItem id="driver_board" icon="bike" label="Available Deliveries" badge={availableJobs.length} active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                        <SidebarItem id="driver_history" icon="history" label="Completed Deliveries" active={activeTab} onClick={(t) => { setSelectedMerchant(null); setActiveTab(t); }} />
-                    </>
-                );
-            }
+            const customer = {
+                id: 'c_' + Date.now(),
+                name: regName.trim(),
+                email: regEmail.trim().toLowerCase(),
+                phone: regPhone.trim() || "+855 12 345 678",
+                role: "CUSTOMER",
+                addresses: [{ id: 'a1', label: "Default Address", address: regAddress.trim() || "Phnom Penh, Cambodia", isDefault: true }]
+            };
+            localStorage.setItem('foodeats_auth_user', JSON.stringify(customer));
+            showToast("Account created successfully! Redirecting to Customer Portal...", "info");
+            setTimeout(() => window.location.href = 'customer.html', 800);
         };
 
         return (
-            <div class="flex flex-col md:flex-row w-full h-full overflow-hidden bg-cream-50">
+            <div className="min-h-screen flex flex-col bg-cream-50 text-ink-900">
+                {/* Toast Notification */}
                 {toast && (
-                    <div class={`fixed top-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border text-sm font-semibold transition-all ${
-                        toast.type === 'error' ? 'bg-rust-900 text-cream-100 border-rust-600' : 'bg-ink-950 text-mint-300 border-forest-700'
-                    }`}>
-                        <i data-lucide={toast.type === 'error' ? 'alert-circle' : 'check-circle-2'} class={`w-4 h-4 ${toast.type === 'error' ? 'text-rust-500' : 'text-mint-400'}`}></i>
+                    <div className="fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border text-sm font-semibold bg-ink-950 text-mint-300 border-forest-700 animate-bounce">
+                        <i data-lucide="check-circle-2" className="w-5 h-5 text-mint-400"></i>
                         {toast.msg}
                     </div>
                 )}
 
-                <aside class="w-full md:w-64 bg-gradient-to-b from-ink-950 to-ink-900 text-white flex flex-col justify-between p-5 md:p-6 shrink-0 border-r border-ink-800/60 overflow-y-auto">
-                    <div>
-                        <div class="flex items-center justify-between pb-5 border-b border-white/10">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-2xl bg-forest-500 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-forest-900/40">
-                                    <i data-lucide="utensils" class="w-5 h-5"></i>
+                {/* Platform Header */}
+                <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-sage-200 shadow-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+
+                        {/* Logo */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-forest-500 flex items-center justify-center text-white font-black text-xl shadow-md shadow-forest-500/30">
+                                <i data-lucide="utensils" className="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-display font-black text-xl tracking-tight text-ink-950">FoodEats</span>
+                                    <span className="px-2 py-0.5 rounded-full bg-forest-100 text-forest-800 text-[10px] font-extrabold border border-forest-200">Full Platform</span>
                                 </div>
-                                <div>
-                                    <h1 class="font-display font-semibold text-lg tracking-tight text-white leading-none">FoodEats</h1>
-                                    <span class="text-[10px] font-semibold text-mint-300/80 uppercase tracking-wider">Multi-Role Auth</span>
-                                </div>
+                                <span className="text-[11px] font-semibold text-ink-400 block -mt-1">Spring Boot & Kotlin Delivery System</span>
                             </div>
                         </div>
 
-                        {currentUser && (
-                            <>
-                                <div class="mt-5 mb-2 px-3 text-[10px] font-bold tracking-wider text-mint-100/40 uppercase">
-                                    {currentUser.role} Navigation
-                                </div>
-                                <nav class="space-y-1">
-                                    {renderNavItems()}
-                                </nav>
-                            </>
-                        )}
-                    </div>
-
-                    <div class="space-y-3 pt-4 border-t border-white/10">
-                        <div class="px-1 flex items-center justify-between text-[10px] font-bold text-mint-100/40 uppercase tracking-wider">
-                            <span>Quick Role Switch</span>
-                            <span class="text-mint-300 font-extrabold">{currentUser ? currentUser.role : 'GUEST'}</span>
+                        {/* Navigation Actions */}
+                        <div className="flex items-center gap-3">
+                            <a
+                                href="customer.html"
+                                className="px-4 py-2 bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 rounded-2xl text-xs font-bold transition flex items-center gap-2"
+                            >
+                                <i data-lucide="shopping-bag" className="w-4 h-4 text-forest-600"></i>
+                                <span>Go to Customer App</span>
+                            </a>
+                            <button
+                                onClick={() => { setAuthTab('login'); setShowAuthModal(true); }}
+                                className="px-4 py-2 bg-forest-600 hover:bg-forest-700 text-white rounded-2xl text-xs font-bold transition shadow-md shadow-forest-600/20 flex items-center gap-2"
+                            >
+                                <i data-lucide="log-in" className="w-4 h-4"></i>
+                                <span>Sign In / Log In</span>
+                            </button>
+                            <button
+                                onClick={() => { setAuthTab('register'); setShowAuthModal(true); }}
+                                className="hidden sm:flex px-4 py-2 bg-white hover:bg-sage-100 text-ink-800 border border-sage-300 rounded-2xl text-xs font-bold transition items-center gap-2"
+                            >
+                                <i data-lucide="user-plus" className="w-4 h-4 text-forest-600"></i>
+                                <span>Register</span>
+                            </button>
                         </div>
+                    </div>
+                </header>
 
-                        <div class="grid grid-cols-2 gap-1.5">
-                            {users.map(u => (
+                {/* Hero Section */}
+                <section className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+                    <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-ink-950 via-forest-900 to-ink-900 text-white p-8 md:p-16 shadow-2xl border border-ink-800">
+                        <div className="relative z-10 max-w-3xl space-y-6">
+                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-forest-500/20 border border-forest-400/30 text-mint-300 text-xs font-bold">
+                                <i data-lucide="sparkles" className="w-4 h-4 text-mint-400"></i>
+                                <span>Sprint 1–6 Agile System Delivery Hub</span>
+                            </div>
+                            <h1 className="font-display font-black text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-tight">
+                                Smart Food Delivery Ecosystem
+                            </h1>
+                            <p className="text-mint-100/90 text-sm sm:text-base md:text-lg font-medium leading-relaxed">
+                                Complete multi-role platform linking Customers, Merchants, Delivery Couriers, and System Administrators in a unified Spring Boot & Kotlin architecture.
+                            </p>
+                            <div className="pt-2 flex flex-wrap items-center gap-4">
+                                <a
+                                    href="customer.html"
+                                    className="px-6 py-3.5 bg-mint-400 hover:bg-mint-300 text-ink-950 rounded-2xl text-xs sm:text-sm font-black shadow-lg shadow-mint-400/30 transition flex items-center gap-2"
+                                >
+                                    <i data-lucide="utensils" className="w-4 h-4"></i>
+                                    <span>Launch Customer Discovery</span>
+                                </a>
                                 <button
-                                    key={u.id}
-                                    onClick={() => switchUserRole(u)}
-                                    class={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-left transition truncate border ${
-                                        currentUser && currentUser.id === u.id
-                                            ? 'bg-forest-500 text-white border-forest-400 shadow-sm font-extrabold'
-                                            : 'bg-white/5 text-mint-50/80 border-white/10 hover:bg-white/10'
-                                    }`}
+                                    onClick={() => { setAuthTab('login'); setShowAuthModal(true); }}
+                                    className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl text-xs sm:text-sm font-bold backdrop-blur transition flex items-center gap-2"
                                 >
-                                    {u.role === 'ADMIN' ? '⚙️ Admin' :
-                                        u.role === 'CUSTOMER' ? '🛒 Customer' :
-                                            u.role === 'MERCHANT' ? '🏪 Merchant' : '🛵 Driver'}
+                                    <i data-lucide="key" className="w-4 h-4 text-mint-300"></i>
+                                    <span>Single-Form Sign In</span>
                                 </button>
-                            ))}
+                            </div>
                         </div>
+                    </div>
+                </section>
 
-                        {currentUser ? (
-                            <div class="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 border border-white/10">
-                                <div class="flex items-center gap-2.5 truncate">
-                                    <img src={currentUser.avatar} alt="User" class="w-8 h-8 rounded-full object-cover ring-2 ring-forest-400/50" />
-                                    <div class="truncate w-24">
-                                        <div class="text-xs font-bold text-white truncate">{currentUser.name}</div>
-                                        <div class="text-[10px] text-mint-300 truncate">{currentUser.role}</div>
-                                    </div>
+                {/* Four Distinct Role Portal Cards */}
+                <section className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-6">
+                    <div>
+                        <h2 className="font-display font-bold text-2xl sm:text-3xl text-ink-950">Select Your Role Portal</h2>
+                        <p className="text-xs sm:text-sm font-semibold text-ink-500">Each role is protected by Spring Boot JWT authorization and strict role-based access control</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                        {/* 1. Customer Card */}
+                        <a
+                            href="customer.html"
+                            className="group bg-white rounded-3xl border border-sage-200 p-6 hover:border-forest-400 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                        >
+                            <div className="space-y-4">
+                                <div className="w-12 h-12 rounded-2xl bg-forest-50 text-forest-700 border border-forest-200 flex items-center justify-center font-black group-hover:bg-forest-600 group-hover:text-white transition">
+                                    <i data-lucide="shopping-bag" className="w-6 h-6"></i>
                                 </div>
-                                <button onClick={handleLogout} title="Sign Out" class="p-1.5 rounded-xl bg-white/10 hover:bg-rust-600/30 text-white/70 hover:text-rust-400 transition">
-                                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                                </button>
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-forest-700 bg-forest-50 px-2 py-0.5 rounded">Sprint 1, 3, 4</span>
+                                    <h3 className="font-display font-bold text-xl text-ink-950 mt-1">Customer Portal</h3>
+                                    <p className="text-xs text-ink-500 mt-1 leading-relaxed">
+                                        Browse artisan restaurants, manage your shopping cart, complete mock payments, and track live deliveries.
+                                    </p>
+                                </div>
                             </div>
-                        ) : (
-                            <button onClick={() => setShowAuthModal(true)} class="w-full py-2.5 rounded-2xl bg-forest-500 hover:bg-forest-400 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2">
-                                <i data-lucide="log-in" class="w-4 h-4"></i> Sign In / Register
-                            </button>
-                        )}
-                    </div>
-                </aside>
+                            <div className="pt-6 mt-4 border-t border-sage-100 flex items-center justify-between text-xs font-bold text-forest-700">
+                                <span>Open Customer App</span>
+                                <i data-lucide="arrow-right" className="w-4 h-4 group-hover:translate-x-1 transition"></i>
+                            </div>
+                        </a>
 
-                <main class="flex-1 bg-cream-50 overflow-y-auto flex flex-col">
-                    <header class="px-6 py-4 bg-cream-50/90 backdrop-blur border-b border-sage-200 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30">
-                        <div class="flex items-center gap-3">
-                            {selectedMerchant && (
-                                <button onClick={() => setSelectedMerchant(null)} class="p-2 rounded-xl bg-white hover:bg-sage-100 text-ink-700 font-bold transition flex items-center gap-1.5 text-xs border border-sage-200">
-                                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
-                                </button>
-                            )}
+                        {/* 2. Merchant Card */}
+                        <a
+                            href="merchant.html"
+                            className="group bg-white rounded-3xl border border-sage-200 p-6 hover:border-forest-400 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                        >
+                            <div className="space-y-4">
+                                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-black group-hover:bg-amber-600 group-hover:text-white transition">
+                                    <i data-lucide="store" className="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded">Sprint 2 & 4</span>
+                                    <h3 className="font-display font-bold text-xl text-ink-950 mt-1">Merchant Kitchen</h3>
+                                    <p className="text-xs text-ink-500 mt-1 leading-relaxed">
+                                        Set up store profiles, manage menus & categories, toggle item stock, and accept or reject live orders.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="pt-6 mt-4 border-t border-sage-100 flex items-center justify-between text-xs font-bold text-amber-700">
+                                <span>Open Kitchen Portal</span>
+                                <i data-lucide="arrow-right" className="w-4 h-4 group-hover:translate-x-1 transition"></i>
+                            </div>
+                        </a>
+
+                        {/* 3. Driver Card */}
+                        <a
+                            href="driver.html"
+                            className="group bg-white rounded-3xl border border-sage-200 p-6 hover:border-forest-400 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                        >
+                            <div className="space-y-4">
+                                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-black group-hover:bg-blue-600 group-hover:text-white transition">
+                                    <i data-lucide="bike" className="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Sprint 5</span>
+                                    <h3 className="font-display font-bold text-xl text-ink-950 mt-1">Driver Dispatch</h3>
+                                    <p className="text-xs text-ink-500 mt-1 leading-relaxed">
+                                        Accept available delivery requests, broadcast live pickup and delivery status updates, and review earnings.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="pt-6 mt-4 border-t border-sage-100 flex items-center justify-between text-xs font-bold text-blue-700">
+                                <span>Open Dispatch Board</span>
+                                <i data-lucide="arrow-right" className="w-4 h-4 group-hover:translate-x-1 transition"></i>
+                            </div>
+                        </a>
+
+                        {/* 4. Admin Card */}
+                        <a
+                            href="admin.html"
+                            className="group bg-white rounded-3xl border border-sage-200 p-6 hover:border-forest-400 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                        >
+                            <div className="space-y-4">
+                                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center font-black group-hover:bg-purple-600 group-hover:text-white transition">
+                                    <i data-lucide="shield-check" className="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 px-2 py-0.5 rounded">Sprint 6</span>
+                                    <h3 className="font-display font-bold text-xl text-ink-950 mt-1">Admin Control</h3>
+                                    <p className="text-xs text-ink-500 mt-1 leading-relaxed">
+                                        Manage user directory, activate/deactivate accounts, verify merchants, monitor orders, and view analytics.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="pt-6 mt-4 border-t border-sage-100 flex items-center justify-between text-xs font-bold text-purple-700">
+                                <span>Open Admin Hub</span>
+                                <i data-lucide="arrow-right" className="w-4 h-4 group-hover:translate-x-1 transition"></i>
+                            </div>
+                        </a>
+
+                    </div>
+                </section>
+
+                {/* Architecture & Sprints Breakdown */}
+                <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+                    <div className="bg-white rounded-3xl border border-sage-200 p-8 shadow-sm space-y-6">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
                             <div>
-                                <h2 class="font-display text-xl font-semibold text-ink-900 capitalize tracking-tight">
-                                    {selectedMerchant ? `${selectedMerchant.name} (Menu & Profile)` : `${activeTab.replace('_', ' ')}`}
-                                </h2>
-                                <p class="text-xs text-ink-500 font-medium">
-                                    {currentUser ? (
-                                        <>Active Account: <strong class="text-ink-800">{currentUser.name}</strong> • Role: <span class="px-2 py-0.5 rounded-md bg-mint-100 text-forest-700 font-bold text-[10px]">{currentUser.role}</span></>
-                                    ) : (
-                                        <span class="text-rust-600 font-bold">Not logged in — please sign in to proceed</span>
-                                    )}
-                                </p>
+                                <h3 className="font-display font-bold text-2xl text-ink-950">System Architecture & Sprint Progress</h3>
+                                <p className="text-xs text-ink-500">Android Mobile App (Kotlin) ➔ RESTful API ➔ Spring Boot ➔ MySQL Database</p>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-bold">
+                                <span className="px-3 py-1 bg-mint-100 text-forest-800 rounded-full border border-mint-300">JWT Enabled</span>
+                                <span className="px-3 py-1 bg-cream-200 text-ink-800 rounded-full border border-sage-300">OpenAPI / Swagger</span>
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-3">
-                            <div class="hidden xl:flex items-center gap-1 bg-white p-1 rounded-xl text-[11px] font-bold text-ink-600 border border-sage-200">
-                                <span class="px-2 text-ink-300">Routes:</span>
-                                <a href="/main/customer" class="px-2 py-1 hover:bg-sage-100 rounded-lg text-ink-800">🛒 /main/customer</a>
-                                <a href="/main/merchant" class="px-2 py-1 hover:bg-sage-100 rounded-lg text-ink-800">🏪 /main/merchant</a>
-                                <a href="/main/driver" class="px-2 py-1 hover:bg-sage-100 rounded-lg text-ink-800">🛵 /main/driver</a>
-                                <a href="/main/admin" class="px-2 py-1 hover:bg-sage-100 rounded-lg text-ink-800">⚙️ /main/admin</a>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                            <div className="p-4 rounded-2xl bg-cream-50 border border-sage-200 space-y-1">
+                                <span className="font-bold text-forest-700">Sprint 1: Auth & Database</span>
+                                <p className="text-ink-600 font-medium">Customer registration, multi-role JWT authentication, default address management.</p>
                             </div>
-
-                            {currentUser && currentUser.role === 'CUSTOMER' && cart.length > 0 && (
-                                <button onClick={() => setSelectedMerchant(merchants.find(m => m.id === cartMerchantId) || merchants[0])} class="px-3.5 py-1.5 rounded-full bg-forest-500 hover:bg-forest-600 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition">
-                                    <i data-lucide="shopping-cart" class="w-4 h-4"></i>
-                                    <span>Cart ({cart.reduce((s, i) => s + i.qty, 0)})</span>
-                                </button>
-                            )}
-
-                            {!currentUser ? (
-                                <button onClick={() => setShowAuthModal(true)} class="px-4 py-2 rounded-xl bg-ink-950 text-mint-300 text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                                    <i data-lucide="log-in" class="w-4 h-4"></i> Sign In
-                                </button>
-                            ) : (
-                                <button onClick={() => setShowAuthModal(true)} class="px-3 py-1.5 rounded-xl bg-white text-ink-700 text-xs font-semibold flex items-center gap-2 border border-sage-200">
-                                    <span class="w-2 h-2 rounded-full bg-forest-500 animate-pulse"></span>
-                                    <span>Auth: <strong>JWT Active</strong></span>
-                                </button>
-                            )}
+                            <div className="p-4 rounded-2xl bg-cream-50 border border-sage-200 space-y-1">
+                                <span className="font-bold text-forest-700">Sprint 2: Merchant Storefront</span>
+                                <p className="text-ink-600 font-medium">Store profile setup, category hierarchy, item options & live stock toggling.</p>
+                            </div>
+                            <div className="p-4 rounded-2xl bg-cream-50 border border-sage-200 space-y-1">
+                                <span className="font-bold text-forest-700">Sprint 3: Customer Discovery</span>
+                                <p className="text-ink-600 font-medium">Restaurant search, distance calculations, active cart with backend pricing validation.</p>
+                            </div>
+                            <div className="p-4 rounded-2xl bg-cream-50 border border-sage-200 space-y-1">
+                                <span className="font-bold text-forest-700">Sprint 4: Payment & State Machine</span>
+                                <p className="text-ink-600 font-medium">Modular mock KHQR payment, merchant accept/reject workflow, strict state progression.</p>
+                            </div>
+                            <div className="p-4 rounded-2xl bg-cream-50 border border-sage-200 space-y-1">
+                                <span className="font-bold text-forest-700">Sprint 5: Driver Dispatch</span>
+                                <p className="text-ink-600 font-medium">Driver job board, delivery assignment, status updates, live tracking screen.</p>
+                            </div>
+                            <div className="p-4 rounded-2xl bg-cream-50 border border-sage-200 space-y-1">
+                                <span className="font-bold text-forest-700">Sprint 6: Admin Governance</span>
+                                <p className="text-ink-600 font-medium">User directory management, active/inactive controls, sales reports, system hardening.</p>
+                            </div>
                         </div>
-                    </header>
-
-                    <div class="p-6 flex-1 space-y-6">
-                        {selectedMerchant ? (
-                            <StoreDetailView
-                                merchant={selectedMerchant}
-                                merchants={merchants}
-                                setMerchants={saveMerchants}
-                                currentUser={currentUser}
-                                cart={cart}
-                                addToCart={addToCart}
-                                updateCartQty={updateCartQty}
-                                checkoutCart={checkoutCart}
-                                showToast={showToast}
-                                onBack={() => setSelectedMerchant(null)}
-                            />
-                        ) : (
-                            <>
-                                {currentUser && currentUser.role === 'ADMIN' && activeTab === 'dashboard' && (
-                                    <DashboardOverview orders={orders} merchants={merchants} users={users} totalRevenue={totalRevenue} pendingOrders={pendingOrders} onSelectMerchant={setSelectedMerchant} onNavigate={setActiveTab} currentUser={currentUser} />
-                                )}
-                                {currentUser && currentUser.role === 'ADMIN' && activeTab === 'merchants_admin' && (
-                                    <MerchantsAdminView merchants={merchants} setMerchants={saveMerchants} users={users} onSelectMerchant={setSelectedMerchant} currentUser={currentUser} showToast={showToast} />
-                                )}
-                                {currentUser && currentUser.role === 'ADMIN' && activeTab === 'orders_admin' && (
-                                    <OrdersDispatchView orders={orders} setOrders={saveOrders} currentUser={currentUser} showToast={showToast} />
-                                )}
-                                {currentUser && currentUser.role === 'ADMIN' && activeTab === 'users_admin' && (
-                                    <UserDirectoryView users={users} setUsers={saveUsers} merchants={merchants} currentUser={currentUser} showToast={showToast} />
-                                )}
-                                {currentUser && currentUser.role === 'ADMIN' && activeTab === 'merchant_linking' && (
-                                    <MerchantLinkingExplanationView users={users} merchants={merchants} setMerchants={saveMerchants} setUsers={saveUsers} showToast={showToast} />
-                                )}
-                                {currentUser && currentUser.role === 'ADMIN' && activeTab === 'analytics' && (
-                                    <AnalyticsView orders={orders} totalRevenue={totalRevenue} />
-                                )}
-
-                                {currentUser && currentUser.role === 'MERCHANT' && activeTab === 'my_store' && (
-                                    <MerchantStoreManagementView
-                                        merchant={merchants.find(m => m.id === currentUser.merchantId || m.ownerId === currentUser.id) || merchants[0]}
-                                        merchants={merchants}
-                                        setMerchants={saveMerchants}
-                                        currentUser={currentUser}
-                                        showToast={showToast}
-                                    />
-                                )}
-                                {currentUser && currentUser.role === 'MERCHANT' && activeTab === 'merchant_orders' && (
-                                    <MerchantOrdersView orders={orders} setOrders={saveOrders} merchantId={currentUser.merchantId || 1} showToast={showToast} />
-                                )}
-                                {currentUser && currentUser.role === 'MERCHANT' && activeTab === 'merchant_sales' && (
-                                    <MerchantSalesSummary orders={orders.filter(o => o.merchantId === (currentUser.merchantId || 1))} />
-                                )}
-
-                                {currentUser && currentUser.role === 'CUSTOMER' && activeTab === 'restaurants' && (
-                                    <CustomerDiscoveryView merchants={merchants} onSelectMerchant={setSelectedMerchant} />
-                                )}
-                                {currentUser && currentUser.role === 'CUSTOMER' && activeTab === 'customer_orders' && (
-                                    <CustomerOrdersView orders={orders.filter(o => o.customerEmail === currentUser.email || o.customer === currentUser.name)} />
-                                )}
-                                {currentUser && currentUser.role === 'CUSTOMER' && activeTab === 'customer_profile' && (
-                                    <CustomerProfileView user={currentUser} users={users} setUsers={saveUsers} setCurrentUser={setCurrentUser} showToast={showToast} />
-                                )}
-
-                                {currentUser && currentUser.role === 'DRIVER' && activeTab === 'driver_board' && (
-                                    <DriverJobBoardView orders={orders} setOrders={saveOrders} currentUser={currentUser} showToast={showToast} />
-                                )}
-                                {currentUser && currentUser.role === 'DRIVER' && activeTab === 'driver_history' && (
-                                    <DriverHistoryView orders={orders.filter(o => o.driver === currentUser.name && o.status === 'DELIVERED')} />
-                                )}
-
-                                {!currentUser && (
-                                    <div class="py-20 text-center space-y-4">
-                                        <div class="w-16 h-16 rounded-3xl bg-mint-100 text-forest-700 flex items-center justify-center mx-auto text-2xl font-bold">
-                                            <i data-lucide="lock" class="w-8 h-8 text-forest-600"></i>
-                                        </div>
-                                        <h3 class="font-display text-xl font-semibold text-ink-900">Authentication Required</h3>
-                                        <p class="text-xs text-ink-500 max-w-sm mx-auto">Please login with your customer, merchant, driver, or admin credentials to view your authorized portal.</p>
-                                        <button onClick={() => setShowAuthModal(true)} class="px-6 py-3 rounded-2xl bg-ink-950 text-mint-300 font-extrabold text-xs shadow-lg hover:bg-ink-900 transition">
-                                            Open Sign In / Registration
-                                        </button>
-                                    </div>
-                                )}
-                            </>
-                        )}
                     </div>
-                </main>
+                </section>
 
+                {/* Footer */}
+                <footer className="mt-auto py-8 bg-ink-950 text-white text-xs border-t border-ink-800">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-mint-100/70">
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold text-white">FoodEats Platform</span>
+                            <span>• Smart Food Delivery Mobile Application</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <a href="customer.html" className="hover:text-white transition">Customer</a>
+                            <a href="merchant.html" className="hover:text-white transition">Merchant</a>
+                            <a href="driver.html" className="hover:text-white transition">Driver</a>
+                            <a href="admin.html" className="hover:text-white transition">Admin</a>
+                        </div>
+                    </div>
+                </footer>
+
+                {/* SINGLE-FORM AUTHENTICATION MODAL (ROLE AUTO-ROUTING) */}
                 {showAuthModal && (
-                    <AuthModal
-                        users={users}
-                        setUsers={saveUsers}
-                        merchants={merchants}
-                        setMerchants={saveMerchants}
-                        onLoginSuccess={handleLoginSuccess}
-                        onClose={() => currentUser && setShowAuthModal(false)}
-                        authMode={authMode}
-                        setAuthMode={setAuthMode}
-                        showToast={showToast}
-                    />
-                )}
-            </div>
-        );
-    }
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-ink-950/70 backdrop-blur-sm" onClick={() => setShowAuthModal(false)}></div>
+                        <div className="relative bg-white rounded-3xl border border-sage-200 max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 z-10">
 
-    function AuthModal({ users, setUsers, merchants, setMerchants, onLoginSuccess, onClose, authMode, setAuthMode, showToast }) {
-        const [email, setEmail] = useState('');
-        const [password, setPassword] = useState('password123');
-        const [name, setName] = useState('');
-        const [role, setRole] = useState('CUSTOMER');
-        const [phone, setPhone] = useState('+855 12 345 678');
-        const [address, setAddress] = useState('Phnom Penh');
-        const [storeName, setStoreName] = useState('');
-        const [storeCategory, setStoreCategory] = useState('Gourmet Food');
-
-        const handleLogin = (e) => {
-            e.preventDefault();
-            const matched = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
-            if (!matched) {
-                showToast("User account not found. Try one of the quick accounts below.", "error");
-                return;
-            }
-            if (matched.password !== password) {
-                showToast("Invalid password credentials.", "error");
-                return;
-            }
-            onLoginSuccess(matched);
-        };
-
-        const handleRegister = (e) => {
-            e.preventDefault();
-            if (users.some(u => u.email.toLowerCase() === email.trim().toLowerCase())) {
-                showToast("An account with this email already exists.", "error");
-                return;
-            }
-
-            let assignedMerchantId = null;
-            const newUserId = Date.now();
-
-            if (role === 'MERCHANT') {
-                const newStore = {
-                    id: Date.now() + 10,
-                    ownerId: newUserId,
-                    ownerEmail: email,
-                    name: storeName || `${name}'s Kitchen`,
-                    category: storeCategory,
-                    rating: 5.0,
-                    reviewsCount: 1,
-                    deliveryFee: 1.50,
-                    deliveryTimeMins: 20,
-                    isOpen: true,
-                    address: address,
-                    imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80",
-                    description: "Freshly prepared gourmet dishes and fast delivery.",
-                    menu: [
-                        { id: Date.now() + 101, name: "Signature Dish", category: "Specials", price: 6.50, description: "House special prepared daily", imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=80", isAvailable: true }
-                    ]
-                };
-                assignedMerchantId = newStore.id;
-                setMerchants([...merchants, newStore]);
-            }
-
-            const newUser = {
-                id: newUserId,
-                name,
-                email,
-                password,
-                role,
-                phone,
-                address,
-                merchantId: assignedMerchantId,
-                avatar: `https://images.unsplash.com/photo-${role === 'DRIVER' ? '1507003211169-0a1dd7228f2d' : role === 'MERCHANT' ? '1570295999919-56ceb5ecca61' : '1494790108377-be9c29b29330'}?w=150&auto=format&fit=crop&q=80`
-            };
-
-            setUsers([...users, newUser]);
-            showToast(`Account registered as ${role}!`);
-            onLoginSuccess(newUser);
-        };
-
-        const roleAccent = { CUSTOMER: 'forest', MERCHANT: 'ink', DRIVER: 'mint', ADMIN: 'sage' };
-
-        return (
-            <div class="fixed inset-0 bg-ink-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div class="bg-cream-50 rounded-3xl max-w-lg w-full shadow-2xl border border-sage-200 overflow-hidden max-h-[90vh] flex flex-col">
-                    <div class="px-6 sm:px-8 pt-7 pb-5 bg-gradient-to-br from-ink-950 via-ink-900 to-forest-800 relative overflow-hidden shrink-0">
-                        <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-mint-400/10 blur-2xl"></div>
-                        <div class="absolute -bottom-16 -left-10 w-48 h-48 rounded-full bg-forest-400/10 blur-2xl"></div>
-                        <div class="relative flex justify-between items-start">
-                            <div>
-                                    <span class="px-2.5 py-0.5 rounded-full bg-mint-400/15 text-mint-300 font-extrabold text-[10px] uppercase tracking-wide border border-mint-400/20">
-                                        Spring Security & JWT Engine
+                            {/* Header */}
+                            <div className="flex items-center justify-between pb-3 border-b border-sage-100">
+                                <div>
+                                    <h3 className="font-display font-bold text-xl text-ink-950">
+                                        {authTab === 'login' ? 'Single-Form Authentication' : 'Create Customer Account'}
+                                    </h3>
+                                    <span className="text-xs font-semibold text-ink-500">
+                                        {authTab === 'login' ? 'Automatic role detection & routing' : 'Register for immediate food ordering'}
                                     </span>
-                                <h3 class="font-display text-2xl font-semibold text-white mt-2">
-                                    {authMode === 'login' ? 'Sign In to FoodEats' : 'Create New Account'}
-                                </h3>
-                                <p class="text-xs text-mint-100/60 mt-1">
-                                    {authMode === 'login' ? 'Select or enter account credentials' : 'Register Customer, Merchant, Driver, or Admin account'}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="px-6 sm:px-8 py-6 overflow-y-auto">
-                        <div class="mb-6 p-3.5 rounded-2xl bg-sage-100/70 border border-sage-200">
-                                <span class="text-[10px] font-bold text-ink-500 uppercase tracking-wider block mb-2">
-                                    ⚡ Quick 1-Click Persona Sign-In:
-                                </span>
-                            <div class="grid grid-cols-2 gap-2">
-                                {users.slice(0, 4).map(u => (
-                                    <button
-                                        key={u.id}
-                                        onClick={() => onLoginSuccess(u)}
-                                        class="p-2 rounded-xl bg-white hover:bg-ink-950 hover:text-mint-300 border border-sage-200 text-left transition group"
-                                    >
-                                        <div class="text-[11px] font-bold text-ink-900 group-hover:text-white truncate">{u.name}</div>
-                                        <div class="text-[10px] text-forest-600 group-hover:text-mint-300 font-semibold">{u.role}</div>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {authMode === 'login' ? (
-                            <form onSubmit={handleLogin} class="space-y-3.5 text-xs">
-                                <div>
-                                    <label class="block font-bold text-ink-700 mb-1">Email Address</label>
-                                    <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} class="w-full bg-white border border-sage-300 rounded-2xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-forest-500 focus:ring-2 focus:ring-forest-500/20" placeholder="admin@example.com" />
                                 </div>
-                                <div>
-                                    <label class="block font-bold text-ink-700 mb-1">Password</label>
-                                    <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} class="w-full bg-white border border-sage-300 rounded-2xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-forest-500 focus:ring-2 focus:ring-forest-500/20" />
-                                </div>
-                                <button type="submit" class="w-full py-3 rounded-2xl bg-ink-950 hover:bg-ink-900 text-mint-300 font-extrabold text-xs shadow-md transition">
-                                    Authenticate & Issue JWT
+                                <button onClick={() => setShowAuthModal(false)} className="p-2 hover:bg-sage-100 rounded-full text-ink-400">
+                                    <i data-lucide="x" className="w-5 h-5"></i>
                                 </button>
-                                <p class="text-center text-xs text-ink-500 pt-2">
-                                    Don't have an account? <button type="button" onClick={() => setAuthMode('register')} class="text-forest-600 font-bold hover:underline">Register here</button>
-                                </p>
-                            </form>
-                        ) : (
-                            <form onSubmit={handleRegister} class="space-y-3 text-xs">
-                                <div>
-                                    <label class="block font-bold text-ink-700 mb-1">I want to register as:</label>
-                                    <select value={role} onChange={e=>setRole(e.target.value)} class="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:outline-none focus:border-forest-500">
-                                        <option value="CUSTOMER">🛒 Customer (Browse, Order & Pay)</option>
-                                        <option value="MERCHANT">🏪 Merchant (Manage Store & Menu)</option>
-                                        <option value="DRIVER">🛵 Driver (Accept Deliveries)</option>
-                                        <option value="ADMIN">⚙️ Administrator (System Governance)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block font-bold text-ink-700 mb-1">Full Name</label>
-                                    <input type="text" required value={name} onChange={e=>setName(e.target.value)} class="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs focus:outline-none focus:border-forest-500" placeholder="e.g. Sreymom Sok" />
-                                </div>
-                                <div>
-                                    <label class="block font-bold text-ink-700 mb-1">Email</label>
-                                    <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} class="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs focus:outline-none focus:border-forest-500" placeholder="user@example.com" />
-                                </div>
+                            </div>
 
-                                {role === 'MERCHANT' && (
-                                    <div class="p-3 bg-mint-50 rounded-2xl border border-mint-200 space-y-2">
-                                        <span class="text-[10px] font-bold text-forest-700 uppercase tracking-wider block">🏪 Store Onboarding Details:</span>
-                                        <div>
-                                            <label class="block font-semibold text-ink-700 mb-0.5">Restaurant / Store Name</label>
-                                            <input type="text" required value={storeName} onChange={e=>setStoreName(e.target.value)} class="w-full bg-white border border-sage-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none" placeholder="e.g. Bopha Asian Bites" />
-                                        </div>
-                                        <div>
-                                            <label class="block font-semibold text-ink-700 mb-0.5">Cuisine Category</label>
-                                            <input type="text" value={storeCategory} onChange={e=>setStoreCategory(e.target.value)} class="w-full bg-white border border-sage-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none" />
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div>
-                                    <label class="block font-bold text-ink-700 mb-1">Delivery / Operating Address</label>
-                                    <input type="text" value={address} onChange={e=>setAddress(e.target.value)} class="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs focus:outline-none focus:border-forest-500" placeholder="Street 271, Phnom Penh" />
-                                </div>
-                                <button type="submit" class="w-full py-3 rounded-2xl bg-ink-950 hover:bg-ink-900 text-mint-300 font-extrabold text-xs shadow-md transition mt-2">
-                                    Create Account & Log In
+                            {/* Tab Switcher */}
+                            <div className="flex p-1 bg-cream-100 rounded-2xl border border-sage-200 text-xs font-bold">
+                                <button
+                                    onClick={() => { setAuthTab('login'); setAuthError(''); }}
+                                    className={`flex-1 py-2 rounded-xl transition ${authTab === 'login' ? 'bg-white text-ink-950 shadow-sm' : 'text-ink-600 hover:text-ink-950'}`}
+                                >
+                                    Log In / Sign In
                                 </button>
-                                <p class="text-center text-xs text-ink-500 pt-1">
-                                    Already have an account? <button type="button" onClick={() => setAuthMode('login')} class="text-forest-600 font-bold hover:underline">Log in</button>
-                                </p>
-                            </form>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    function MerchantLinkingExplanationView({ users, merchants, setMerchants, setUsers, showToast }) {
-        const [selectedUser, setSelectedUser] = useState(users.find(u => u.role === 'MERCHANT') || users[0]);
-        const [selectedStoreId, setSelectedStoreId] = useState(merchants[0]?.id || 1);
-
-        const handleAssignStore = (e) => {
-            e.preventDefault();
-            const store = merchants.find(m => m.id === parseInt(selectedStoreId));
-            if (!store) return;
-
-            const updatedMerchants = merchants.map(m => m.id === store.id ? { ...m, ownerId: selectedUser.id, ownerEmail: selectedUser.email } : m);
-            const updatedUsers = users.map(u => u.id === selectedUser.id ? { ...u, merchantId: store.id } : u);
-
-            setMerchants(updatedMerchants);
-            setUsers(updatedUsers);
-            showToast(`Assigned store "${store.name}" to owner ${selectedUser.name}!`);
-        };
-
-        return (
-            <div class="space-y-6">
-                <div class="p-6 rounded-3xl bg-gradient-to-br from-ink-950 to-forest-900 text-white shadow-lg relative overflow-hidden">
-                    <div class="absolute -top-12 -right-12 w-56 h-56 rounded-full bg-mint-400/10 blur-3xl"></div>
-                    <span class="relative px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">
-                            Database Architecture & Foreign Key Mapping
-                        </span>
-                    <h3 class="relative font-display text-2xl font-semibold text-white mt-2">How Merchant Accounts are Assigned</h3>
-                    <p class="relative text-xs text-mint-100/70 mt-1 max-w-2xl">
-                        In the MySQL schema, the relationship is established through a Foreign Key: <code class="bg-black/30 px-1.5 py-0.5 rounded text-mint-300">merchants.owner_id ➔ users.id</code>. When a merchant signs in, Spring Security inspects their ID to load and authorize their store menu and kitchen tickets.
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm space-y-4">
-                        <h4 class="font-bold text-ink-900 text-sm">Assign Store Ownership to User</h4>
-                        <form onSubmit={handleAssignStore} class="space-y-3 text-xs">
-                            <div>
-                                <label class="block font-bold text-ink-700 mb-1">Select Merchant User</label>
-                                <select
-                                    value={selectedUser.id}
-                                    onChange={e => setSelectedUser(users.find(u => u.id === parseInt(e.target.value)))}
-                                    class="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold focus:outline-none"
+                                <button
+                                    onClick={() => { setAuthTab('register'); setAuthError(''); }}
+                                    className={`flex-1 py-2 rounded-xl transition ${authTab === 'register' ? 'bg-white text-ink-950 shadow-sm' : 'text-ink-600 hover:text-ink-950'}`}
                                 >
-                                    {users.filter(u => u.role === 'MERCHANT' || u.role === 'ADMIN').map(u => (
-                                        <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
-                                    ))}
-                                </select>
+                                    Register Account
+                                </button>
                             </div>
-                            <div>
-                                <label class="block font-bold text-ink-700 mb-1">Select Restaurant Store Profile</label>
-                                <select
-                                    value={selectedStoreId}
-                                    onChange={e => setSelectedStoreId(e.target.value)}
-                                    class="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold focus:outline-none"
-                                >
-                                    {merchants.map(m => (
-                                        <option key={m.id} value={m.id}>{m.name} (Current Owner: {m.ownerEmail || 'Unassigned'})</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <button type="submit" class="w-full py-2.5 rounded-2xl bg-ink-950 text-mint-300 font-extrabold text-xs shadow-sm hover:bg-ink-900 transition">
-                                Update Ownership Link in DB
-                            </button>
-                        </form>
-                    </div>
 
-                    <div class="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm space-y-3 text-xs">
-                        <h4 class="font-bold text-ink-900 text-sm">Active Store ⇄ Owner Relationships</h4>
-                        <div class="divide-y divide-sage-100 max-h-56 overflow-y-auto">
-                            {merchants.map(m => (
-                                <div key={m.id} class="py-2.5 flex items-center justify-between">
+                            {/* TAB 1: LOG IN */}
+                            {authTab === 'login' && (
+                                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                                    {authError && (
+                                        <div className="p-3 rounded-xl bg-rust-500/10 border border-rust-500/30 text-xs font-semibold text-rust-600 flex items-center gap-2">
+                                            <i data-lucide="alert-circle" className="w-4 h-4 shrink-0"></i>
+                                            <span>{authError}</span>
+                                        </div>
+                                    )}
+
                                     <div>
-                                        <div class="font-bold text-ink-900">{m.name}</div>
-                                        <div class="text-[11px] text-ink-400">Owner ID: {m.ownerId || 'N/A'} • {m.ownerEmail || 'None'}</div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1.5">Email Address</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            value={authEmail}
+                                            onChange={e => setAuthEmail(e.target.value)}
+                                            placeholder="Enter your email"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
                                     </div>
-                                    <span class="px-2 py-0.5 rounded-md bg-mint-100 text-forest-700 font-bold text-[10px]">
-                                            Linked ✓
-                                        </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
-    function SidebarItem({ id, icon, label, badge, active, onClick }) {
-        const isActive = active === id;
-        return (
-            <button onClick={() => onClick(id)} class={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${isActive ? 'bg-forest-500 text-white shadow-md font-extrabold' : 'text-mint-50/70 hover:text-white hover:bg-white/5'}`}>
-                <div class="flex items-center gap-3">
-                    <i data-lucide={icon} class="w-4 h-4"></i>
-                    <span>{label}</span>
-                </div>
-                {badge !== undefined && badge > 0 && (
-                    <span class={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-ink-950 text-mint-300' : 'bg-white/10 text-white/80'}`}>{badge}</span>
-                )}
-            </button>
-        );
-    }
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1.5">Password</label>
+                                        <input
+                                            type="password"
+                                            required
+                                            value={authPassword}
+                                            onChange={e => setAuthPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
 
-    function DashboardOverview({ orders, merchants, users, totalRevenue, pendingOrders, onSelectMerchant, onNavigate }) {
-        return (
-            <div class="space-y-6">
-                <div class="p-6 rounded-3xl bg-gradient-to-br from-ink-950 via-ink-900 to-forest-900 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
-                    <div class="absolute -top-16 -right-10 w-64 h-64 rounded-full bg-mint-400/10 blur-3xl"></div>
-                    <div class="relative">
-                        <span class="px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">Admin Central Control</span>
-                        <h3 class="font-display text-2xl font-semibold text-white mt-1">Platform Operations</h3>
-                    </div>
-                    <div class="relative flex gap-2">
-                        <button onClick={() => onNavigate('merchants_admin')} class="px-4 py-2 rounded-2xl bg-forest-500 hover:bg-forest-400 text-white font-extrabold text-xs shadow-md transition">Manage Stores</button>
-                        <button onClick={() => onNavigate('merchant_linking')} class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition">Owner Links</button>
-                    </div>
-                </div>
+                                    {/* 1-Click Role Fill Buttons for Testing */}
+                                    <div className="p-3 bg-cream-100 rounded-2xl border border-sage-200 space-y-2">
+                                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-ink-500 block">⚡ Quick Demo Credentials:</span>
+                                        <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
+                                            <button
+                                                type="button"
+                                                onClick={() => { setAuthEmail('customer@example.com'); setAuthPassword('password123'); }}
+                                                className="p-1.5 bg-white rounded-lg border border-sage-200 hover:border-forest-400 text-forest-700 text-left truncate"
+                                            >
+                                                🛍️ Customer
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setAuthEmail('merchant@example.com'); setAuthPassword('password123'); }}
+                                                className="p-1.5 bg-white rounded-lg border border-sage-200 hover:border-amber-400 text-amber-700 text-left truncate"
+                                            >
+                                                🍳 Merchant
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setAuthEmail('driver@example.com'); setAuthPassword('password123'); }}
+                                                className="p-1.5 bg-white rounded-lg border border-sage-200 hover:border-blue-400 text-blue-700 text-left truncate"
+                                            >
+                                                🛵 Driver
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setAuthEmail('admin@example.com'); setAuthPassword('password123'); }}
+                                                className="p-1.5 bg-white rounded-lg border border-sage-200 hover:border-purple-400 text-purple-700 text-left truncate"
+                                            >
+                                                🛡️ Admin
+                                            </button>
+                                        </div>
+                                    </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <KpiCard title="Platform Revenue" value={`$${totalRevenue.toFixed(2)}`} icon="dollar-sign" change="+28.4% this week" color="forest" />
-                    <KpiCard title="Active Orders" value={orders.length} icon="shopping-bag" change={`${pendingOrders} awaiting`} color="mint" />
-                    <KpiCard title="Merchant Stores" value={merchants.length} icon="store" change="100% operational" color="ink" />
-                    <KpiCard title="System Accounts" value={users.length} icon="users" change="JWT Role Verified" color="sage" />
-                </div>
-
-                <div class="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm">
-                    <h4 class="font-bold text-ink-900 text-base mb-3">Partner Restaurants</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {merchants.map(m => (
-                            <div key={m.id} onClick={() => onSelectMerchant(m)} class="group p-4 rounded-2xl bg-cream-50 border border-sage-200 hover:border-forest-400 hover:shadow-md cursor-pointer transition">
-                                <div class="relative rounded-xl overflow-hidden mb-2">
-                                    <img src={m.imageUrl} class="w-full h-32 object-cover group-hover:scale-105 transition duration-300" />
-                                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur text-[10px] font-bold text-forest-700 flex items-center gap-1">
-                                            <i data-lucide="star" class="w-3 h-3 text-forest-500" style={{fill:'currentColor'}}></i>{m.rating}
-                                        </span>
-                                </div>
-                                <h5 class="font-bold text-ink-900 text-xs">{m.name}</h5>
-                                <p class="text-[11px] text-ink-400">{m.category} • {m.menu?.length || 0} Dishes</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    function MerchantsAdminView({ merchants, setMerchants, users, onSelectMerchant, currentUser, showToast }) {
-        const [showAdd, setShowAdd] = useState(false);
-        const [name, setName] = useState('');
-        const [cat, setCat] = useState('Gourmet Food');
-        const [ownerId, setOwnerId] = useState(users.find(u => u.role === 'MERCHANT')?.id || users[0].id);
-
-        const handleCreate = (e) => {
-            e.preventDefault();
-            const owner = users.find(u => u.id === parseInt(ownerId));
-            const newStore = {
-                id: Date.now(),
-                ownerId: owner?.id,
-                ownerEmail: owner?.email,
-                name,
-                category: cat,
-                rating: 5.0,
-                reviewsCount: 1,
-                deliveryFee: 1.50,
-                deliveryTimeMins: 20,
-                isOpen: true,
-                address: "Street 271, Phnom Penh",
-                imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80",
-                description: "High quality dishes delivered fast.",
-                menu: [{ id: Date.now() + 1, name: "Special House Plate", category: "Specials", price: 6.50, description: "Daily special", imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=80", isAvailable: true }]
-            };
-            setMerchants([newStore, ...merchants]);
-            showToast(`Created store "${name}" and assigned to ${owner?.name}!`);
-            setShowAdd(false);
-        };
-
-        return (
-            <div class="space-y-6">
-                <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-ink-900 text-base">Merchant Partner Stores</h3>
-                    <button onClick={() => setShowAdd(true)} class="px-4 py-2 rounded-2xl bg-ink-950 hover:bg-ink-900 text-mint-300 text-xs font-bold flex items-center gap-2 transition">
-                        <i data-lucide="plus-circle" class="w-4 h-4"></i> Onboard Merchant Store
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {merchants.map(m => (
-                        <div key={m.id} onClick={() => onSelectMerchant(m)} class="group bg-white rounded-3xl border border-sage-200 overflow-hidden cursor-pointer hover:shadow-md hover:border-forest-300 transition p-5">
-                            <div class="relative rounded-2xl overflow-hidden mb-3">
-                                <img src={m.imageUrl} class="w-full h-40 object-cover group-hover:scale-105 transition duration-300" />
-                                <span class={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold ${m.isOpen ? 'bg-forest-500 text-white' : 'bg-ink-800/80 text-white'}`}>{m.isOpen ? 'Open' : 'Closed'}</span>
-                            </div>
-                            <h4 class="font-extrabold text-ink-900 text-base">{m.name}</h4>
-                            <div class="flex items-center justify-between mt-0.5">
-                                <p class="text-xs text-ink-400">{m.category}</p>
-                                <RatingBadge rating={m.rating} reviewsCount={m.reviewsCount} />
-                            </div>
-                            <p class="text-[11px] text-forest-600 font-semibold mt-2">Owner: {m.ownerEmail || 'Unassigned'}</p>
-                        </div>
-                    ))}
-                </div>
-
-                {showAdd && (
-                    <div class="fixed inset-0 bg-ink-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div class="bg-cream-50 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs border border-sage-200">
-                            <h3 class="font-bold text-ink-900 text-base">Onboard New Merchant Profile</h3>
-                            <form onSubmit={handleCreate} class="space-y-3">
-                                <div>
-                                    <label class="block font-bold text-ink-700 mb-1">Restaurant Name</label>
-                                    <input type="text" required value={name} onChange={e=>setName(e.target.value)} class="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2" placeholder="e.g. Angkor Bistro" />
-                                </div>
-                                <div>
-                                    <label class="block font-bold text-ink-700 mb-1">Assign Owner (Merchant Account)</label>
-                                    <select value={ownerId} onChange={e=>setOwnerId(e.target.value)} class="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 font-bold">
-                                        {users.filter(u => u.role === 'MERCHANT' || u.role === 'ADMIN').map(u => (
-                                            <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div class="flex gap-2 pt-2">
-                                    <button type="button" onClick={() => setShowAdd(false)} class="flex-1 py-2.5 bg-sage-100 hover:bg-sage-200 rounded-2xl font-bold transition">Cancel</button>
-                                    <button type="submit" class="flex-1 py-2.5 bg-ink-950 hover:bg-ink-900 text-mint-300 rounded-2xl font-bold transition">Save Store</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    }
-
-    function MerchantStoreManagementView({ merchant, merchants, setMerchants, currentUser, showToast }) {
-        const menu = merchant.menu || [];
-        return (
-            <div class="space-y-6">
-                <div class="p-6 rounded-3xl bg-gradient-to-br from-ink-950 to-forest-900 text-white shadow-lg flex justify-between items-center relative overflow-hidden">
-                    <div class="absolute -bottom-14 -right-8 w-48 h-48 rounded-full bg-mint-400/10 blur-3xl"></div>
-                    <div class="relative">
-                        <span class="px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">Merchant Storefront</span>
-                        <h3 class="font-display text-2xl font-semibold text-white mt-1">{merchant.name}</h3>
-                        <p class="text-xs text-mint-100/70">{merchant.address} • Owner: {merchant.ownerEmail || currentUser.email}</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    {menu.map(item => (
-                        <div key={item.id} class="bg-white p-4 rounded-3xl border border-sage-200 shadow-sm flex flex-col justify-between hover:shadow-md transition">
-                            <div>
-                                <img src={item.imageUrl} class="w-full h-36 object-cover rounded-2xl mb-2" />
-                                <h4 class="font-bold text-ink-900 text-xs">{item.name}</h4>
-                                <span class="font-extrabold text-forest-700 text-xs">${item.price.toFixed(2)}</span>
-                            </div>
-                            <span class="text-[10px] text-forest-600 font-bold mt-2 flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3 h-3"></i> In Stock</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
-    function CustomerDiscoveryView({ merchants, onSelectMerchant }) {
-        return (
-            <div class="space-y-6">
-                <div class="p-6 rounded-3xl bg-gradient-to-br from-ink-950 via-ink-900 to-forest-900 text-white shadow-lg relative overflow-hidden">
-                    <div class="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-mint-400/10 blur-3xl"></div>
-                    <span class="relative px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">Customer Portal</span>
-                    <h3 class="relative font-display text-2xl font-semibold text-white mt-1">Explore Nearby Restaurants</h3>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    {merchants.map(m => (
-                        <div key={m.id} onClick={() => onSelectMerchant(m)} class="group bg-white rounded-3xl border border-sage-200 overflow-hidden cursor-pointer hover:shadow-lg hover:border-forest-300 transition p-5">
-                            <div class="relative rounded-2xl overflow-hidden mb-3">
-                                <img src={m.imageUrl} class="w-full h-44 object-cover group-hover:scale-105 transition duration-300" />
-                                <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink-950/60 to-transparent"></div>
-                                <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur text-[10px] font-extrabold text-forest-700 flex items-center gap-1 shadow-sm">
-                                        <i data-lucide="star" class="w-3 h-3 text-forest-500" style={{fill:'currentColor'}}></i>{m.rating}
-                                    </span>
-                                <span class="absolute bottom-2.5 left-2.5 text-white text-[11px] font-bold flex items-center gap-1">
-                                        <i data-lucide="clock" class="w-3 h-3"></i>{m.deliveryTimeMins} mins
-                                    </span>
-                            </div>
-                            <h4 class="font-extrabold text-ink-900 text-base">{m.name}</h4>
-                            <div class="flex items-center justify-between mt-0.5">
-                                <p class="text-xs text-ink-400">{m.category}</p>
-                                <span class="text-[11px] font-bold text-ink-500">${m.deliveryFee.toFixed(2)} delivery</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
-    function StoreDetailView({ merchant, currentUser, cart, addToCart, updateCartQty, checkoutCart, onBack }) {
-        const menu = merchant.menu || [];
-        const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-        const total = subtotal + (merchant.deliveryFee || 0);
-        return (
-            <div class="space-y-6">
-                <div class="p-6 rounded-3xl bg-gradient-to-br from-ink-950 via-ink-900 to-forest-900 text-white shadow-lg flex justify-between items-center relative overflow-hidden">
-                    <div class="absolute -top-14 -right-14 w-56 h-56 rounded-full bg-mint-400/10 blur-3xl"></div>
-                    <div class="relative">
-                        <h2 class="font-display text-2xl font-semibold">{merchant.name}</h2>
-                        <p class="text-xs text-mint-100/70 flex items-center gap-2 mt-1">
-                            <RatingBadge rating={merchant.rating} reviewsCount={merchant.reviewsCount} dark />
-                            <span>•</span>
-                            <span>{merchant.category}</span>
-                            <span>•</span>
-                            <span>${merchant.deliveryFee.toFixed(2)} delivery fee</span>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {menu.map(item => (
-                            <div key={item.id} class="bg-white p-4 rounded-3xl border border-sage-200 shadow-sm flex flex-col justify-between hover:shadow-md transition">
-                                <div>
-                                    <img src={item.imageUrl} class="w-full h-36 object-cover rounded-2xl mb-2" />
-                                    <h4 class="font-bold text-ink-900 text-xs">{item.name}</h4>
-                                    <span class="font-extrabold text-forest-700 text-xs">${item.price.toFixed(2)}</span>
-                                </div>
-                                {currentUser?.role === 'CUSTOMER' && (
-                                    <button onClick={() => addToCart(item, merchant)} class="mt-3 py-1.5 rounded-xl bg-ink-950 hover:bg-forest-600 text-mint-300 hover:text-white font-extrabold text-xs transition">
-                                        + Add to Cart
+                                    <button
+                                        type="submit"
+                                        className="w-full py-3 bg-forest-600 hover:bg-forest-700 text-white rounded-2xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2"
+                                    >
+                                        <i data-lucide="log-in" className="w-4 h-4"></i>
+                                        <span>Sign In & Route to Portal</span>
                                     </button>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    {currentUser?.role === 'CUSTOMER' && (
-                        <div class="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm space-y-4 h-fit sticky top-20">
-                            <h4 class="font-bold text-ink-900 text-sm flex items-center gap-2">
-                                <i data-lucide="shopping-cart" class="w-4 h-4 text-forest-600"></i>
-                                Shopping Cart ({cart.length})
-                            </h4>
-                            {cart.length === 0 && <p class="text-[11px] text-ink-400">Add a dish to start your order.</p>}
-                            <div class="space-y-2">
-                                {cart.map(item => (
-                                    <div key={item.id} class="flex justify-between items-center text-xs">
-                                        <span class="text-ink-700">{item.qty}x {item.name}</span>
-                                        <span class="font-bold text-ink-900">${(item.price * item.qty).toFixed(2)}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            {cart.length > 0 && (
-                                <>
-                                    <div class="border-t border-sage-200 pt-3 space-y-1.5 text-xs">
-                                        <div class="flex justify-between text-ink-500"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-                                        <div class="flex justify-between text-ink-500"><span>Delivery fee</span><span>${merchant.deliveryFee.toFixed(2)}</span></div>
-                                        <div class="flex justify-between font-extrabold text-ink-900 text-sm pt-1"><span>Total</span><span>${total.toFixed(2)}</span></div>
-                                    </div>
-                                    <button onClick={checkoutCart} class="w-full py-3 rounded-2xl bg-forest-500 hover:bg-forest-600 text-white font-bold text-xs shadow-md transition">
-                                        Checkout & Mock Pay
-                                    </button>
-                                </>
+                                </form>
                             )}
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    }
 
-    function CustomerOrdersView({ orders }) {
-        const statusStyle = (s) => s === 'DELIVERED' ? 'bg-mint-100 text-forest-700' : s === 'ACCEPTED' ? 'bg-sage-200 text-ink-700' : 'bg-cream-200 text-cream-700';
-        return (
-            <div class="bg-white rounded-3xl border border-sage-200 p-6 space-y-4">
-                <h3 class="font-bold text-ink-900 text-base">My Order History</h3>
-                <div class="divide-y divide-sage-100">
-                    {orders.map(o => (
-                        <div key={o.id} class="py-3 flex justify-between items-center text-xs">
-                            <div>
-                                <div class="font-bold text-ink-900">Order #{o.id} • {o.merchant}</div>
-                                <div class="text-ink-400">{o.destination}</div>
-                                <OrderStatusStepper status={o.status} />
-                            </div>
-                            <span class={`px-2.5 py-1 rounded-full font-bold ${statusStyle(o.status)}`}>{o.status}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
+                            {/* TAB 2: REGISTER */}
+                            {authTab === 'register' && (
+                                <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+                                    {authError && (
+                                        <div className="p-3 rounded-xl bg-rust-500/10 border border-rust-500/30 text-xs font-semibold text-rust-600 flex items-center gap-2">
+                                            <i data-lucide="alert-circle" className="w-4 h-4 shrink-0"></i>
+                                            <span>{authError}</span>
+                                        </div>
+                                    )}
 
-    function MerchantOrdersView({ orders, setOrders, merchantId, showToast }) {
-        const myOrders = orders.filter(o => o.merchantId === merchantId);
-        return (
-            <div class="bg-white rounded-3xl border border-sage-200 p-6 space-y-4">
-                <h3 class="font-bold text-ink-900 text-base">Incoming Kitchen Orders</h3>
-                {myOrders.map(o => (
-                    <div key={o.id} class="p-3 border border-sage-200 rounded-2xl flex justify-between items-center text-xs">
-                        <div>
-                            <div class="font-bold text-ink-900">Order #{o.id} • Customer: {o.customer}</div>
-                            <div class="text-ink-400">${parseFloat(o.totalAmount).toFixed(2)}</div>
-                        </div>
-                        <span class="px-2 py-1 bg-cream-200 text-cream-700 rounded-full font-bold">{o.status}</span>
-                    </div>
-                ))}
-            </div>
-        );
-    }
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1">Full Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={regName}
+                                            onChange={e => setRegName(e.target.value)}
+                                            placeholder="Sokha Mean"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
 
-    function UserDirectoryView({ users, setUsers, merchants, currentUser, showToast }) {
-        return (
-            <div class="bg-white rounded-3xl border border-sage-200 p-6 space-y-4">
-                <h3 class="font-bold text-ink-900 text-base">User Directory & Roles</h3>
-                <div class="divide-y divide-sage-100">
-                    {users.map(u => (
-                        <div key={u.id} class="py-3 flex justify-between items-center text-xs">
-                            <div class="flex items-center gap-3">
-                                <img src={u.avatar} class="w-8 h-8 rounded-full object-cover" />
-                                <div>
-                                    <div class="font-bold text-ink-900">{u.name}</div>
-                                    <div class="text-ink-400">{u.email}</div>
-                                </div>
-                            </div>
-                            <span class="px-2.5 py-1 rounded-full bg-mint-100 text-forest-700 font-bold">{u.role}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1">Email Address</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            value={regEmail}
+                                            onChange={e => setRegEmail(e.target.value)}
+                                            placeholder="sokha@example.com"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
 
-    function DriverJobBoardView({ orders, setOrders, currentUser, showToast }) {
-        return (
-            <div class="bg-white rounded-3xl border border-sage-200 p-6 space-y-4">
-                <h3 class="font-bold text-ink-900 text-base">Available Deliveries</h3>
-                {orders.filter(o => o.status === 'PENDING' || o.status === 'ACCEPTED').map(o => (
-                    <div key={o.id} class="p-3 border border-sage-200 rounded-2xl flex justify-between items-center text-xs">
-                        <div>
-                            <div class="font-bold text-ink-900">Order #{o.id} • {o.merchant}</div>
-                            <div class="text-ink-400">To: {o.destination}</div>
-                        </div>
-                        <button onClick={() => { setOrders(orders.map(ord => ord.id === o.id ? { ...ord, status: 'DELIVERED', driver: currentUser.name } : ord)); showToast("Marked as Delivered!"); }} class="px-3 py-1.5 bg-forest-500 hover:bg-forest-600 text-white rounded-xl font-bold transition">Accept & Deliver</button>
-                    </div>
-                ))}
-            </div>
-        );
-    }
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1">Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            value={regPhone}
+                                            onChange={e => setRegPhone(e.target.value)}
+                                            placeholder="+855 12 345 678"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
 
-    function DriverHistoryView({ orders }) {
-        return <div class="bg-white rounded-3xl border border-sage-200 p-6"><h3 class="font-bold text-ink-900 text-base">Delivery History</h3><p class="text-xs text-ink-400 mt-2">All completed drop-offs recorded.</p></div>;
-    }
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1">Delivery Address</label>
+                                        <input
+                                            type="text"
+                                            value={regAddress}
+                                            onChange={e => setRegAddress(e.target.value)}
+                                            placeholder="Building 42, St. 302, BKK1, Phnom Penh"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
 
-    function MerchantSalesSummary({ orders }) {
-        return <div class="bg-white rounded-3xl border border-sage-200 p-6"><h3 class="font-bold text-ink-900 text-base">Store Earnings</h3><div class="font-display text-2xl font-semibold text-forest-700 mt-2">${orders.reduce((s,o)=>s+o.totalAmount,0).toFixed(2)}</div></div>;
-    }
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1">Password</label>
+                                        <input
+                                            type="password"
+                                            required
+                                            value={regPassword}
+                                            onChange={e => setRegPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
 
-    function CustomerProfileView({ user, users, setUsers, setCurrentUser, showToast }) {
-        return <div class="bg-white rounded-3xl border border-sage-200 p-6 max-w-md"><h3 class="font-bold text-ink-900 text-base">Delivery Address</h3><input type="text" value={user.address} onChange={e=>{const u={...user, address: e.target.value}; setCurrentUser(u); setUsers(users.map(us=>us.id===user.id?u:us));}} class="w-full mt-2 p-2.5 border border-sage-300 rounded-2xl text-xs bg-cream-50 focus:outline-none focus:border-forest-500" /></div>;
-    }
+                                    <button
+                                        type="submit"
+                                        className="w-full py-3 bg-forest-600 hover:bg-forest-700 text-white rounded-2xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2"
+                                    >
+                                        <i data-lucide="user-plus" className="w-4 h-4"></i>
+                                        <span>Create Customer Account</span>
+                                    </button>
+                                </form>
+                            )}
 
-    function OrdersDispatchView({ orders, setOrders, showToast }) {
-        return (
-            <div class="bg-white rounded-3xl border border-sage-200 p-6 space-y-4">
-                <h3 class="font-bold text-ink-900 text-base">Global Order Pipeline</h3>
-                {orders.map(o => (
-                    <div key={o.id} class="p-3 border border-sage-200 rounded-2xl flex justify-between items-center text-xs">
-                        <div>
-                            <span class="font-bold text-ink-900">#{o.id} • {o.merchant}</span>
-                            <div class="text-ink-400">Customer: {o.customer}</div>
-                        </div>
-                        <span class="font-bold text-forest-600">{o.status}</span>
-                    </div>
-                ))}
-            </div>
-        );
-    }
-
-    function AnalyticsView({ orders, totalRevenue }) {
-        const revenueCanvasRef = useRef(null);
-        const statusCanvasRef = useRef(null);
-        const revenueChartRef = useRef(null);
-        const statusChartRef = useRef(null);
-
-        useEffect(() => {
-            if (!revenueCanvasRef.current || !statusCanvasRef.current) return;
-            if (revenueChartRef.current) revenueChartRef.current.destroy();
-            if (statusChartRef.current) statusChartRef.current.destroy();
-
-            const sorted = [...orders].sort((a, b) => a.id - b.id);
-            revenueChartRef.current = new Chart(revenueCanvasRef.current, {
-                type: 'line',
-                data: {
-                    labels: sorted.map(o => `#${o.id}`),
-                    datasets: [{
-                        label: 'Order Revenue ($)',
-                        data: sorted.map(o => o.totalAmount),
-                        borderColor: '#1a936f',
-                        backgroundColor: 'rgba(26,147,111,0.12)',
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: '#114b5f',
-                        pointBorderColor: '#fff',
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { color: '#4c8593', font: { size: 10 } } },
-                        y: { beginAtZero: true, grid: { color: '#eef3e9' }, ticks: { color: '#4c8593', font: { size: 10 } } }
-                    }
-                }
-            });
-
-            const statusCounts = orders.reduce((acc, o) => { acc[o.status] = (acc[o.status] || 0) + 1; return acc; }, {});
-            statusChartRef.current = new Chart(statusCanvasRef.current, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(statusCounts),
-                    datasets: [{
-                        data: Object.values(statusCounts),
-                        backgroundColor: ['#dcc48f', '#c6dabf', '#1a936f', '#114b5f', '#88d498'],
-                        borderColor: '#ffffff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '65%',
-                    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, color: '#0d3b4b', padding: 12 } } }
-                }
-            });
-
-            return () => {
-                if (revenueChartRef.current) revenueChartRef.current.destroy();
-                if (statusChartRef.current) statusChartRef.current.destroy();
-            };
-        }, [orders]);
-
-        return (
-            <div class="space-y-6">
-                <div class="p-6 rounded-3xl bg-gradient-to-br from-ink-950 to-forest-900 text-white shadow-lg relative overflow-hidden">
-                    <div class="absolute -top-12 -right-10 w-56 h-56 rounded-full bg-mint-400/10 blur-3xl"></div>
-                    <span class="relative px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">Platform Analytics</span>
-                    <h4 class="relative font-display text-2xl font-semibold text-white mt-1">Revenue Velocity</h4>
-                    <div class="relative font-display text-3xl font-semibold text-mint-300 mt-2">${totalRevenue.toFixed(2)}</div>
-                </div>
-
-                {orders.length === 0 ? (
-                    <div class="bg-white rounded-3xl border border-sage-200 p-10 text-center">
-                        <p class="text-xs text-ink-400">No orders yet — charts will populate once orders start coming in.</p>
-                    </div>
-                ) : (
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2 bg-white rounded-3xl border border-sage-200 p-6">
-                            <h4 class="font-bold text-ink-900 text-sm mb-4">Revenue by Order</h4>
-                            <div style={{height: '240px'}}>
-                                <canvas ref={revenueCanvasRef}></canvas>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-3xl border border-sage-200 p-6">
-                            <h4 class="font-bold text-ink-900 text-sm mb-4">Orders by Status</h4>
-                            <div style={{height: '240px'}}>
-                                <canvas ref={statusCanvasRef}></canvas>
-                            </div>
                         </div>
                     </div>
                 )}
+
             </div>
         );
     }
 
-    function KpiCard({ title, value, icon, change, color }) {
-        const tones = {
-            forest: 'bg-forest-100 text-forest-700',
-            mint:   'bg-mint-100 text-forest-600',
-            ink:    'bg-ink-100 text-ink-700',
-            sage:   'bg-sage-200 text-ink-700'
-        };
-        return (
-            <div class="bg-white p-5 rounded-3xl border border-sage-200 shadow-sm flex flex-col justify-between hover:shadow-md transition">
-                <div class="flex items-center justify-between text-xs text-ink-500 font-semibold">
-                    <span>{title}</span>
-                    <span class={`p-2 rounded-xl ${tones[color] || tones.forest}`}><i data-lucide={icon} class="w-4 h-4"></i></span>
-                </div>
-                <div class="mt-3">
-                    <div class="font-display text-2xl font-semibold text-ink-900">{value}</div>
-                    <div class="text-xs font-semibold text-forest-600 mt-1">{change}</div>
-                </div>
-            </div>
-        );
-    }
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    ReactDOM.render(<PlatformGateway />, document.getElementById('root'));
 </script>
 </body>
 </html>

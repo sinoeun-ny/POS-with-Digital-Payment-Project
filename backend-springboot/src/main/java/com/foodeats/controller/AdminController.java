@@ -109,6 +109,47 @@ public class AdminController {
         return ResponseEntity.ok(orderRepository.findAll());
     }
 
+    @PutMapping("/users/{id}/status")
+    public ResponseEntity<?> updateUserStatus(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        String status = body.get("status") != null ? body.get("status").toString() : "Active";
+        return userRepository.findById(id).map(user -> {
+            user.setStatus(status);
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of("message", "User status updated to " + status, "user", user));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        return userRepository.findById(id).map(user -> {
+            userRepository.delete(user);
+            return ResponseEntity.ok(Map.of("message", "User " + user.getName() + " removed successfully", "id", id));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/merchants/{id}/status")
+    public ResponseEntity<?> updateMerchantStatus(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        String status = body.get("status") != null ? body.get("status").toString() : "Active";
+        return merchantRepository.findById(id).map(merchant -> {
+            merchant.setStatus(status);
+            if ("Inactive".equalsIgnoreCase(status) || "CLOSED".equalsIgnoreCase(status)) {
+                merchant.setIsOpen(false);
+            } else if ("Active".equalsIgnoreCase(status) || "OPEN".equalsIgnoreCase(status)) {
+                merchant.setIsOpen(true);
+            }
+            merchantRepository.save(merchant);
+            return ResponseEntity.ok(Map.of("message", "Merchant status updated to " + status, "merchant", merchant));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/merchants/{id}")
+    public ResponseEntity<?> deleteMerchant(@PathVariable Long id) {
+        return merchantRepository.findById(id).map(merchant -> {
+            merchantRepository.delete(merchant);
+            return ResponseEntity.ok(Map.of("message", "Merchant " + merchant.getName() + " removed successfully", "id", id));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/settings")
     public ResponseEntity<?> getSettings() {
         return ResponseEntity.ok(systemSettings);

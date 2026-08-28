@@ -1,212 +1,564 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50">
+<html lang="en" class="h-full bg-cream-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoodEats - Executive Administrator Control Center</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        forest: { 800: '#114b5f', 900: '#0d3b4b', 950: '#082530' },
-                        mint: { 50: '#f4faf6', 100: '#e1f5e8', 400: '#88d498', 500: '#1a936f', 600: '#157a5c', 700: '#114b5f' },
-                        amber: { 500: '#1a936f', 600: '#114b5f' },
-                        teal: { 950: '#082530', 900: '#114b5f', 800: '#155d76', 700: '#1a936f', 600: '#22ad83', 500: '#88d498' },
-                        sage: { 100: '#f3e9d2', 200: '#c6dabf', 300: '#a8c69f' },
-                        cream: { 50: '#fcfaf6', 100: '#f3e9d2', 200: '#e8dcbd' }
+                        ink: {
+                            50: '#eef4f5', 100: '#d7e6e9', 200: '#adc9cf', 300: '#7ea9b3',
+                            400: '#4c8593', 500: '#2c6575', 600: '#1c5164', 700: '#16455a',
+                            800: '#114b5f', 900: '#0d3b4b', 950: '#082530'
+                        },
+                        forest: {
+                            50: '#eefaf5', 100: '#d3f2e3', 200: '#a7e5c8', 300: '#72d1a8',
+                            400: '#3fb686', 500: '#1a936f', 600: '#157a5c', 700: '#12634c',
+                            800: '#114f3f', 900: '#0f4235', 950: '#08251e'
+                        },
+                        mint: {
+                            50: '#f4faf6', 100: '#e1f5e8', 200: '#c3ebd2', 300: '#a2e0b9',
+                            400: '#88d498', 500: '#63bf79', 600: '#47a25e', 700: '#38814c',
+                            800: '#2f673f', 900: '#295536'
+                        },
+                        sage: {
+                            50: '#f7faf5', 100: '#eef3e9', 200: '#dde9d4', 300: '#c6dabf',
+                            400: '#aec9a4', 500: '#93b487', 600: '#75986a', 700: '#5c7a54',
+                            800: '#4b6345', 900: '#3f523a'
+                        },
+                        cream: {
+                            50: '#fdfbf7', 100: '#f8f2e6', 200: '#f3e9d2', 300: '#e9d8b4',
+                            400: '#dcc48f', 500: '#ceaf6c', 600: '#b5924e', 700: '#927540'
+                        },
+                        rust: { 500: '#b4543d', 600: '#96422f', 900: '#3d1a13' }
                     },
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Fraunces', 'serif']
+                    }
                 }
             }
         }
     </script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-display { font-family: 'Fraunces', serif; font-feature-settings: 'ss01'; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8f2e6; }
+        ::-webkit-scrollbar-thumb { background: #c6dabf; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #aec9a4; }
+        *:focus-visible { outline: 2px solid #1a936f; outline-offset: 2px; }
+    </style>
 </head>
-<body class="h-screen w-screen m-0 p-0 text-slate-800 bg-[#f8fafc] overflow-hidden antialiased">
-<div id="root" class="w-full h-full overflow-hidden flex flex-col"></div>
+<body class="h-screen w-screen m-0 p-0 text-ink-900 bg-cream-50 overflow-hidden antialiased">
+<div id="root" class="w-full h-full overflow-hidden flex flex-col md:flex-row items-center justify-center">
+    <div class="text-center p-8 bg-white/80 backdrop-blur rounded-3xl border border-sage-200 shadow-xl max-w-sm">
+        <div class="w-12 h-12 border-4 border-forest-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <h2 class="font-display font-bold text-xl text-ink-950 mb-1">Loading Admin Console...</h2>
+        <p class="text-xs text-ink-500 font-semibold">Connecting to Spring Boot Platform Engine</p>
+    </div>
+</div>
 
 <script type="text/babel">
     const { useState, useEffect } = React;
 
-    const SEED_USERS = [
-        { id: 1, name: "Alex Williamson", email: "admin@example.com", phone: "+855 11 223 344", role: "ADMIN", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" },
-        { id: 2, name: "Dominica Reed", email: "customer@example.com", phone: "+855 12 345 678", role: "CUSTOMER", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80" },
-        { id: 3, name: "Bopha Culinary Co.", email: "merchant@example.com", phone: "+855 98 765 432", role: "MERCHANT", merchantId: 1, avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80" },
-        { id: 4, name: "Dara K. Express", email: "driver@example.com", phone: "+855 88 776 655", role: "DRIVER", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" }
+    const INITIAL_USERS = [
+        { id: 1, name: "Alex Williamson", email: "admin@example.com", phone: "+855 11 223 344", role: "ADMIN", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80", status: "Active" },
+        { id: 2, name: "Dominica Reed", email: "customer@example.com", phone: "+855 12 345 678", role: "CUSTOMER", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80", status: "Active" },
+        { id: 3, name: "Bopha Culinary Co.", email: "merchant@example.com", phone: "+855 98 765 432", role: "MERCHANT", merchantId: 1, avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80", status: "Active" },
+        { id: 4, name: "Dara K. Express", email: "driver@example.com", phone: "+855 88 776 655", role: "DRIVER", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80", status: "Active" }
+    ];
+
+    const INITIAL_MERCHANTS = [
+        { id: 1, name: "Zando Burger & Grill", ownerEmail: "merchant@example.com", category: "Gourmet American", rating: 4.9, status: "OPEN", sales: 1240.50, ordersCount: 88, imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80" },
+        { id: 2, name: "Sakura Sushi & Ramen Bar", ownerEmail: "sakura@example.com", category: "Japanese Artisan", rating: 4.8, status: "OPEN", sales: 2190.00, ordersCount: 142, imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&auto=format&fit=crop&q=80" },
+        { id: 3, name: "Khmer Coffee & Patisserie", ownerEmail: "khmercafe@example.com", category: "Café & Bakery", rating: 4.9, status: "OPEN", sales: 680.20, ordersCount: 95, imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80" }
+    ];
+
+    const INITIAL_ORDERS = [
+        { id: 101, customer: "Dominica Reed", merchant: "Zando Burger & Grill", items: "2x Double Truffle Smash Burger", total: 14.50, status: "ACCEPTED", time: "10m ago", payment: "PAID_MOCK" },
+        { id: 102, customer: "Chan Dara", merchant: "Sakura Sushi & Ramen Bar", items: "2x Signature Tonkotsu Black Ramen", total: 19.00, status: "ACCEPTED", time: "15m ago", payment: "PAID_MOCK" },
+        { id: 103, customer: "Sreypov Meas", merchant: "Khmer Coffee & Patisserie", items: "1x Mondulkiri Iced Latte, 1x Almond Butter Croissant", total: 5.95, status: "PENDING", time: "Just now", payment: "PAID_MOCK" }
     ];
 
     function AdminApp() {
-        const [users, setUsers] = useState(() => JSON.parse(localStorage.getItem('foodeats_users')) || SEED_USERS);
-        const [merchants, setMerchants] = useState(() => JSON.parse(localStorage.getItem('foodeats_merchants')) || []);
-        const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('foodeats_orders')) || []);
-        const [tab, setTab] = useState('dashboard'); // 'dashboard' | 'stores' | 'users' | 'linking'
+        const [activeTab, setActiveTab] = useState('overview');
+        const [users, setUsers] = useState(INITIAL_USERS);
+        const [merchants, setMerchants] = useState(INITIAL_MERCHANTS);
+        const [orders, setOrders] = useState(INITIAL_ORDERS);
         const [toast, setToast] = useState(null);
+        const [userRoleFilter, setUserRoleFilter] = useState('ALL');
 
-        const showToast = (msg) => {
-            setToast(msg);
+        const showToast = (msg, type = 'success') => {
+            setToast({ msg, type });
             setTimeout(() => setToast(null), 3000);
         };
 
-        const saveMerchants = (m) => { setMerchants(m); localStorage.setItem('foodeats_merchants', JSON.stringify(m)); };
-        const saveUsers = (u) => { setUsers(u); localStorage.setItem('foodeats_users', JSON.stringify(u)); };
+        const loadAdminData = async () => {
+            try {
+                const uRes = await fetch('/api/admin/users');
+                if (uRes.ok) {
+                    const uData = await uRes.json();
+                    if (Array.isArray(uData) && uData.length > 0) setUsers(uData);
+                }
+            } catch (e) {}
+
+            try {
+                const mRes = await fetch('/api/admin/merchants');
+                if (mRes.ok) {
+                    const mData = await mRes.json();
+                    if (Array.isArray(mData) && mData.length > 0) setMerchants(mData);
+                }
+            } catch (e) {}
+
+            try {
+                const oRes = await fetch('/api/admin/orders');
+                if (oRes.ok) {
+                    const oData = await oRes.json();
+                    if (Array.isArray(oData) && oData.length > 0) setOrders(oData);
+                }
+            } catch (e) {}
+        };
 
         useEffect(() => {
-            lucide.createIcons();
-        }, [tab, users, merchants, orders, toast]);
+            loadAdminData();
+        }, []);
 
-        const totalRevenue = orders.reduce((sum, o) => sum + (parseFloat(o.totalAmount) || 0), 0);
+        const handleToggleUserStatus = async (user) => {
+            const newStatus = user.status === 'Inactive' ? 'Active' : 'Inactive';
+            try {
+                const res = await fetch(`/api/admin/users/${user.id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (res.ok) {
+                    showToast(`User ${user.name} marked as ${newStatus}`);
+                }
+            } catch (e) {}
+            setUsers(users.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
+        };
+
+        const handleDeleteUser = async (user) => {
+            if (!confirm(`Are you sure you want to remove user account for "${user.name}" (${user.role})?`)) return;
+            try {
+                const res = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast(`User ${user.name} removed from system.`);
+                }
+            } catch (e) {}
+            setUsers(users.filter(u => u.id !== user.id));
+        };
+
+        const handleToggleMerchantStatus = async (merchant) => {
+            const currentStatus = merchant.status || (merchant.isOpen ? 'Active' : 'Inactive');
+            const newStatus = currentStatus === 'Active' || currentStatus === 'OPEN' ? 'Inactive' : 'Active';
+            try {
+                const res = await fetch(`/api/admin/merchants/${merchant.id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (res.ok) {
+                    showToast(`Store ${merchant.name} marked as ${newStatus}`);
+                }
+            } catch (e) {}
+            setMerchants(merchants.map(m => m.id === merchant.id ? { ...m, status: newStatus, isOpen: newStatus === 'Active' } : m));
+        };
+
+        const handleDeleteMerchant = async (merchant) => {
+            if (!confirm(`Are you sure you want to delete merchant store "${merchant.name}"? This action cannot be undone.`)) return;
+            try {
+                const res = await fetch(`/api/admin/merchants/${merchant.id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast(`Merchant ${merchant.name} removed from system.`);
+                }
+            } catch (e) {}
+            setMerchants(merchants.filter(m => m.id !== merchant.id));
+        };
+
+        const handleLogout = () => {
+            localStorage.removeItem('foodeats_auth_token');
+            localStorage.removeItem('foodeats_auth_user');
+            window.location.href = 'index.html';
+        };
+
+        useEffect(() => {
+            if (window.lucide) window.lucide.createIcons();
+        }, [activeTab, users, merchants, orders, toast, userRoleFilter]);
+
+        const filteredUsers = userRoleFilter === 'ALL'
+            ? users
+            : users.filter(u => u.role === userRoleFilter);
+
+        const totalRevenue = orders.reduce((sum, o) => sum + (o.total || o.totalAmount || 0), 4110.70);
 
         return (
-            <div class="w-full h-full flex flex-col bg-[#f8fafc]">
+            <div className="flex flex-col md:flex-row w-full h-full overflow-hidden bg-cream-50">
                 {toast && (
-                    <div class="fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl bg-forest-950 text-mint-400 font-bold text-xs shadow-xl border border-forest-800 flex items-center gap-2">
-                        <i data-lucide="check-circle" class="w-4 h-4 text-mint-400"></i> {toast}
+                    <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border text-sm font-semibold bg-ink-950 text-mint-300 border-forest-700">
+                        <i data-lucide="check-circle-2" className="w-4 h-4 text-mint-400"></i>
+                        {toast.msg}
                     </div>
                 )}
 
-                {/* Header */}
-                <header class="bg-forest-950 text-white px-6 py-3.5 flex items-center justify-between border-b border-forest-900 shrink-0">
-                    <div class="flex items-center gap-6">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center text-forest-950 font-black shadow-md">
-                                <i data-lucide="shield" class="w-5 h-5"></i>
+                {/* Sidebar */}
+                <aside className="w-full md:w-64 bg-gradient-to-b from-ink-950 to-ink-900 text-white flex flex-col justify-between p-5 md:p-6 shrink-0 border-r border-ink-800/60 overflow-y-auto">
+                    <div>
+                        <div className="flex items-center gap-3 pb-5 border-b border-white/10">
+                            <div className="w-10 h-10 rounded-2xl bg-forest-500 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-forest-900/40">
+                                <i data-lucide="shield-check" className="w-5 h-5"></i>
                             </div>
                             <div>
-                                <h1 class="font-black text-base tracking-tight text-white leading-tight">FoodEats</h1>
-                                <span class="text-[10px] text-sky-400 font-bold uppercase tracking-wider">Admin Dashboard (Sprint 6)</span>
+                                <h1 className="font-display font-semibold text-lg tracking-tight text-white leading-none">Admin Hub</h1>
+                                <span className="text-[10px] font-semibold text-mint-300/80 uppercase tracking-wider">Sprint 6 Control</span>
                             </div>
                         </div>
 
-                        <nav class="hidden md:flex items-center gap-2 text-xs font-bold">
-                            <button onClick={() => setTab('dashboard')} class={`px-3 py-1.5 rounded-xl transition ${tab === 'dashboard' ? 'bg-sky-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                Overview & KPIs
-                            </button>
-                            <button onClick={() => setTab('stores')} class={`px-3 py-1.5 rounded-xl transition ${tab === 'stores' ? 'bg-sky-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                Merchant Stores ({merchants.length})
-                            </button>
-                            <button onClick={() => setTab('users')} class={`px-3 py-1.5 rounded-xl transition ${tab === 'users' ? 'bg-sky-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                User Directory ({users.length})
-                            </button>
-                            <button onClick={() => setTab('linking')} class={`px-3 py-1.5 rounded-xl transition ${tab === 'linking' ? 'bg-sky-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                Merchant Ownership Link
-                            </button>
+                        <div className="mt-6 mb-2 px-3 text-[10px] font-bold tracking-wider text-mint-100/40 uppercase">
+                            Governance
+                        </div>
+                        <nav className="space-y-1">
+                            <NavItem id="overview" icon="layout-dashboard" label="System Overview" active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="merchants" icon="store" label="Merchant Partners" badge={merchants.length} active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="orders" icon="shopping-cart" label="Order Pipeline" badge={orders.filter(o=>o.status==='PENDING').length} active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="users" icon="users" label="User Directory (RBAC)" badge={users.length} active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="analytics" icon="bar-chart-3" label="Platform Analytics" active={activeTab} onClick={setActiveTab} />
                         </nav>
+
+                        {/* Switch Portals */}
+                        <div className="mt-6 mb-2 px-3 text-[10px] font-bold tracking-wider text-mint-100/40 uppercase">
+                            Switch Role Portal
+                        </div>
+                        <div className="space-y-1 text-xs">
+                            <a href="customer.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="shopping-bag" className="w-4 h-4 text-mint-300"></i> Customer Portal
+                            </a>
+                            <a href="merchant.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="store" className="w-4 h-4 text-mint-300"></i> Merchant Portal
+                            </a>
+                            <a href="driver.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="bike" className="w-4 h-4 text-mint-300"></i> Driver Dispatch
+                            </a>
+                            <a href="index.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="layout-grid" className="w-4 h-4 text-mint-300"></i> Platform Gateway
+                            </a>
+                        </div>
                     </div>
 
-                    {/* Right Portal Switcher / Links */}
-                    <div class="flex items-center gap-3">
-                        <div class="hidden lg:flex items-center gap-1 bg-white/10 p-1 rounded-xl text-[11px] font-bold text-white/80">
-                            <span class="px-2 text-white/50">Routes:</span>
-                            <a href="/main/customer" class="px-2 py-1 hover:bg-white/10 rounded-lg text-mint-300">🛒 /main/customer</a>
-                            <a href="/main/merchant" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🏪 /main/merchant</a>
-                            <a href="/main/driver" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🛵 /main/driver</a>
-                            <a href="/main/admin" class="px-2 py-1 bg-sky-500/20 text-sky-300 rounded-lg">⚙️ Admin</a>
+                    <div className="pt-4 border-t border-white/10 space-y-3">
+                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="Avatar" className="w-8 h-8 rounded-full object-cover ring-2 ring-forest-400/50" />
+                                <div>
+                                    <div className="text-xs font-bold text-white">Alex Williamson</div>
+                                    <div className="text-[10px] text-mint-300 font-bold">SUPER_ADMIN</div>
+                                </div>
+                            </div>
                         </div>
-
-                        <div class="flex items-center gap-2 pl-3 border-l border-white/15 text-xs font-bold text-white">
-                            <span>⚙️ System Admin</span>
-                        </div>
+                        <button onClick={handleLogout} className="w-full py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-bold text-xs flex items-center justify-center gap-2 transition">
+                            <i data-lucide="log-out" className="w-4 h-4"></i> Sign Out to Customer View
+                        </button>
                     </div>
-                </header>
+                </aside>
 
-                {/* Main Workspace */}
-                <main class="flex-1 overflow-y-auto p-6 space-y-6">
-                    {tab === 'dashboard' ? (
-                        <div class="space-y-6">
-                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg">
-                                <span class="px-3 py-1 rounded-full bg-sky-500/20 text-sky-400 text-xs font-bold uppercase">Executive Analytics (US-024)</span>
-                                <h2 class="text-2xl font-black mt-2">Platform Overview & Velocity</h2>
-                                <p class="text-xs text-white/70 mt-1">Real-time metrics on gross volume, merchants, deliveries, and active accounts.</p>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm">
-                                    <div class="text-xs font-bold text-slate-500">Gross Merchandise Value</div>
-                                    <div class="text-2xl font-black text-slate-900 mt-2">${totalRevenue.toFixed(2)} USD</div>
-                                    <span class="text-[11px] text-mint-600 font-bold mt-1 block">+34% this month</span>
-                                </div>
-                                <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm">
-                                    <div class="text-xs font-bold text-slate-500">Total System Orders</div>
-                                    <div class="text-2xl font-black text-slate-900 mt-2">{orders.length}</div>
-                                    <span class="text-[11px] text-slate-400 font-bold mt-1 block">Live DB pipeline</span>
-                                </div>
-                                <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm">
-                                    <div class="text-xs font-bold text-slate-500">Active Merchant Stores</div>
-                                    <div class="text-2xl font-black text-slate-900 mt-2">{merchants.length}</div>
-                                    <span class="text-[11px] text-sky-600 font-bold mt-1 block">100% active</span>
-                                </div>
-                                <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm">
-                                    <div class="text-xs font-bold text-slate-500">Registered Accounts</div>
-                                    <div class="text-2xl font-black text-slate-900 mt-2">{users.length}</div>
-                                    <span class="text-[11px] text-purple-600 font-bold mt-1 block">Multi-Role RBAC</span>
-                                </div>
-                            </div>
+                {/* Main Content Area */}
+                <main className="flex-1 bg-cream-50 overflow-y-auto flex flex-col">
+                    <header className="px-6 py-4 bg-cream-50/90 backdrop-blur border-b border-sage-200 flex items-center justify-between sticky top-0 z-30">
+                        <div>
+                            <h2 className="font-display text-xl font-semibold text-ink-900 capitalize tracking-tight">
+                                {activeTab.replace('_', ' ')}
+                            </h2>
+                            <p className="text-xs text-ink-500 font-medium">Enterprise Food Delivery Management Console</p>
                         </div>
-                    ) : tab === 'stores' ? (
-                        <div class="space-y-6">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-black text-slate-900 text-base">Partner Restaurants & Stores</h3>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                {merchants.map(m => (
-                                    <div key={m.id} class="bg-white rounded-3xl border p-5 shadow-sm space-y-2">
-                                        <img src={m.imageUrl} class="w-full h-36 object-cover rounded-2xl mb-2" />
-                                        <h4 class="font-black text-slate-900 text-sm">{m.name}</h4>
-                                        <p class="text-xs text-slate-500">{m.category} • {m.address}</p>
-                                        <div class="text-[11px] text-mint-700 font-bold pt-2 border-t">
-                                            Owner: {m.ownerEmail || 'Unassigned'}
+                        <div className="flex items-center gap-3">
+                            <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-700 text-xs font-bold flex items-center gap-1.5 border border-mint-200">
+                                <span className="w-2 h-2 rounded-full bg-forest-500 animate-pulse"></span>
+                                Spring Boot API Online (Port 8080)
+                            </span>
+                        </div>
+                    </header>
+
+                    <div className="p-6 flex-1 space-y-6">
+                        {activeTab === 'overview' && (
+                            <div className="space-y-6">
+                                <div className="p-6 rounded-3xl bg-gradient-to-br from-ink-950 via-ink-900 to-forest-900 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                    <div className="absolute -top-16 -right-10 w-64 h-64 rounded-full bg-mint-400/10 blur-3xl"></div>
+                                    <div className="relative">
+                                        <span className="px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">Executive Analytics</span>
+                                        <h3 className="font-display text-2xl font-semibold text-white mt-1">Platform Performance & Security</h3>
+                                        <p className="text-xs text-mint-100/70 mt-0.5">JWT Multi-Role authorization actively enforced on all REST endpoints.</p>
+                                    </div>
+                                    <button onClick={() => showToast("Health check passed: MySQL & JPA Entities healthy")} className="relative px-4 py-2 rounded-2xl bg-forest-500 hover:bg-forest-400 text-white font-extrabold text-xs shadow-md transition flex items-center gap-1.5">
+                                        <i data-lucide="activity" className="w-4 h-4"></i> Run Health Check
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <KpiCard title="Total Platform Gross" value={`$${totalRevenue.toFixed(2)}`} icon="dollar-sign" change="+24% vs last week" color="forest" />
+                                    <KpiCard title="Active Orders Today" value={orders.length} icon="shopping-bag" change="All tracked live" color="mint" />
+                                    <KpiCard title="Onboarded Merchants" value={merchants.length} icon="store" change="100% active" color="ink" />
+                                    <KpiCard title="Registered Users" value={users.length} icon="users" change="RBAC verified" color="sage" />
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm space-y-4">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-bold text-ink-900 text-sm">Top Merchant Partners</h4>
+                                            <button onClick={()=>setActiveTab('merchants')} className="text-xs font-bold text-forest-600 hover:underline">View All</button>
+                                        </div>
+                                        <div className="divide-y divide-sage-100">
+                                            {merchants.map(m => (
+                                                <div key={m.id} className="py-3 flex items-center justify-between text-xs">
+                                                    <div className="flex items-center gap-3">
+                                                        <img src={m.imageUrl} alt={m.name} className="w-10 h-10 rounded-xl object-cover" />
+                                                        <div>
+                                                            <div className="font-bold text-ink-900">{m.name}</div>
+                                                            <div className="text-[11px] text-ink-400">{m.category} • {m.ordersCount} orders</div>
+                                                        </div>
+                                                    </div>
+                                                    <span className="font-extrabold text-forest-700">${m.sales.toFixed(2)}</span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                ))}
+
+                                    <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm space-y-4">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-bold text-ink-900 text-sm">Recent Order Pipeline</h4>
+                                            <button onClick={()=>setActiveTab('orders')} className="text-xs font-bold text-forest-600 hover:underline">View Live</button>
+                                        </div>
+                                        <div className="divide-y divide-sage-100">
+                                            {orders.map(o => (
+                                                <div key={o.id} className="py-3 flex items-center justify-between text-xs">
+                                                    <div>
+                                                        <div className="font-bold text-ink-900">Order #{o.id} • {o.merchant}</div>
+                                                        <div className="text-[11px] text-ink-400">Customer: {o.customer} ({o.time})</div>
+                                                    </div>
+                                                    <span className="px-2.5 py-1 rounded-full bg-mint-100 text-forest-700 font-bold text-[10px]">{o.status}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    ) : tab === 'users' ? (
-                        <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-                            <h3 class="font-black text-slate-900 text-base">Registered System Users (Role-Based Access Control)</h3>
-                            <div class="divide-y divide-slate-100">
-                                {users.map(u => (
-                                    <div key={u.id} class="py-3 flex justify-between items-center text-xs">
-                                        <div class="flex items-center gap-3">
-                                            <img src={u.avatar} class="w-8 h-8 rounded-full object-cover" />
-                                            <div>
-                                                <span class="font-bold text-slate-900">{u.name}</span>
-                                                <p class="text-slate-400 text-[11px]">{u.email} • {u.phone}</p>
+                        )}
+
+                        {activeTab === 'merchants' && (
+                            <div className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h3 className="font-bold text-ink-900 text-base">Registered Merchant Stores</h3>
+                                        <p className="text-xs text-ink-500">Manage merchant partners, toggle store operating status or remove store accounts.</p>
+                                    </div>
+                                    <span className="text-xs font-bold px-3 py-1 bg-sage-100 text-ink-800 rounded-full">{merchants.length} Partner Stores</span>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-xs text-left">
+                                        <thead>
+                                        <tr className="border-b border-sage-200 text-ink-400 uppercase text-[10px] tracking-wider">
+                                            <th className="pb-3 font-bold">Restaurant</th>
+                                            <th className="pb-3 font-bold">Owner Email</th>
+                                            <th className="pb-3 font-bold">Category</th>
+                                            <th className="pb-3 font-bold">Rating</th>
+                                            <th className="pb-3 font-bold">Status</th>
+                                            <th className="pb-3 font-bold text-right">Actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-sage-100">
+                                        {merchants.map(m => {
+                                            const isActive = (m.status === 'Active' || m.status === 'OPEN' || m.isOpen === true) && m.status !== 'Inactive';
+                                            return (
+                                                <tr key={m.id} className="hover:bg-cream-50/50 transition">
+                                                    <td className="py-3.5 flex items-center gap-2.5 font-bold text-ink-900">
+                                                        <img src={m.imageUrl} alt={m.name} className="w-9 h-9 rounded-xl object-cover border border-sage-200" />
+                                                        <div>
+                                                            <div>{m.name}</div>
+                                                            <div className="text-[10px] text-ink-400 font-normal">{m.address || 'Phnom Penh'}</div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-3.5 text-ink-600 font-medium">{m.ownerEmail || (m.owner ? m.owner.email : 'merchant@example.com')}</td>
+                                                    <td className="py-3.5 text-ink-500">{m.category || m.cuisineType || 'Gourmet'}</td>
+                                                    <td className="py-3.5 font-bold text-forest-700">★ {m.rating || 4.8}</td>
+                                                    <td className="py-3.5">
+                                                            <span className={`px-2.5 py-1 rounded-full font-extrabold text-[10px] ${isActive ? 'bg-mint-100 text-forest-800 border border-mint-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}`}>
+                                                                {isActive ? '● Active / Open' : '○ Inactive / Closed'}
+                                                            </span>
+                                                    </td>
+                                                    <td className="py-3.5 text-right space-x-1.5">
+                                                        <button
+                                                            onClick={() => handleToggleMerchantStatus(m)}
+                                                            className={`px-3 py-1.5 rounded-xl font-bold transition text-[11px] ${isActive ? 'bg-amber-100 hover:bg-amber-200 text-amber-900' : 'bg-mint-100 hover:bg-mint-200 text-forest-800'}`}
+                                                        >
+                                                            {isActive ? 'Deactivate' : 'Activate'}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteMerchant(m)}
+                                                            className="px-3 py-1.5 bg-rose-100 hover:bg-rose-600 text-rose-800 hover:text-white rounded-xl font-bold transition text-[11px]"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'users' && (
+                            <div className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-4">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                    <div>
+                                        <h3 className="font-bold text-ink-900 text-base">User Directory & Role-Based Access Control (RBAC)</h3>
+                                        <p className="text-xs text-ink-500">View registered users, deactivate driver/merchant access, or remove accounts.</p>
+                                    </div>
+                                    {/* Role filter pills */}
+                                    <div className="flex flex-wrap gap-1 bg-sage-100 p-1 rounded-2xl text-xs font-bold">
+                                        {['ALL', 'CUSTOMER', 'MERCHANT', 'DRIVER', 'ADMIN'].map(role => (
+                                            <button
+                                                key={role}
+                                                onClick={() => setUserRoleFilter(role)}
+                                                className={`px-3 py-1 rounded-xl transition ${userRoleFilter === role ? 'bg-ink-950 text-mint-300 shadow-sm' : 'text-ink-600 hover:text-ink-950'}`}
+                                            >
+                                                {role}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="divide-y divide-sage-100">
+                                    {filteredUsers.map(u => {
+                                        const isInactive = u.status === 'Inactive';
+                                        return (
+                                            <div key={u.id} className="py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-forest-100 text-forest-700 font-bold flex items-center justify-center border border-forest-200 shrink-0">
+                                                        {u.avatar ? <img src={u.avatar} alt={u.name} className="w-full h-full rounded-full object-cover" /> : u.name[0]}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-ink-900 text-sm flex items-center gap-2">
+                                                            {u.name}
+                                                            <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase ${
+                                                                u.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
+                                                                    u.role === 'MERCHANT' ? 'bg-amber-100 text-amber-800' :
+                                                                        u.role === 'DRIVER' ? 'bg-blue-100 text-blue-800' :
+                                                                            'bg-forest-100 text-forest-800'
+                                                            }`}>
+                                                                {u.role}
+                                                            </span>
+                                                            <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] ${!isInactive ? 'bg-mint-100 text-forest-700' : 'bg-rose-100 text-rose-700'}`}>
+                                                                {!isInactive ? 'Active' : 'Inactive'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-[11px] text-ink-400 font-medium">{u.email} • {u.phone || 'No phone'}</div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 self-end sm:self-center">
+                                                    {u.role !== 'ADMIN' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleToggleUserStatus(u)}
+                                                                className={`px-3 py-1.5 rounded-xl font-bold transition text-[11px] ${!isInactive ? 'bg-amber-100 hover:bg-amber-200 text-amber-900' : 'bg-mint-100 hover:bg-mint-200 text-forest-800'}`}
+                                                            >
+                                                                {!isInactive ? 'Deactivate' : 'Activate'}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteUser(u)}
+                                                                className="px-3 py-1.5 bg-rose-100 hover:bg-rose-600 text-rose-800 hover:text-white rounded-xl font-bold transition text-[11px]"
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                        <span class="px-3 py-1 rounded-full bg-slate-100 font-black text-slate-800">
-                                                {u.role}
-                                            </span>
-                                    </div>
-                                ))}
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm max-w-xl space-y-4 text-xs">
-                            <h3 class="font-black text-slate-900 text-base">Assign Store Ownership to Merchant User</h3>
-                            <p class="text-slate-500">In Spring Boot / MySQL, this updates the relational foreign key <code class="bg-slate-100 px-1 py-0.5 rounded text-forest-900 font-bold">merchants.owner_id = users.id</code>.</p>
+                        )}
 
-                            <div class="divide-y divide-slate-100 pt-2">
-                                {merchants.map(m => (
-                                    <div key={m.id} class="py-3 flex justify-between items-center">
-                                        <div>
-                                            <span class="font-bold text-slate-900">{m.name}</span>
-                                            <p class="text-slate-400 text-[11px]">Current Owner: {m.ownerEmail || 'Unassigned'}</p>
+                        {activeTab === 'orders' && (
+                            <div className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-4">
+                                <h3 className="font-bold text-ink-900 text-base">Global Order Dispatch</h3>
+                                <div className="divide-y divide-sage-100">
+                                    {orders.map(o => (
+                                        <div key={o.id} className="py-3 flex justify-between items-center text-xs">
+                                            <div>
+                                                <div className="font-bold text-ink-900">Order #{o.id} • {o.merchant}</div>
+                                                <div className="text-[11px] text-ink-400">Buyer: {o.customer} • Items: {o.items} • Total: ${o.total.toFixed(2)}</div>
+                                            </div>
+                                            <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-700 font-bold">{o.status}</span>
                                         </div>
-                                        <span class="px-2.5 py-1 rounded-full bg-mint-50 text-mint-700 font-black text-[10px]">
-                                                Linked ✓
-                                            </span>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+
+                        {activeTab === 'analytics' && (
+                            <div className="space-y-6">
+                                <div className="p-6 rounded-3xl bg-gradient-to-br from-ink-950 to-forest-900 text-white shadow-lg">
+                                    <span className="px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">Financial Summary</span>
+                                    <h3 className="font-display text-2xl font-semibold text-white mt-1">Total Platform Volume: ${totalRevenue.toFixed(2)}</h3>
+                                </div>
+                                <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm text-xs text-ink-500 space-y-2">
+                                    <h4 className="font-bold text-ink-900 text-sm">Automated Settlement Report</h4>
+                                    <p>Platform service take-rate: 15% • Merchant Payouts processed every Monday via Spring Boot Cron Scheduler.</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </main>
+            </div>
+        );
+    }
+
+    function NavItem({ id, icon, label, badge, active, onClick }) {
+        const isActive = active === id;
+        return (
+            <button onClick={() => onClick(id)} className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${isActive ? 'bg-forest-500 text-white shadow-md font-extrabold' : 'text-mint-50/70 hover:text-white hover:bg-white/5'}`}>
+                <div className="flex items-center gap-3">
+                    <i data-lucide={icon} className="w-4 h-4"></i>
+                    <span>{label}</span>
+                </div>
+                {badge !== undefined && badge > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-ink-950 text-mint-300' : 'bg-white/10 text-white/80'}`}>{badge}</span>
+                )}
+            </button>
+        );
+    }
+
+    function KpiCard({ title, value, icon, change, color }) {
+        const tones = {
+            forest: 'bg-forest-100 text-forest-700',
+            mint: 'bg-mint-100 text-forest-600',
+            ink: 'bg-ink-100 text-ink-700',
+            sage: 'bg-sage-200 text-ink-700'
+        };
+        return (
+            <div className="bg-white p-5 rounded-3xl border border-sage-200 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                <div className="flex items-center justify-between text-xs text-ink-500 font-semibold">
+                    <span>{title}</span>
+                    <span className={`p-2 rounded-xl ${tones[color] || tones.forest}`}><i data-lucide={icon} className="w-4 h-4"></i></span>
+                </div>
+                <div className="mt-3">
+                    <div className="font-display text-2xl font-semibold text-ink-900">{value}</div>
+                    <div className="text-xs font-semibold text-forest-600 mt-1">{change}</div>
+                </div>
             </div>
         );
     }

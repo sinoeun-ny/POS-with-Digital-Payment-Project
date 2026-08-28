@@ -42,3 +42,5 @@ D:\food_delivery\backend-springboot\src\main\java\com\foodeats\model\Order.java
 D:\food_delivery\backend-springboot\src\main\java\com\foodeats\repository\UserRepository.java
 D:\food_delivery\backend-springboot\src\main\java\com\foodeats\repository\OrderRepository.java
 D:\food_delivery\backend-springboot\src\main\java\com\foodeats\repository\CategoryRepository.java
+D:\food_delivery\backend-springboot\src\main\java\com\foodeats\model\ItemOption.java
+D:\food_delivery\backend-springboot\src\main\java\com\foodeats\repository\ItemOptionRepository.java

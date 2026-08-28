@@ -1,231 +1,849 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50">
+<html lang="en" class="h-full bg-cream-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodEats - Driver Dispatch & Tracking Portal</title>
+    <title>FoodEats - Driver Job Board & Real-Time Delivery Dispatch</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        forest: { 800: '#114b5f', 900: '#0d3b4b', 950: '#082530' },
-                        mint: { 50: '#f4faf6', 100: '#e1f5e8', 400: '#88d498', 500: '#1a936f', 600: '#157a5c', 700: '#114b5f' },
-                        amber: { 500: '#1a936f', 600: '#114b5f' },
-                        teal: { 950: '#082530', 900: '#114b5f', 800: '#155d76', 700: '#1a936f', 600: '#22ad83', 500: '#88d498' },
-                        sage: { 100: '#f3e9d2', 200: '#c6dabf', 300: '#a8c69f' },
-                        cream: { 50: '#fcfaf6', 100: '#f3e9d2', 200: '#e8dcbd' }
+                        ink: {
+                            50: '#eef4f5', 100: '#d7e6e9', 200: '#adc9cf', 300: '#7ea9b3',
+                            400: '#4c8593', 500: '#2c6575', 600: '#1c5164', 700: '#16455a',
+                            800: '#114b5f', 900: '#0d3b4b', 950: '#082530'
+                        },
+                        forest: {
+                            50: '#eefaf5', 100: '#d3f2e3', 200: '#a7e5c8', 300: '#72d1a8',
+                            400: '#3fb686', 500: '#1a936f', 600: '#157a5c', 700: '#12634c',
+                            800: '#114f3f', 900: '#0f4235', 950: '#08251e'
+                        },
+                        mint: {
+                            50: '#f4faf6', 100: '#e1f5e8', 200: '#c3ebd2', 300: '#a2e0b9',
+                            400: '#88d498', 500: '#63bf79', 600: '#47a25e', 700: '#38814c',
+                            800: '#2f673f', 900: '#295536'
+                        },
+                        sage: {
+                            50: '#f7faf5', 100: '#eef3e9', 200: '#dde9d4', 300: '#c6dabf',
+                            400: '#aec9a4', 500: '#93b487', 600: '#75986a', 700: '#5c7a54',
+                            800: '#4b6345', 900: '#3f523a'
+                        },
+                        cream: {
+                            50: '#fdfbf7', 100: '#f8f2e6', 200: '#f3e9d2', 300: '#e9d8b4',
+                            400: '#dcc48f', 500: '#ceaf6c', 600: '#b5924e', 700: '#927540'
+                        },
+                        rust: { 500: '#b4543d', 600: '#96422f', 900: '#3d1a13' }
                     },
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Fraunces', 'serif']
+                    }
                 }
             }
         }
     </script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-display { font-family: 'Fraunces', serif; font-feature-settings: 'ss01'; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8f2e6; }
+        ::-webkit-scrollbar-thumb { background: #c6dabf; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #aec9a4; }
+        *:focus-visible { outline: 2px solid #1a936f; outline-offset: 2px; }
+    </style>
 </head>
-<body class="h-screen w-screen m-0 p-0 text-slate-800 bg-[#f8fafc] overflow-hidden antialiased">
-<div id="root" class="w-full h-full overflow-hidden flex flex-col"></div>
+<body class="h-screen w-screen m-0 p-0 text-ink-900 bg-cream-50 overflow-hidden antialiased">
+<div id="root" class="w-full h-full overflow-hidden flex flex-col md:flex-row items-center justify-center">
+    <div class="text-center p-8 bg-white/80 backdrop-blur rounded-3xl border border-sage-200 shadow-xl max-w-sm">
+        <div class="w-12 h-12 border-4 border-forest-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <h2 class="font-display font-bold text-xl text-ink-950 mb-1">Loading Driver Dispatch...</h2>
+        <p class="text-xs text-ink-500 font-semibold">Connecting to Spring Boot Delivery Fleet Engine</p>
+    </div>
+</div>
 
 <script type="text/babel">
     const { useState, useEffect } = React;
 
-    const SEED_ORDERS = [
-        { id: 101, customer: "Dominica Reed", merchant: "Zando Burger & Grill", items: [{ name: "Double Truffle Smash Burger", qty: 2 }], totalAmount: 14.50, status: "ACCEPTED", destination: "Building 42, St. 302, BKK1", driver: null },
-        { id: 102, customer: "Chan Dara", merchant: "Sakura Sushi & Ramen Bar", items: [{ name: "Signature Tonkotsu Black Ramen", qty: 2 }], totalAmount: 19.00, status: "ACCEPTED", destination: "Monivong Blvd, Tower 4", driver: null },
-        { id: 100, customer: "Sreymom Sok", merchant: "Khmer Coffee & Patisserie", items: [{ name: "Mondulkiri Iced Latte", qty: 3 }], totalAmount: 8.60, status: "DELIVERED", destination: "Toul Kork, St 598", driver: "Dara K. Express" }
+    const INITIAL_JOBS = [
+        {
+            id: 101,
+            merchant: "Zando Burger & Grill",
+            merchantAddress: "Street 271, Boeng Tumpun",
+            customer: "Dominica Reed",
+            customerAddress: "Building 42, St. 302, BKK1",
+            distance: "2.4 km",
+            itemsSummary: "2x Double Truffle Smash Burger",
+            deliveryFee: 1.50,
+            tip: 1.00,
+            status: "AVAILABLE",
+            time: "3m ago"
+        },
+        {
+            id: 102,
+            merchant: "Sakura Sushi & Ramen Bar",
+            merchantAddress: "Monivong Blvd, BKK2",
+            customer: "Chan Dara",
+            customerAddress: "Tower 4, Russian Market",
+            distance: "3.1 km",
+            itemsSummary: "2x Signature Tonkotsu Black Ramen",
+            deliveryFee: 2.00,
+            tip: 1.50,
+            status: "AVAILABLE",
+            time: "8m ago"
+        },
+        {
+            id: 103,
+            merchant: "Khmer Coffee & Patisserie",
+            merchantAddress: "Norodom Blvd, Daun Penh",
+            customer: "Sreypov Meas",
+            customerAddress: "Norodom Blvd, Daun Penh",
+            distance: "1.1 km",
+            itemsSummary: "1x Mondulkiri Iced Latte, 1x Almond Butter Croissant",
+            deliveryFee: 1.00,
+            tip: 0.80,
+            status: "AVAILABLE",
+            time: "1m ago"
+        }
+    ];
+
+    const INITIAL_COMPLETED = [
+        { id: 98, merchant: "Khmer Coffee & Patisserie", customer: "Sokha Mean", payout: 2.50, time: "1 hr ago", rating: 5.0 },
+        { id: 99, merchant: "Zando Burger & Grill", customer: "Vannak Long", payout: 3.20, time: "2 hrs ago", rating: 5.0 }
     ];
 
     function DriverApp() {
-        const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('foodeats_orders')) || SEED_ORDERS);
-        const [activeTab, setActiveTab] = useState('board'); // 'board' | 'active' | 'history'
-        const [driverName] = useState("Dara K. Express");
+        const [currentUser, setCurrentUser] = useState({ name: "Dara K. Express", email: "driver@example.com", role: "DRIVER", token: "jwt_driver" });
+        const [showAuthModal, setShowAuthModal] = useState(false);
+        const [activeTab, setActiveTab] = useState('jobs');
+        const [isOnline, setIsOnline] = useState(true);
+        const [availableJobs, setAvailableJobs] = useState(INITIAL_JOBS);
+        const [activeDelivery, setActiveDelivery] = useState(null);
+        const [completedDeliveries, setCompletedDeliveries] = useState(INITIAL_COMPLETED);
+        const [deliveryStep, setDeliveryStep] = useState(0); // 0: Heading to store, 1: Arrived at store, 2: Food picked up, 3: Completed
         const [toast, setToast] = useState(null);
 
-        const showToast = (msg) => {
-            setToast(msg);
+        const showToast = (msg, type = 'success') => {
+            setToast({ msg, type });
             setTimeout(() => setToast(null), 3000);
         };
 
-        const saveOrders = (newOrders) => {
-            setOrders(newOrders);
-            localStorage.setItem('foodeats_orders', JSON.stringify(newOrders));
+        const handleLogout = () => {
+            localStorage.removeItem('foodeats_auth_token');
+            localStorage.removeItem('foodeats_auth_user');
+            window.location.href = 'index.html';
         };
 
         useEffect(() => {
-            lucide.createIcons();
-        }, [activeTab, orders, toast]);
+            if (window.lucide) window.lucide.createIcons();
+        }, [activeTab, isOnline, availableJobs, activeDelivery, completedDeliveries, deliveryStep, toast]);
 
-        const acceptJob = (orderId) => {
-            const updated = orders.map(o => o.id === orderId ? { ...o, status: 'IN_TRANSIT', driver: driverName } : o);
-            saveOrders(updated);
-            setActiveTab('active');
-            showToast(`Accepted Delivery Job #${orderId}!`);
+        const acceptJob = (job) => {
+            if (!isOnline) {
+                showToast("Please toggle your status to ONLINE first!", "error");
+                return;
+            }
+            setActiveDelivery(job);
+            setDeliveryStep(0);
+            setAvailableJobs(availableJobs.filter(j => j.id !== job.id));
+            showToast(`Accepted Delivery Job #${job.id}! Navigate to ${job.merchant}`);
         };
 
-        const markDelivered = (orderId) => {
-            const updated = orders.map(o => o.id === orderId ? { ...o, status: 'DELIVERED' } : o);
-            saveOrders(updated);
-            showToast(`Order #${orderId} marked as DELIVERED!`);
+        const advanceDeliveryStep = () => {
+            if (deliveryStep === 0) {
+                setDeliveryStep(1);
+                showToast("Broadcasted status: Arrived at Restaurant");
+            } else if (deliveryStep === 1) {
+                setDeliveryStep(2);
+                showToast("Broadcasted status: Food Picked Up & On Route to Customer");
+            } else if (deliveryStep === 2) {
+                const payout = activeDelivery.deliveryFee + activeDelivery.tip;
+                const doneItem = {
+                    id: activeDelivery.id,
+                    merchant: activeDelivery.merchant,
+                    customer: activeDelivery.customer,
+                    payout: payout,
+                    time: "Just now",
+                    rating: 5.0
+                };
+                setCompletedDeliveries([doneItem, ...completedDeliveries]);
+                setActiveDelivery(null);
+                setDeliveryStep(0);
+                showToast(`Delivery completed! Earned $${payout.toFixed(2)} 🎉`);
+            }
         };
 
-        const availableJobs = orders.filter(o => (o.status === 'ACCEPTED' || o.status === 'PENDING') && !o.driver);
-        const myActiveDeliveries = orders.filter(o => o.driver === driverName && o.status === 'IN_TRANSIT');
-        const myHistory = orders.filter(o => o.driver === driverName && o.status === 'DELIVERED');
-        const totalDriverEarnings = myHistory.length * 1.50; // $1.50 per delivery fee payout
+        const totalEarnedToday = completedDeliveries.reduce((sum, d) => sum + d.payout, 14.80);
 
         return (
-            <div class="w-full h-full flex flex-col bg-[#f8fafc]">
+            <div className="flex flex-col md:flex-row w-full h-full overflow-hidden bg-cream-50">
                 {toast && (
-                    <div class="fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl bg-forest-950 text-mint-400 font-bold text-xs shadow-xl border border-forest-800 flex items-center gap-2">
-                        <i data-lucide="check-circle" class="w-4 h-4 text-mint-400"></i> {toast}
+                    <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border text-sm font-semibold bg-ink-950 text-mint-300 border-forest-700">
+                        <i data-lucide="check-circle-2" className="w-4 h-4 text-mint-400"></i>
+                        {toast.msg}
                     </div>
                 )}
 
-                {/* Header */}
-                <header class="bg-forest-950 text-white px-6 py-3.5 flex items-center justify-between border-b border-forest-900 shrink-0">
-                    <div class="flex items-center gap-6">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center text-forest-950 font-black shadow-md">
-                                <i data-lucide="bike" class="w-5 h-5"></i>
+                {/* Sidebar */}
+                <aside className="w-full md:w-64 bg-gradient-to-b from-ink-950 to-ink-900 text-white flex flex-col justify-between p-5 md:p-6 shrink-0 border-r border-ink-800/60 overflow-y-auto">
+                    <div>
+                        <div className="flex items-center gap-3 pb-5 border-b border-white/10">
+                            <div className="w-10 h-10 rounded-2xl bg-forest-500 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-forest-900/40">
+                                <i data-lucide="bike" className="w-5 h-5"></i>
                             </div>
                             <div>
-                                <h1 class="font-black text-base tracking-tight text-white leading-tight">FoodEats</h1>
-                                <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Driver Portal (Sprint 5)</span>
+                                <h1 className="font-display font-semibold text-lg tracking-tight text-white leading-none">Driver Hub</h1>
+                                <span className="text-[10px] font-semibold text-mint-300/80 uppercase tracking-wider">Fleet Dispatch</span>
                             </div>
                         </div>
 
-                        <nav class="hidden md:flex items-center gap-2 text-xs font-bold">
-                            <button onClick={() => setActiveTab('board')} class={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${activeTab === 'board' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                <span>Available Jobs</span>
-                                {availableJobs.length > 0 && <span class="px-1.5 py-0.2 rounded-full bg-forest-900 text-amber-300 text-[10px]">{availableJobs.length}</span>}
-                            </button>
-                            <button onClick={() => setActiveTab('active')} class={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${activeTab === 'active' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                <span>In Transit</span>
-                                {myActiveDeliveries.length > 0 && <span class="px-1.5 py-0.2 rounded-full bg-mint-500 text-forest-950 text-[10px] font-black">{myActiveDeliveries.length}</span>}
-                            </button>
-                            <button onClick={() => setActiveTab('history')} class={`px-3 py-1.5 rounded-xl transition ${activeTab === 'history' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                Earnings & History
-                            </button>
+                        <div className="mt-6 mb-2 px-3 text-[10px] font-bold tracking-wider text-mint-100/40 uppercase">
+                            Deliveries
+                        </div>
+                        <nav className="space-y-1">
+                            <NavItem id="jobs" icon="map-pin" label="Available Jobs" badge={availableJobs.length} active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="active" icon="navigation" label="Active In-Transit" badge={activeDelivery ? 1 : 0} active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="history" icon="history" label="Delivery History" badge={completedDeliveries.length} active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="earnings" icon="wallet" label="Earnings & Tips" active={activeTab} onClick={setActiveTab} />
                         </nav>
+
+                        <div className="mt-6 mb-2 px-3 text-[10px] font-bold tracking-wider text-mint-100/40 uppercase">
+                            Switch Role Portal
+                        </div>
+                        <div className="space-y-1 text-xs">
+                            <a href="customer.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="shopping-bag" className="w-4 h-4 text-mint-300"></i> Customer Portal
+                            </a>
+                            <a href="merchant.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="store" className="w-4 h-4 text-mint-300"></i> Merchant Portal
+                            </a>
+                            <a href="admin.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="shield-check" className="w-4 h-4 text-mint-300"></i> Admin Hub
+                            </a>
+                            <a href="index.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="layout-grid" className="w-4 h-4 text-mint-300"></i> Platform Gateway
+                            </a>
+                        </div>
                     </div>
 
-                    {/* Right Portal Switcher / Links */}
-                    <div class="flex items-center gap-3">
-                        <div class="hidden lg:flex items-center gap-1 bg-white/10 p-1 rounded-xl text-[11px] font-bold text-white/80">
-                            <span class="px-2 text-white/50">Routes:</span>
-                            <a href="/main/customer" class="px-2 py-1 hover:bg-white/10 rounded-lg text-mint-300">🛒 /main/customer</a>
-                            <a href="/main/merchant" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🏪 /main/merchant</a>
-                            <a href="/main/driver" class="px-2 py-1 bg-amber-500/20 text-amber-300 rounded-lg">🛵 Driver</a>
-                            <a href="/main/admin" class="px-2 py-1 hover:bg-white/10 rounded-lg text-sky-300">⚙️ /main/admin</a>
-                        </div>
-
-                        <div class="flex items-center gap-2 pl-3 border-l border-white/15 text-xs font-bold text-white">
-                            <span>🛵 {driverName}</span>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Main Workspace */}
-                <main class="flex-1 overflow-y-auto p-6 space-y-6">
-                    {activeTab === 'board' ? (
-                        <div class="space-y-6">
-                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg">
-                                <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold uppercase">Driver Job Board (US-019 & US-020)</span>
-                                <h2 class="text-2xl font-black mt-2">Available Delivery Orders</h2>
-                                <p class="text-xs text-white/70 mt-1">Accept open delivery runs and navigate directly to customer destinations.</p>
+                    <div className="pt-4 border-t border-white/10 space-y-3">
+                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" alt="Avatar" className="w-8 h-8 rounded-full object-cover ring-2 ring-forest-400/50" />
+                                <div>
+                                    <div className="text-xs font-bold text-white">Dara K. Express</div>
+                                    <div className="text-[10px] text-mint-300 font-semibold">★ 4.95 Rating</div>
+                                </div>
                             </div>
+                        </div>
+                        <button onClick={handleLogout} className="w-full py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-bold text-xs flex items-center justify-center gap-2 transition">
+                            <i data-lucide="log-out" className="w-4 h-4"></i> Sign Out to Customer View
+                        </button>
+                    </div>
+                </aside>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Main Content */}
+                <main className="flex-1 bg-cream-50 overflow-y-auto flex flex-col">
+                    <header className="px-6 py-4 bg-cream-50/90 backdrop-blur border-b border-sage-200 flex items-center justify-between sticky top-0 z-30">
+                        <div>
+                            <h2 className="font-display text-xl font-semibold text-ink-900 capitalize tracking-tight">
+                                {activeTab === 'jobs' ? 'Live Driver Job Board' : activeTab === 'active' ? 'Active Route Tracking' : activeTab === 'history' ? 'Completed Orders' : 'Earnings'}
+                            </h2>
+                            <p className="text-xs text-ink-500 font-medium">GPS Location: <strong>Phnom Penh Central (BKK1)</strong></p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowAuthModal(true)}
+                                className="px-3.5 py-1.5 rounded-2xl text-xs font-bold bg-white hover:bg-sage-100 text-ink-900 border border-sage-300 flex items-center gap-1.5 transition shadow-sm"
+                            >
+                                <i data-lucide="user-plus" className="w-3.5 h-3.5 text-forest-600"></i>
+                                <span>Register / Sign In</span>
+                                <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-extrabold uppercase">{currentUser.role}</span>
+                            </button>
+
+                            <button
+                                onClick={() => { setIsOnline(!isOnline); showToast(isOnline ? "Status: Offline" : "Status: ONLINE — Ready for jobs!"); }}
+                                className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition ${isOnline ? 'bg-mint-100 text-forest-700 border border-mint-300' : 'bg-rust-900 text-cream-100'}`}
+                            >
+                                <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-forest-500 animate-pulse' : 'bg-rust-500'}`}></span>
+                                <span>{isOnline ? 'Driver Online' : 'Driver Offline'}</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    <div className="p-6 flex-1 space-y-6">
+                        {activeTab === 'jobs' && (
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h3 className="font-display text-lg font-semibold text-ink-900">Nearby Pickup Orders ({availableJobs.length})</h3>
+                                        <p className="text-xs text-ink-500">Pick up ready dishes and deliver to earn fees + 100% tip.</p>
+                                    </div>
+                                    <span className="px-3 py-1 bg-white border border-sage-200 text-ink-700 text-xs font-bold rounded-xl">
+                                        Today's Earned: <strong className="text-forest-700">${totalEarnedToday.toFixed(2)}</strong>
+                                    </span>
+                                </div>
+
                                 {availableJobs.length === 0 ? (
-                                    <div class="col-span-full bg-white rounded-3xl border p-12 text-center text-slate-400">
-                                        <i data-lucide="check-check" class="w-10 h-10 mx-auto text-mint-500 mb-2"></i>
-                                        <p class="text-xs font-bold">All available customer deliveries are currently assigned!</p>
+                                    <div className="bg-white rounded-3xl border border-sage-200 p-12 text-center text-xs text-ink-400 space-y-2">
+                                        <i data-lucide="check-circle-2" className="w-8 h-8 mx-auto text-forest-500"></i>
+                                        <p className="font-bold text-ink-700">All available orders have been dispatched!</p>
+                                        <p>Stand by for incoming orders.</p>
                                     </div>
                                 ) : (
-                                    availableJobs.map(job => (
-                                        <div key={job.id} class="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-sm space-y-3 flex flex-col justify-between">
-                                            <div>
-                                                <div class="flex justify-between items-center pb-2 border-b">
-                                                    <span class="font-black text-slate-900 text-xs">Job #{job.id}</span>
-                                                    <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold">{job.status}</span>
-                                                </div>
-                                                <div class="mt-3 space-y-1 text-xs">
-                                                    <p class="font-bold text-slate-900">Pickup: <span class="text-forest-900 font-extrabold">{job.merchant}</span></p>
-                                                    <p class="text-slate-600">Dropoff: <span class="font-bold text-slate-800">{job.destination}</span></p>
-                                                    <p class="text-slate-400 text-[11px]">Customer: {job.customer}</p>
-                                                </div>
-                                            </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        {availableJobs.map(job => (
+                                            <div key={job.id} className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-4 flex flex-col justify-between hover:shadow-md transition">
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between items-start">
+                                                        <span className="text-[10px] font-bold text-ink-400 uppercase tracking-wider">Delivery #{job.id} • {job.time}</span>
+                                                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-mint-100 text-forest-700">
+                                                            {job.distance} Est.
+                                                        </span>
+                                                    </div>
 
-                                            <div class="pt-3 border-t flex items-center justify-between">
-                                                <span class="font-black text-mint-700 text-xs">Payout: +$1.50 USD</span>
-                                                <button onClick={() => acceptJob(job.id)} class="px-4 py-2 bg-forest-950 hover:bg-forest-900 text-mint-400 font-black text-xs rounded-2xl shadow-sm">
-                                                    Accept Delivery Job
-                                                </button>
+                                                    <div className="space-y-2 text-xs">
+                                                        <div className="flex items-start gap-2.5">
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-forest-500 mt-1 shrink-0"></div>
+                                                            <div>
+                                                                <div className="font-extrabold text-ink-900">{job.merchant}</div>
+                                                                <div className="text-[11px] text-ink-500">{job.merchantAddress}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-start gap-2.5">
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-rust-500 mt-1 shrink-0"></div>
+                                                            <div>
+                                                                <div className="font-extrabold text-ink-900">{job.customer}</div>
+                                                                <div className="text-[11px] text-ink-500">{job.customerAddress}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="p-3 rounded-2xl bg-cream-50 text-[11px] text-ink-700 font-medium">
+                                                        <span className="font-bold">Package: </span>{job.itemsSummary}
+                                                    </div>
+                                                </div>
+
+                                                <div className="pt-3 border-t border-sage-100 flex items-center justify-between">
+                                                    <div>
+                                                        <span className="text-[10px] text-ink-400 uppercase font-bold block">Estimated Payout</span>
+                                                        <span className="font-extrabold text-forest-700 text-base">
+                                                            ${(job.deliveryFee + job.tip).toFixed(2)}
+                                                            <span className="text-xs text-ink-500 font-normal"> (Fee ${job.deliveryFee.toFixed(2)} + ${job.tip.toFixed(2)} Tip)</span>
+                                                        </span>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => acceptJob(job)}
+                                                        className="px-4 py-2 rounded-2xl bg-ink-950 hover:bg-forest-600 text-mint-300 hover:text-white font-extrabold text-xs shadow-md transition flex items-center gap-1.5"
+                                                    >
+                                                        <i data-lucide="bike" className="w-4 h-4"></i> Accept Job
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
+                                        ))}
+                                    </div>
                                 )}
                             </div>
-                        </div>
-                    ) : activeTab === 'active' ? (
-                        <div class="space-y-6">
-                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg">
-                                <span class="px-3 py-1 rounded-full bg-mint-500/20 text-mint-400 text-xs font-bold uppercase">Real-Time Status Broadcasts (US-021)</span>
-                                <h2 class="text-2xl font-black mt-2">Active In-Transit Deliveries</h2>
-                            </div>
+                        )}
 
-                            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-                                {myActiveDeliveries.length === 0 ? (
-                                    <p class="text-xs text-slate-400 py-8 text-center">No active deliveries assigned. Go to the Job Board to accept jobs.</p>
+                        {activeTab === 'active' && (
+                            <div className="max-w-2xl mx-auto space-y-6">
+                                {activeDelivery ? (
+                                    <div className="bg-white rounded-3xl border border-sage-200 p-6 shadow-md space-y-6">
+                                        <div className="flex justify-between items-center pb-4 border-b border-sage-100">
+                                            <div>
+                                                <span className="text-xs font-bold text-forest-700 uppercase tracking-wider">Active Trip #{activeDelivery.id}</span>
+                                                <h3 className="font-display text-xl font-bold text-ink-900">{activeDelivery.merchant} ➔ {activeDelivery.customer}</h3>
+                                            </div>
+                                            <span className="px-3 py-1 bg-mint-100 text-forest-700 rounded-full text-xs font-extrabold animate-pulse">
+                                                In Progress
+                                            </span>
+                                        </div>
+
+                                        {/* Delivery Stepper */}
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between text-xs font-bold text-ink-600">
+                                                <span className={deliveryStep >= 0 ? "text-forest-700" : ""}>1. Heading to Store</span>
+                                                <span className={deliveryStep >= 1 ? "text-forest-700" : ""}>2. At Restaurant</span>
+                                                <span className={deliveryStep >= 2 ? "text-forest-700" : ""}>3. Delivering to Client</span>
+                                            </div>
+                                            <div className="w-full bg-sage-200 h-2.5 rounded-full overflow-hidden">
+                                                <div
+                                                    className="bg-forest-500 h-full transition-all duration-500"
+                                                    style={{ width: deliveryStep === 0 ? '33%' : deliveryStep === 1 ? '66%' : '100%' }}
+                                                ></div>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-4 rounded-2xl bg-cream-50 border border-sage-200 space-y-2 text-xs">
+                                            <div className="font-bold text-ink-900">Delivery Instructions:</div>
+                                            <p className="text-ink-600">{activeDelivery.itemsSummary}</p>
+                                            <p className="text-ink-500 font-medium">Customer Address: {activeDelivery.customerAddress}</p>
+                                        </div>
+
+                                        <button
+                                            onClick={advanceDeliveryStep}
+                                            className="w-full py-3.5 bg-forest-500 hover:bg-forest-600 text-white font-extrabold text-xs rounded-2xl shadow-lg transition flex items-center justify-center gap-2"
+                                        >
+                                            <i data-lucide="navigation" className="w-4 h-4"></i>
+                                            {deliveryStep === 0 && "Update Status: Arrived at Restaurant"}
+                                            {deliveryStep === 1 && "Update Status: Food Picked Up — On Route to Customer"}
+                                            {deliveryStep === 2 && "Complete Delivery & Collect Payout"}
+                                        </button>
+                                    </div>
                                 ) : (
-                                    myActiveDeliveries.map(job => (
-                                        <div key={job.id} class="p-4 rounded-2xl border bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                            <div>
-                                                <span class="font-black text-slate-900 text-sm">Order #{job.id} • {job.merchant}</span>
-                                                <p class="text-xs text-slate-600 mt-1">📍 Destination: <strong>{job.destination}</strong></p>
-                                                <p class="text-xs text-mint-700 font-bold mt-0.5">🛵 Status: In Transit with {driverName}</p>
-                                            </div>
-                                            <button onClick={() => markDelivered(job.id)} class="px-5 py-2.5 bg-mint-500 hover:bg-mint-600 text-forest-950 font-black text-xs rounded-2xl shadow-md">
-                                                ✓ Mark as Completed & Delivered
-                                            </button>
-                                        </div>
-                                    ))
+                                    <div className="bg-white rounded-3xl border border-sage-200 p-12 text-center text-xs text-ink-400 space-y-3">
+                                        <i data-lucide="compass" className="w-10 h-10 mx-auto text-sage-300"></i>
+                                        <h4 className="font-display font-semibold text-base text-ink-700">No Active Delivery Job in Transit</h4>
+                                        <p>Go to the Job Board tab to accept pending pickup requests from restaurants.</p>
+                                        <button onClick={() => setActiveTab('jobs')} className="px-4 py-2 bg-forest-500 text-white rounded-xl font-bold text-xs">
+                                            View Available Jobs
+                                        </button>
+                                    </div>
                                 )}
                             </div>
-                        </div>
-                    ) : (
-                        <div class="space-y-6">
-                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg flex justify-between items-center">
-                                <div>
-                                    <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold uppercase">Driver Earnings</span>
-                                    <h2 class="text-2xl font-black mt-2">Total Delivery Earnings</h2>
-                                </div>
-                                <div class="text-3xl font-black text-mint-400">${totalDriverEarnings.toFixed(2)} USD</div>
-                            </div>
+                        )}
 
-                            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-                                <h3 class="font-black text-slate-900 text-base">Completed Dropoff Log ({myHistory.length})</h3>
-                                <div class="divide-y divide-slate-100">
-                                    {myHistory.map(job => (
-                                        <div key={job.id} class="py-3 flex justify-between items-center text-xs">
+                        {activeTab === 'history' && (
+                            <div className="space-y-4">
+                                <h3 className="font-display text-lg font-semibold text-ink-900">Completed Deliveries ({completedDeliveries.length})</h3>
+                                <div className="space-y-3">
+                                    {completedDeliveries.map(item => (
+                                        <div key={item.id} className="bg-white rounded-3xl border border-sage-200 p-4 shadow-sm flex items-center justify-between text-xs">
                                             <div>
-                                                <span class="font-bold text-slate-900">Order #{job.id} • {job.merchant}</span>
-                                                <p class="text-slate-400 text-[11px]">Delivered to: {job.destination}</p>
+                                                <div className="font-extrabold text-ink-900">Order #{item.id} • {item.merchant}</div>
+                                                <div className="text-ink-500 text-[11px]">Delivered to {item.customer} • {item.time}</div>
                                             </div>
-                                            <span class="font-black text-mint-700">+$1.50 USD</span>
+                                            <div className="text-right">
+                                                <div className="font-extrabold text-forest-700 text-sm">+${item.payout.toFixed(2)}</div>
+                                                <div className="text-[10px] text-amber-600 font-bold">★ {item.rating} Rating</div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
+                        )}
+
+                        {activeTab === 'earnings' && (
+                            <div className="space-y-6">
+                                <div className="p-6 rounded-3xl bg-gradient-to-br from-ink-950 to-forest-900 text-white shadow-lg space-y-2">
+                                    <span className="px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">Driver Fleet Wallet</span>
+                                    <h3 className="font-display text-3xl font-bold text-white">${totalEarnedToday.toFixed(2)}</h3>
+                                    <p className="text-xs text-mint-100/70">Total earned today across completed delivery routes + 100% customer tips.</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </main>
+
+                {showAuthModal && (
+                    <MultiRoleAuthModal
+                        currentUser={currentUser}
+                        onClose={() => setShowAuthModal(false)}
+                        onSuccessLogin={(user) => {
+                            setCurrentUser(user);
+                            setShowAuthModal(false);
+                            showToast(`Welcome back, ${user.name}!`);
+                        }}
+                        onSuccessRegister={(user) => {
+                            setCurrentUser(user);
+                            setShowAuthModal(false);
+                            showToast(`🎉 Account created! Welcome, ${user.name} (${user.role}).`);
+                        }}
+                        showToast={showToast}
+                    />
+                )}
+            </div>
+        );
+    }
+
+    // ==========================================
+    // MULTI-ROLE REGISTRATION & LOGIN MODAL (US-001 & US-002)
+    // ==========================================
+    function MultiRoleAuthModal({ currentUser, onClose, onSuccessLogin, onSuccessRegister, showToast }) {
+        const [mode, setMode] = useState('register'); // 'register' | 'login'
+        const [selectedRole, setSelectedRole] = useState('DRIVER'); // Default to Driver on driver screen
+        const [loading, setLoading] = useState(false);
+        const [errorMsg, setErrorMsg] = useState('');
+
+        const [regName, setRegName] = useState('');
+        const [regEmail, setRegEmail] = useState('');
+        const [regPassword, setRegPassword] = useState('password123');
+        const [regPhone, setRegPhone] = useState('+855 88 123 456');
+        const [vehicleType, setVehicleType] = useState('Motorbike');
+        const [plateNumber, setPlateNumber] = useState('PP 1AB-8899');
+        const [restaurantName, setRestaurantName] = useState('');
+        const [cuisineType, setCuisineType] = useState('Khmer Cuisine');
+        const [storeAddress, setStoreAddress] = useState('Street 271, Phnom Penh');
+        const [deliveryAddress, setDeliveryAddress] = useState('Building 42, BKK1, Phnom Penh');
+
+        const [loginEmail, setLoginEmail] = useState('');
+        const [loginPassword, setLoginPassword] = useState('');
+
+        const handleRegister = async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            setErrorMsg('');
+
+            const payload = {
+                name: regName.trim(),
+                email: regEmail.trim().toLowerCase(),
+                password: regPassword,
+                phone: regPhone.trim(),
+                role: selectedRole,
+                restaurantName: selectedRole === 'MERCHANT' ? (restaurantName.trim() || regName + ' Kitchen') : null,
+                cuisineType: selectedRole === 'MERCHANT' ? cuisineType : null,
+                address: selectedRole === 'MERCHANT' ? storeAddress : (selectedRole === 'CUSTOMER' ? deliveryAddress : null),
+                city: 'Phnom Penh',
+                vehicleType: selectedRole === 'DRIVER' ? vehicleType : null,
+                plateNumber: selectedRole === 'DRIVER' ? plateNumber : null
+            };
+
+            try {
+                const res = await fetch(`http://localhost:8080/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    onSuccessRegister({
+                        name: data.name,
+                        email: data.email,
+                        role: data.role,
+                        token: data.token,
+                        id: data.userId
+                    });
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    setErrorMsg(err.message || "Registration failed. Try a different email.");
+                }
+            } catch (err) {
+                // Fallback simulation
+                onSuccessRegister({
+                    name: payload.name,
+                    email: payload.email,
+                    role: payload.role,
+                    token: "jwt_token_" + Date.now()
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const handleLogin = async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            setErrorMsg('');
+            try {
+                const res = await fetch(`http://localhost:8080/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: loginEmail.trim().toLowerCase(), password: loginPassword })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    onSuccessLogin({
+                        name: data.name,
+                        email: data.email,
+                        role: data.role,
+                        token: data.token,
+                        id: data.userId
+                    });
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    setErrorMsg(err.message || "Invalid credentials.");
+                }
+            } catch (err) {
+                onSuccessLogin({
+                    name: loginEmail.split('@')[0],
+                    email: loginEmail,
+                    role: "DRIVER",
+                    token: "jwt_token_demo"
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        return (
+            <div className="fixed inset-0 bg-ink-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+                <div className="bg-white rounded-3xl max-w-lg w-full p-6 border border-sage-200 shadow-2xl space-y-4 my-8 max-h-[90vh] overflow-y-auto">
+                    <div className="flex justify-between items-center pb-3 border-b border-sage-200">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-2xl bg-forest-500 text-white flex items-center justify-center font-bold shadow-md">
+                                <i data-lucide="shield-check" className="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 className="font-display text-lg font-bold text-ink-950">FoodEats Multi-Role Portal</h3>
+                                <p className="text-[11px] text-ink-500 font-medium">Sprint 1: Auth Engine & Onboarding (US-001, US-002)</p>
+                            </div>
+                        </div>
+                        <button onClick={onClose} className="w-8 h-8 rounded-full bg-sage-100 text-ink-600 hover:bg-sage-200 font-bold flex items-center justify-center">✕</button>
+                    </div>
+
+                    <div className="grid grid-cols-2 p-1 bg-sage-100 rounded-2xl">
+                        <button
+                            type="button"
+                            onClick={() => { setMode('register'); setErrorMsg(''); }}
+                            className={`py-2 text-xs font-bold rounded-xl transition ${mode === 'register' ? 'bg-white text-forest-800 shadow-sm font-extrabold' : 'text-ink-600 hover:text-ink-900'}`}
+                        >
+                            ✨ Register New Account
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setMode('login'); setErrorMsg(''); }}
+                            className={`py-2 text-xs font-bold rounded-xl transition ${mode === 'login' ? 'bg-white text-forest-800 shadow-sm font-extrabold' : 'text-ink-600 hover:text-ink-900'}`}
+                        >
+                            🔑 Sign In
+                        </button>
+                    </div>
+
+                    {errorMsg && (
+                        <div className="p-3 rounded-2xl bg-rust-50 border border-rust-200 text-rust-800 text-xs font-semibold flex items-center gap-2">
+                            <i data-lucide="alert-circle" className="w-4 h-4 text-rust-600"></i>
+                            <span>{errorMsg}</span>
                         </div>
                     )}
-                </main>
+
+                    {mode === 'register' && (
+                        <form onSubmit={handleRegister} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-ink-800 mb-1.5">
+                                    Step 1: Choose Your Account Role (US-003)
+                                </label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    {[
+                                        { role: 'DRIVER', icon: 'bike', label: 'Driver', desc: 'Deliveries' },
+                                        { role: 'MERCHANT', icon: 'store', label: 'Merchant', desc: 'Store & Menu' },
+                                        { role: 'CUSTOMER', icon: 'shopping-bag', label: 'Customer', desc: 'Order Food' },
+                                        { role: 'ADMIN', icon: 'shield', label: 'Admin', desc: 'Platform' }
+                                    ].map(item => (
+                                        <button
+                                            key={item.role}
+                                            type="button"
+                                            onClick={() => setSelectedRole(item.role)}
+                                            className={`p-2.5 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-1 ${selectedRole === item.role ? 'bg-forest-500 text-white border-forest-600 shadow-md ring-2 ring-forest-400/30 font-extrabold' : 'bg-cream-50 text-ink-800 border-sage-200 hover:bg-sage-100'}`}
+                                        >
+                                            <i data-lucide={item.icon} className="w-4 h-4"></i>
+                                            <span className="text-xs font-bold leading-none">{item.label}</span>
+                                            <span className={`text-[9px] ${selectedRole === item.role ? 'text-mint-100' : 'text-ink-400'}`}>{item.desc}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-sage-100 space-y-3">
+                                <label className="block text-xs font-bold text-ink-800">
+                                    Step 2: Personal Details (US-001)
+                                </label>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Full Name *</label>
+                                        <input
+                                            required
+                                            value={regName}
+                                            onChange={e => setRegName(e.target.value)}
+                                            placeholder="e.g. Dara Chan"
+                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Phone Number *</label>
+                                        <input
+                                            required
+                                            value={regPhone}
+                                            onChange={e => setRegPhone(e.target.value)}
+                                            placeholder="+855 88 123 456"
+                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Email Address *</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            value={regEmail}
+                                            onChange={e => setRegEmail(e.target.value)}
+                                            placeholder="driver@example.com"
+                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Password *</label>
+                                        <input
+                                            type="password"
+                                            required
+                                            value={regPassword}
+                                            onChange={e => setRegPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {selectedRole === 'DRIVER' && (
+                                <div className="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200 space-y-2.5 animate-fadeIn">
+                                    <div className="flex items-center gap-2 text-amber-900 font-extrabold text-xs">
+                                        <i data-lucide="bike" className="w-4 h-4 text-amber-700"></i>
+                                        Driver Fleet Onboarding (US-002)
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-ink-700 mb-0.5">Vehicle Type</label>
+                                            <select
+                                                value={vehicleType}
+                                                onChange={e => setVehicleType(e.target.value)}
+                                                className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
+                                            >
+                                                <option value="Motorbike">🛵 Motorbike / Scooter</option>
+                                                <option value="Bicycle">🚲 Eco Bicycle</option>
+                                                <option value="Electric Scooter">⚡ Electric Scooter</option>
+                                                <option value="Car">🚗 Express Car</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-ink-700 mb-0.5">Plate Number / Hub</label>
+                                            <input
+                                                value={plateNumber}
+                                                onChange={e => setPlateNumber(e.target.value)}
+                                                placeholder="PP 1AB-8899"
+                                                className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedRole === 'MERCHANT' && (
+                                <div className="p-3.5 bg-mint-50/70 rounded-2xl border border-forest-200 space-y-2.5 animate-fadeIn">
+                                    <div className="flex items-center gap-2 text-forest-900 font-extrabold text-xs">
+                                        <i data-lucide="store" className="w-4 h-4 text-forest-700"></i>
+                                        Merchant Storefront Setup (US-002)
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <input
+                                            required
+                                            value={restaurantName}
+                                            onChange={e => setRestaurantName(e.target.value)}
+                                            placeholder="Restaurant Name"
+                                            className="w-full bg-white border border-forest-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
+                                        />
+                                        <input
+                                            required
+                                            value={cuisineType}
+                                            onChange={e => setCuisineType(e.target.value)}
+                                            placeholder="Cuisine Type"
+                                            className="w-full bg-white border border-forest-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="pt-2 flex items-center justify-end gap-2">
+                                <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-sage-100 hover:bg-sage-200 font-bold text-xs text-ink-700">
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="px-6 py-2 rounded-xl bg-forest-500 hover:bg-forest-600 font-extrabold text-xs text-white shadow-md transition flex items-center gap-1.5 disabled:opacity-50"
+                                >
+                                    {loading ? 'Creating Account...' : `Register as ${selectedRole}`}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
+                    {mode === 'login' && (
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-ink-700 mb-1">Email Address *</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={loginEmail}
+                                        onChange={e => setLoginEmail(e.target.value)}
+                                        placeholder="driver@example.com"
+                                        className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-ink-700 mb-1">Password *</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={loginPassword}
+                                        onChange={e => setLoginPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full py-2.5 rounded-2xl bg-forest-500 hover:bg-forest-600 font-extrabold text-xs text-white shadow-md transition disabled:opacity-50"
+                            >
+                                {loading ? 'Authenticating...' : 'Sign In with JWT'}
+                            </button>
+
+                            <div className="pt-3 border-t border-sage-100 space-y-2">
+                                <label className="block text-[11px] font-bold text-ink-500 uppercase tracking-wider">
+                                    ⚡ Quick 1-Click Demo Accounts:
+                                </label>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => onSuccessLogin({ name: "Dara Driver", email: "driver@example.com", role: "DRIVER", token: "jwt_dara" })}
+                                        className="p-2 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-left font-bold text-amber-900"
+                                    >
+                                        🛵 Dara (Driver)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onSuccessLogin({ name: "Bopha Merchant", email: "merchant@example.com", role: "MERCHANT", token: "jwt_bopha" })}
+                                        className="p-2 rounded-xl bg-mint-50 border border-mint-200 hover:bg-mint-100 text-left font-bold text-forest-900"
+                                    >
+                                        👨‍🍳 Bopha (Merchant)
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    )}
+                </div>
             </div>
+        );
+    }
+
+    function NavItem({ id, icon, label, badge, active, onClick }) {
+        const isActive = active === id;
+        return (
+            <button onClick={() => onClick(id)} className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${isActive ? 'bg-forest-500 text-white shadow-md font-extrabold' : 'text-mint-50/70 hover:text-white hover:bg-white/5'}`}>
+                <div className="flex items-center gap-3">
+                    <i data-lucide={icon} className="w-4 h-4"></i>
+                    <span>{label}</span>
+                </div>
+                {badge !== undefined && badge > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-ink-950 text-mint-300' : 'bg-white/10 text-white/80'}`}>{badge}</span>
+                )}
+            </button>
         );
     }
 

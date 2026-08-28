@@ -1,5 +1,6 @@
 package com.foodeats.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,6 +13,7 @@ public class Merchant {
 
     @ManyToOne
     @JoinColumn(name = "owner_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password"})
     private User owner;
 
     @Column(nullable = false)
@@ -21,11 +23,17 @@ public class Merchant {
     private String description;
 
     private String imageUrl;
-    private Double rating = 4.5;
+    private String bannerUrl;
+    private String phone;
+    private String cuisineType = "Various";
+    private String openingHours = "08:00 AM - 10:00 PM";
+    private Double rating = 4.8;
     private Double deliveryFee = 1.50;
     private Integer deliveryTimeMins = 25;
     private Boolean isOpen = true;
+    private String status = "Active"; // "Active", "Inactive"
     private String address;
+    private String city = "Phnom Penh";
 
     public Merchant() {}
 
@@ -34,10 +42,11 @@ public class Merchant {
         this.name = name;
         this.description = description;
         this.imageUrl = imageUrl;
-        this.rating = rating;
-        this.deliveryFee = deliveryFee;
-        this.deliveryTimeMins = deliveryTimeMins;
-        this.isOpen = isOpen;
+        this.rating = rating != null ? rating : 4.8;
+        this.deliveryFee = deliveryFee != null ? deliveryFee : 1.50;
+        this.deliveryTimeMins = deliveryTimeMins != null ? deliveryTimeMins : 25;
+        this.isOpen = isOpen != null ? isOpen : true;
+        this.status = "Active";
         this.address = address;
     }
 
@@ -56,6 +65,18 @@ public class Merchant {
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
+    public String getBannerUrl() { return bannerUrl; }
+    public void setBannerUrl(String bannerUrl) { this.bannerUrl = bannerUrl; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getCuisineType() { return cuisineType; }
+    public void setCuisineType(String cuisineType) { this.cuisineType = cuisineType; }
+
+    public String getOpeningHours() { return openingHours; }
+    public void setOpeningHours(String openingHours) { this.openingHours = openingHours; }
+
     public Double getRating() { return rating; }
     public void setRating(Double rating) { this.rating = rating; }
 
@@ -70,4 +91,10 @@ public class Merchant {
 
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+
+    public String getStatus() { return status != null ? status : "Active"; }
+    public void setStatus(String status) { this.status = status; }
 }

@@ -1,338 +1,1750 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50">
+<html lang="en" class="h-full bg-cream-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodEats - Merchant Kitchen & Menu Portal</title>
+    <title>FoodEats - Merchant Kitchen & Menu Builder (Sprint 2)</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        forest: { 800: '#114b5f', 900: '#0d3b4b', 950: '#082530' },
-                        mint: { 50: '#f4faf6', 100: '#e1f5e8', 400: '#88d498', 500: '#1a936f', 600: '#157a5c', 700: '#114b5f' },
-                        amber: { 500: '#1a936f', 600: '#114b5f' },
-                        teal: { 950: '#082530', 900: '#114b5f', 800: '#155d76', 700: '#1a936f', 600: '#22ad83', 500: '#88d498' },
-                        sage: { 100: '#f3e9d2', 200: '#c6dabf', 300: '#a8c69f' },
-                        cream: { 50: '#fcfaf6', 100: '#f3e9d2', 200: '#e8dcbd' }
+                        ink: {
+                            50: '#eef4f5', 100: '#d7e6e9', 200: '#adc9cf', 300: '#7ea9b3',
+                            400: '#4c8593', 500: '#2c6575', 600: '#1c5164', 700: '#16455a',
+                            800: '#114b5f', 900: '#0d3b4b', 950: '#082530'
+                        },
+                        forest: {
+                            50: '#eefaf5', 100: '#d3f2e3', 200: '#a7e5c8', 300: '#72d1a8',
+                            400: '#3fb686', 500: '#1a936f', 600: '#157a5c', 700: '#12634c',
+                            800: '#114f3f', 900: '#0f4235', 950: '#08251e'
+                        },
+                        mint: {
+                            50: '#f4faf6', 100: '#e1f5e8', 200: '#c3ebd2', 300: '#a2e0b9',
+                            400: '#88d498', 500: '#63bf79', 600: '#47a25e', 700: '#38814c',
+                            800: '#2f673f', 900: '#295536'
+                        },
+                        sage: {
+                            50: '#f7faf5', 100: '#eef3e9', 200: '#dde9d4', 300: '#c6dabf',
+                            400: '#aec9a4', 500: '#93b487', 600: '#75986a', 700: '#5c7a54',
+                            800: '#4b6345', 900: '#3f523a'
+                        },
+                        cream: {
+                            50: '#fdfbf7', 100: '#f8f2e6', 200: '#f3e9d2', 300: '#e9d8b4',
+                            400: '#dcc48f', 500: '#ceaf6c', 600: '#b5924e', 700: '#927540'
+                        },
+                        rust: { 500: '#b4543d', 600: '#96422f', 900: '#3d1a13' }
                     },
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Fraunces', 'serif']
+                    }
                 }
             }
         }
     </script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-display { font-family: 'Fraunces', serif; font-feature-settings: 'ss01'; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8f2e6; }
+        ::-webkit-scrollbar-thumb { background: #c6dabf; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #aec9a4; }
+        *:focus-visible { outline: 2px solid #1a936f; outline-offset: 2px; }
+    </style>
 </head>
-<body class="h-screen w-screen m-0 p-0 text-slate-800 bg-[#f8fafc] overflow-hidden antialiased">
-<div id="root" class="w-full h-full overflow-hidden flex flex-col"></div>
+<body class="h-screen w-screen m-0 p-0 text-ink-900 bg-cream-50 overflow-hidden antialiased">
+<div id="root" class="w-full h-full overflow-hidden flex flex-col md:flex-row items-center justify-center">
+    <div class="text-center p-8 bg-white/80 backdrop-blur rounded-3xl border border-sage-200 shadow-xl max-w-sm">
+        <div class="w-12 h-12 border-4 border-forest-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <h2 class="font-display font-bold text-xl text-ink-950 mb-1">Loading Merchant Portal...</h2>
+        <p class="text-xs text-ink-500 font-semibold">Sprint 2: Storefront & Menu Builder</p>
+    </div>
+</div>
 
 <script type="text/babel">
     const { useState, useEffect } = React;
 
-    const DEFAULT_STORE = {
-        id: 1,
-        name: "Zando Burger & Grill",
-        category: "Gourmet American",
-        ownerEmail: "merchant@example.com",
-        address: "Street 271, Phnom Penh",
-        deliveryFee: 1.50,
-        deliveryTimeMins: 20,
-        isOpen: true,
-        imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80",
-        menu: [
-            { id: 101, name: "Double Truffle Smash Burger", category: "Burgers", price: 6.50, description: "Two 100% Angus patties, black truffle mayo", imageUrl: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&auto=format&fit=crop&q=80", isAvailable: true },
-            { id: 102, name: "Crispy Bacon Stack", category: "Burgers", price: 7.20, description: "Applewood bacon, sharp cheddar", imageUrl: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=400&auto=format&fit=crop&q=80", isAvailable: true },
-            { id: 103, name: "Garlic Parmesan Waffle Fries", category: "Sides", price: 2.80, description: "Crispy waffle fries tossed in roasted garlic", imageUrl: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&auto=format&fit=crop&q=80", isAvailable: false }
-        ]
-    };
+    const API_BASE = window.location.origin.includes('http') ? window.location.origin : 'http://localhost:8080';
+
+    const INITIAL_STORES = [
+        {
+            id: 1,
+            name: "Zando Burger & Grill",
+            cuisineType: "Gourmet American",
+            description: "Juicy artisan smash burgers, crispy truffle fries, and premium thick milkshakes crafted daily.",
+            address: "Street 271, Sangkat Phsar Doeum Thkov, Phnom Penh",
+            city: "Phnom Penh",
+            phone: "+855 23 888 999",
+            openingHours: "10:00 AM - 10:30 PM",
+            rating: 4.9,
+            deliveryFee: 1.50,
+            deliveryTimeMins: 20,
+            isOpen: true,
+            imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80",
+            bannerUrl: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=1200&auto=format&fit=crop&q=80"
+        },
+        {
+            id: 2,
+            name: "Sakura Sushi & Ramen Bar",
+            cuisineType: "Japanese Artisan",
+            description: "Authentic Tokyo-style tonkotsu ramen with 18-hour rich broth, fresh sashimi platters, and specialty dragon rolls.",
+            address: "Monivong Blvd, Boeung Keng Kang 1, Phnom Penh",
+            city: "Phnom Penh",
+            phone: "+855 23 777 666",
+            openingHours: "11:00 AM - 11:00 PM",
+            rating: 4.8,
+            deliveryFee: 2.00,
+            deliveryTimeMins: 25,
+            isOpen: true,
+            imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&auto=format&fit=crop&q=80",
+            bannerUrl: "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=1200&auto=format&fit=crop&q=80"
+        },
+        {
+            id: 3,
+            name: "Khmer Coffee & Patisserie",
+            cuisineType: "Café & Bakery",
+            description: "Traditional slow-drip Mondulkiri iced coffee, French butter croissants, and fresh coconut pandan waffles.",
+            address: "Norodom Blvd, Daun Penh, Phnom Penh",
+            city: "Phnom Penh",
+            phone: "+855 23 555 444",
+            openingHours: "07:00 AM - 09:00 PM",
+            rating: 4.9,
+            deliveryFee: 1.00,
+            deliveryTimeMins: 15,
+            isOpen: true,
+            imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80",
+            bannerUrl: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&auto=format&fit=crop&q=80"
+        }
+    ];
+
+    const INITIAL_CATEGORIES = [
+        { id: 1, merchantId: 1, name: "Signature Burgers", displayOrder: 1 },
+        { id: 2, merchantId: 1, name: "Artisan Sides", displayOrder: 2 },
+        { id: 3, merchantId: 1, name: "Craft Beverages", displayOrder: 3 }
+    ];
+
+    const INITIAL_ITEMS = [
+        {
+            id: 101,
+            categoryId: 1,
+            categoryName: "Signature Burgers",
+            name: "Double Truffle Smash Burger",
+            price: 7.25,
+            description: "Double black angus beef patties, aged white cheddar, sautéed portobello, and black truffle aioli on a toasted brioche bun.",
+            imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80",
+            isAvailable: true,
+            prepTimeMinutes: 15,
+            dietaryTag: "Chef Special",
+            popularScore: 99,
+            options: [
+                { id: 1, optionGroup: "Patty Size", optionName: "Double 150g (Standard)", priceAdjustment: 0.00 },
+                { id: 2, optionGroup: "Patty Size", optionName: "Triple Monster 225g", priceAdjustment: 2.25 },
+                { id: 3, optionGroup: "Add-Ons", optionName: "Extra Aged Cheddar", priceAdjustment: 0.75 },
+                { id: 4, optionGroup: "Add-Ons", optionName: "Smoked Applewood Bacon", priceAdjustment: 1.25 }
+            ]
+        },
+        {
+            id: 102,
+            categoryId: 1,
+            categoryName: "Signature Burgers",
+            name: "Spicy Nashville Crispy Chicken",
+            price: 5.75,
+            description: "Buttermilk-brined crispy chicken thigh coated with Nashville cayenne glaze, spicy pickled cucumbers, and house slaw.",
+            imageUrl: "https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?w=600&auto=format&fit=crop&q=80",
+            isAvailable: true,
+            prepTimeMinutes: 12,
+            dietaryTag: "Spicy",
+            popularScore: 94,
+            options: [
+                { id: 5, optionGroup: "Spice Level", optionName: "Mild Heat", priceAdjustment: 0.00 },
+                { id: 6, optionGroup: "Spice Level", optionName: "Hot & Crispy", priceAdjustment: 0.00 },
+                { id: 7, optionGroup: "Spice Level", optionName: "Extra Blazing Ghost Pepper", priceAdjustment: 0.50 }
+            ]
+        },
+        {
+            id: 103,
+            categoryId: 2,
+            categoryName: "Artisan Sides",
+            name: "Parmesan Truffle French Fries",
+            price: 2.95,
+            description: "Hand-cut Idaho potato fries tossed with white truffle oil, freshly grated Grana Padano parmesan, and chives.",
+            imageUrl: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=600&auto=format&fit=crop&q=80",
+            isAvailable: true,
+            prepTimeMinutes: 8,
+            dietaryTag: "Vegetarian",
+            popularScore: 88,
+            options: []
+        },
+        {
+            id: 104,
+            categoryId: 3,
+            categoryName: "Craft Beverages",
+            name: "Salted Caramel Vanilla Shake",
+            price: 3.50,
+            description: "Hand-spun Madagascar vanilla gelato with sea salt caramel ribbon and whipped cream.",
+            imageUrl: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&auto=format&fit=crop&q=80",
+            isAvailable: false,
+            prepTimeMinutes: 5,
+            dietaryTag: "Dessert",
+            popularScore: 82,
+            options: []
+        }
+    ];
 
     function MerchantApp() {
-        const [store, setStore] = useState(() => {
-            const merchants = JSON.parse(localStorage.getItem('foodeats_merchants'));
-            return merchants?.[0] || DEFAULT_STORE;
-        });
-
-        const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('foodeats_orders')) || [
-            { id: 101, customer: "Dominica Reed", merchantId: 1, items: [{ name: "Double Truffle Smash Burger", qty: 2, price: 6.50 }], totalAmount: 14.50, status: "PENDING", time: "5m ago", destination: "Building 42, St. 302, BKK1" }
-        ]);
-
-        const [activeTab, setActiveTab] = useState('menu'); // 'menu' | 'orders' | 'profile'
-        const [showAddModal, setShowAddModal] = useState(false);
-        const [dishName, setDishName] = useState('');
-        const [dishCat, setDishCat] = useState('Burgers');
-        const [dishPrice, setDishPrice] = useState('5.50');
-        const [dishDesc, setDishDesc] = useState('');
-        const [dishImage, setDishImage] = useState('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80');
+        const [activeTab, setActiveTab] = useState('menu'); // 'store', 'categories', 'menu', 'orders', 'earnings'
+        const [stores, setStores] = useState(INITIAL_STORES);
+        const [selectedStoreId, setSelectedStoreId] = useState(1);
+        const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+        const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('ALL');
+        const [menuItems, setMenuItems] = useState(INITIAL_ITEMS);
         const [toast, setToast] = useState(null);
 
-        const showToast = (msg) => {
-            setToast(msg);
-            setTimeout(() => setToast(null), 3000);
+        // Modals
+        const [showItemModal, setShowItemModal] = useState(false);
+        const [editingItem, setEditingItem] = useState(null);
+        const [showCategoryModal, setShowCategoryModal] = useState(false);
+        const [editingCategory, setEditingCategory] = useState(null);
+        const [showAuthModal, setShowAuthModal] = useState(false);
+
+        // Auth state (Allows all roles)
+        const [currentUser, setCurrentUser] = useState({
+            name: "Bopha Merchant",
+            email: "merchant@example.com",
+            role: "MERCHANT",
+            token: "demo_jwt_token_merchant"
+        });
+
+        // Active Store
+        const currentStore = stores.find(s => s.id === selectedStoreId) || stores[0];
+
+        const showToast = (msg, type = 'success') => {
+            setToast({ msg, type });
+            setTimeout(() => setToast(null), 3200);
         };
 
         useEffect(() => {
-            lucide.createIcons();
-        }, [activeTab, store, orders, showAddModal, toast]);
+            fetchStoresFromBackend();
+            fetchCategoriesFromBackend(selectedStoreId);
+            fetchMenuFromBackend(selectedStoreId);
+        }, [selectedStoreId]);
 
-        const toggleAvailability = (itemId) => {
-            const updatedMenu = store.menu.map(item => item.id === itemId ? { ...item, isAvailable: !item.isAvailable } : item);
-            const updatedStore = { ...store, menu: updatedMenu };
-            setStore(updatedStore);
+        useEffect(() => {
+            if (window.lucide) window.lucide.createIcons();
+        }, [activeTab, stores, selectedStoreId, categories, menuItems, toast, showItemModal, showCategoryModal, showAuthModal]);
 
-            // Sync with all merchants in localStorage
-            const allMerchants = JSON.parse(localStorage.getItem('foodeats_merchants')) || [updatedStore];
-            const newAll = allMerchants.map(m => m.id === store.id ? updatedStore : m);
-            localStorage.setItem('foodeats_merchants', JSON.stringify(newAll));
-            showToast("Item inventory status updated!");
+        const handleLogout = () => {
+            localStorage.removeItem('foodeats_auth_token');
+            localStorage.removeItem('foodeats_auth_user');
+            window.location.href = 'index.html';
         };
 
-        const handleAddDish = (e) => {
+        // ==========================================
+        // BACKEND REST API CALLS
+        // ==========================================
+        const fetchStoresFromBackend = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/merchants`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) setStores(data);
+                }
+            } catch (err) {
+                console.log("Using cached stores data", err);
+            }
+        };
+
+        const fetchCategoriesFromBackend = async (merchantId) => {
+            try {
+                const url = merchantId ? `${API_BASE}/api/categories?merchantId=${merchantId}` : `${API_BASE}/api/categories`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && Array.isArray(data)) {
+                        setCategories(data);
+                    }
+                }
+            } catch (err) {
+                console.log("Using cached categories data", err);
+            }
+        };
+
+        const fetchMenuFromBackend = async (merchantId) => {
+            try {
+                const res = await fetch(`${API_BASE}/api/menu?merchantId=${merchantId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) setMenuItems(data);
+                }
+            } catch (err) {
+                console.log("Using cached menu data", err);
+            }
+        };
+
+        // US-005: Store Open/Closed Toggle
+        const toggleStoreStatus = async () => {
+            const nextStatus = !currentStore.isOpen;
+            try {
+                await fetch(`${API_BASE}/api/merchants/${currentStore.id}/status?isOpen=${nextStatus}`, { method: 'PATCH' });
+            } catch (e) {}
+
+            const updatedStores = stores.map(s => s.id === currentStore.id ? { ...s, isOpen: nextStatus } : s);
+            setStores(updatedStores);
+            showToast(nextStatus ? `🟢 ${currentStore.name} is now OPEN to customer orders!` : `🔴 ${currentStore.name} is now CLOSED.`);
+        };
+
+        // US-005: Update Store Profile
+        const handleSaveStoreProfile = async (e) => {
             e.preventDefault();
-            const newDish = {
-                id: Date.now(),
-                name: dishName,
-                category: dishCat,
-                price: parseFloat(dishPrice) || 5.0,
-                description: dishDesc || "Freshly cooked to perfection",
-                imageUrl: dishImage,
-                isAvailable: true
+            const form = e.target;
+            const updated = {
+                ...currentStore,
+                name: form.storeName.value,
+                cuisineType: form.cuisineType.value,
+                description: form.description.value,
+                address: form.address.value,
+                phone: form.phone.value,
+                openingHours: form.openingHours.value,
+                deliveryFee: parseFloat(form.deliveryFee.value) || 1.50,
+                deliveryTimeMins: parseInt(form.deliveryTimeMins.value) || 20,
+                imageUrl: form.imageUrl.value,
+                bannerUrl: form.bannerUrl.value
             };
 
-            const updatedStore = { ...store, menu: [newDish, ...(store.menu || [])] };
-            setStore(updatedStore);
+            try {
+                await fetch(`${API_BASE}/api/merchants/${currentStore.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updated)
+                });
+            } catch (e) {}
 
-            const allMerchants = JSON.parse(localStorage.getItem('foodeats_merchants')) || [updatedStore];
-            const newAll = allMerchants.map(m => m.id === store.id ? updatedStore : m);
-            localStorage.setItem('foodeats_merchants', JSON.stringify(newAll));
-
-            setShowAddModal(false);
-            setDishName('');
-            showToast(`Added "${dishName}" to store menu!`);
+            setStores(stores.map(s => s.id === currentStore.id ? updated : s));
+            showToast("Store profile & branding successfully updated!");
         };
 
-        const updateOrderStatus = (orderId, newStatus) => {
-            const updated = orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
-            setOrders(updated);
-            localStorage.setItem('foodeats_orders', JSON.stringify(updated));
-            showToast(`Order #${orderId} marked as ${newStatus}!`);
+        // US-007: Inventory Availability Toggle
+        const toggleItemAvailability = async (item) => {
+            const nextState = !item.isAvailable;
+            try {
+                await fetch(`${API_BASE}/api/menu/${item.id}/availability?isAvailable=${nextState}`, { method: 'PATCH' });
+            } catch (e) {}
+
+            setMenuItems(menuItems.map(m => m.id === item.id ? { ...m, isAvailable: nextState } : m));
+            showToast(nextState ? `"${item.name}" is now marked IN STOCK` : `"${item.name}" is now marked OUT OF STOCK / SOLD OUT`, nextState ? 'success' : 'warn');
         };
 
-        const kitchenOrders = orders.filter(o => o.merchantId === store.id || !o.merchantId);
-        const pendingTickets = kitchenOrders.filter(o => o.status === 'PENDING').length;
+        // US-007 & US-008: Save / Add Menu Item with Options
+        const handleSaveMenuItem = async (itemData) => {
+            if (editingItem) {
+                // Update
+                try {
+                    await fetch(`${API_BASE}/api/menu/${editingItem.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(itemData)
+                    });
+                } catch (e) {}
+
+                setMenuItems(menuItems.map(m => m.id === editingItem.id ? { ...m, ...itemData } : m));
+                showToast(`Updated "${itemData.name}" successfully!`);
+            } else {
+                // Create
+                const newItem = {
+                    ...itemData,
+                    id: Date.now(),
+                    merchantId: currentStore.id,
+                    isAvailable: true
+                };
+
+                try {
+                    const res = await fetch(`${API_BASE}/api/menu`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newItem)
+                    });
+                    if (res.ok) {
+                        const saved = await res.json();
+                        if (saved && saved.id) newItem.id = saved.id;
+                    }
+                } catch (e) {}
+
+                setMenuItems([newItem, ...menuItems]);
+                showToast(`Created new dish "${itemData.name}" with customization options!`);
+            }
+            setShowItemModal(false);
+            setEditingItem(null);
+        };
+
+        const handleDeleteMenuItem = async (itemId) => {
+            if (!confirm("Are you sure you want to delete this menu item?")) return;
+            try {
+                await fetch(`${API_BASE}/api/menu/${itemId}`, { method: 'DELETE' });
+            } catch (e) {}
+            setMenuItems(menuItems.filter(m => m.id !== itemId));
+            showToast("Menu dish deleted from catalog.");
+        };
+
+        // US-006: Category Management
+        const handleSaveCategory = async (name, displayOrder) => {
+            const storeId = currentStore?.id || 1;
+            const parsedOrder = parseInt(displayOrder) || (categories.length + 1);
+
+            if (editingCategory) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/categories/${editingCategory.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: name.trim(), displayOrder: parsedOrder, merchantId: storeId })
+                    });
+                    if (res.ok) {
+                        const updated = await res.json();
+                        setCategories(categories.map(c => c.id === editingCategory.id ? { ...c, ...updated, name: updated.name || name, displayOrder: updated.displayOrder || parsedOrder } : c));
+                        showToast(`Category "${name}" updated in database!`);
+                        fetchCategoriesFromBackend(storeId);
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        showToast(err.message || "Failed to update category in DB", "warn");
+                    }
+                } catch (e) {
+                    console.error("Category update network error:", e);
+                    setCategories(categories.map(c => c.id === editingCategory.id ? { ...c, name, displayOrder: parsedOrder } : c));
+                    showToast(`Category "${name}" updated locally.`);
+                }
+            } else {
+                const payload = {
+                    merchantId: storeId,
+                    name: name.trim(),
+                    displayOrder: parsedOrder
+                };
+
+                try {
+                    const res = await fetch(`${API_BASE}/api/categories`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                        const saved = await res.json();
+                        setCategories([...categories, saved]);
+                        showToast(`✅ Food category "${name}" saved to database!`);
+                        fetchCategoriesFromBackend(storeId);
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        showToast(err.message || "Failed to save category to DB", "warn");
+                        setCategories([...categories, { id: Date.now(), ...payload }]);
+                    }
+                } catch (e) {
+                    console.error("Category save error:", e);
+                    setCategories([...categories, { id: Date.now(), ...payload }]);
+                    showToast(`Category "${name}" added locally.`);
+                }
+            }
+            setShowCategoryModal(false);
+            setEditingCategory(null);
+        };
+
+        const handleDeleteCategory = async (catId) => {
+            if (!confirm("Are you sure you want to delete this category? Any associated menu items will be deleted or unassigned.")) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/categories/${catId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast("Category deleted from database.");
+                }
+            } catch (e) {
+                console.error("Delete category error:", e);
+            }
+            setCategories(categories.filter(c => c.id !== catId));
+            if (currentStore?.id) {
+                fetchMenuFromBackend(currentStore.id);
+            }
+        };
+
+        // Filtered menu items
+        const filteredItems = selectedCategoryFilter === 'ALL'
+            ? menuItems
+            : menuItems.filter(m => {
+                const cat = categories.find(c => c.id === m.categoryId);
+                return cat ? cat.name === selectedCategoryFilter : m.categoryName === selectedCategoryFilter;
+            });
 
         return (
-            <div class="w-full h-full flex flex-col bg-[#f8fafc]">
+            <div className="flex flex-col md:flex-row w-full h-full overflow-hidden bg-cream-50">
+                {/* Toast Notification */}
                 {toast && (
-                    <div class="fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl bg-forest-950 text-mint-400 font-bold text-xs shadow-xl border border-forest-800 flex items-center gap-2">
-                        <i data-lucide="check-circle" class="w-4 h-4 text-mint-400"></i> {toast}
+                    <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border text-sm font-semibold bg-ink-950 text-mint-300 border-forest-700 animate-bounce">
+                        <i data-lucide={toast.type === 'warn' ? 'alert-triangle' : 'check-circle-2'} className="w-5 h-5 text-mint-400"></i>
+                        <span>{toast.msg}</span>
                     </div>
                 )}
 
-                {/* Header */}
-                <header class="bg-forest-950 text-white px-6 py-3.5 flex items-center justify-between border-b border-forest-900 shrink-0">
-                    <div class="flex items-center gap-6">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center text-forest-950 font-black shadow-md">
-                                <i data-lucide="store" class="w-5 h-5"></i>
-                            </div>
-                            <div>
-                                <h1 class="font-black text-base tracking-tight text-white leading-tight">FoodEats</h1>
-                                <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Merchant Portal (Sprint 2 & 4)</span>
-                            </div>
-                        </div>
-
-                        <nav class="hidden md:flex items-center gap-2 text-xs font-bold">
-                            <button onClick={() => setActiveTab('menu')} class={`px-3 py-1.5 rounded-xl transition ${activeTab === 'menu' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                Menu & Dishes ({store.menu?.length || 0})
-                            </button>
-                            <button onClick={() => setActiveTab('orders')} class={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${activeTab === 'orders' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                <span>Kitchen Tickets</span>
-                                {pendingTickets > 0 && <span class="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] animate-pulse">{pendingTickets}</span>}
-                            </button>
-                            <button onClick={() => setActiveTab('profile')} class={`px-3 py-1.5 rounded-xl transition ${activeTab === 'profile' ? 'bg-amber-500 text-forest-950 font-black' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                Store Details
-                            </button>
-                        </nav>
-                    </div>
-
-                    {/* Right Portal Switcher / Links */}
-                    <div class="flex items-center gap-3">
-                        <div class="hidden lg:flex items-center gap-1 bg-white/10 p-1 rounded-xl text-[11px] font-bold text-white/80">
-                            <span class="px-2 text-white/50">Routes:</span>
-                            <a href="/main/customer" class="px-2 py-1 hover:bg-white/10 rounded-lg text-mint-300">🛒 /main/customer</a>
-                            <a href="/main/merchant" class="px-2 py-1 bg-amber-500/20 text-amber-300 rounded-lg">🏪 Merchant</a>
-                            <a href="/main/driver" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🛵 /main/driver</a>
-                            <a href="/main/admin" class="px-2 py-1 hover:bg-white/10 rounded-lg text-sky-300">⚙️ /main/admin</a>
-                        </div>
-
-                        <div class="flex items-center gap-2 pl-3 border-l border-white/15 text-xs font-bold text-white">
-                            <span class="text-amber-400">🏪 {store.name}</span>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Main Workspace */}
-                <main class="flex-1 overflow-y-auto p-6 space-y-6">
-                    {activeTab === 'menu' ? (
-                        <div class="space-y-6">
-                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <div>
-                                    <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-wider">Storefront Menu Builder (US-007 & US-008)</span>
-                                    <h2 class="text-2xl font-black mt-2">{store.name} Menu</h2>
-                                    <p class="text-xs text-white/70 mt-1">Manage food items, prices, high-res photos, and real-time inventory toggles.</p>
+                {/* Sidebar Navigation */}
+                <aside className="w-full md:w-72 bg-gradient-to-b from-ink-950 via-ink-900 to-ink-950 text-white flex flex-col justify-between p-5 md:p-6 shrink-0 border-r border-ink-800/60 overflow-y-auto">
+                    <div>
+                        {/* Header Branding */}
+                        <div className="flex items-center justify-between pb-5 border-b border-white/10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-forest-500 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-forest-900/40">
+                                    <i data-lucide="chef-hat" className="w-5 h-5"></i>
                                 </div>
-                                <button onClick={() => setShowAddModal(true)} class="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-forest-950 font-black text-xs flex items-center gap-2 shadow-md">
-                                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Add New Dish
-                                </button>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {store.menu?.map(item => (
-                                    <div key={item.id} class="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-sm flex flex-col justify-between space-y-3">
-                                        <div>
-                                            <div class="relative rounded-2xl overflow-hidden mb-3">
-                                                <img src={item.imageUrl} class="w-full h-44 object-cover" />
-                                                <span class={`absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-[10px] font-black ${item.isAvailable ? 'bg-mint-500 text-forest-950' : 'bg-rose-500 text-white'}`}>
-                                                        {item.isAvailable ? '✓ In Stock' : '✕ Sold Out'}
-                                                    </span>
-                                            </div>
-                                            <div class="flex justify-between items-start">
-                                                <h4 class="font-extrabold text-slate-900 text-sm">{item.name}</h4>
-                                                <span class="font-black text-forest-900 text-sm">${item.price.toFixed(2)}</span>
-                                            </div>
-                                            <p class="text-xs text-slate-500 mt-1">{item.description}</p>
-                                            <span class="inline-block mt-2 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold">{item.category}</span>
-                                        </div>
-
-                                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                                            <span class="text-xs font-bold text-slate-600">Inventory Status:</span>
-                                            <button
-                                                onClick={() => toggleAvailability(item.id)}
-                                                class={`px-3 py-1.5 rounded-xl font-black text-xs transition ${
-                                                    item.isAvailable ? 'bg-rose-50 hover:bg-rose-100 text-rose-700' : 'bg-mint-50 hover:bg-mint-100 text-mint-700'
-                                                }`}
-                                            >
-                                                {item.isAvailable ? 'Toggle Sold Out' : 'Toggle In Stock'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                <div>
+                                    <h1 className="font-display font-bold text-lg text-white leading-none">Merchant Hub</h1>
+                                    <span className="text-[10px] font-bold text-mint-300 uppercase tracking-wider">Sprint 2: Store & Menu</span>
+                                </div>
                             </div>
                         </div>
-                    ) : activeTab === 'orders' ? (
-                        <div class="space-y-6">
-                            <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg">
-                                <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold uppercase">Kitchen Ticket Dispatch (US-016 & US-017)</span>
-                                <h2 class="text-2xl font-black mt-2">Incoming Customer Orders</h2>
-                                <p class="text-xs text-white/70 mt-1">Accept tickets to send them to preparation and trigger driver job broadcasts.</p>
-                            </div>
 
-                            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-                                {kitchenOrders.length === 0 ? (
-                                    <p class="text-xs text-slate-400 py-8 text-center">No active kitchen tickets for this restaurant.</p>
-                                ) : (
-                                    <div class="divide-y divide-slate-100">
-                                        {kitchenOrders.map(o => (
-                                            <div key={o.id} class="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                                <div>
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="font-black text-slate-900 text-sm">Order #{o.id}</span>
-                                                        <span class="text-xs text-slate-500">• Customer: <strong>{o.customer}</strong></span>
+                        {/* Multi-Role Quick Switch */}
+                        <div className="mt-4 p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 rounded-full bg-forest-500/30 border border-forest-400 flex items-center justify-center text-xs font-bold text-mint-300">
+                                    {currentUser.name[0]}
+                                </div>
+                                <div className="leading-tight">
+                                    <div className="text-xs font-bold text-white truncate w-28">{currentUser.name}</div>
+                                    <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-mint-400/20 text-mint-300 border border-mint-400/30 uppercase tracking-wider">
+                                        {currentUser.role}
+                                    </span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowAuthModal(true)}
+                                className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-bold text-mint-200 transition"
+                            >
+                                Switch Role
+                            </button>
+                        </div>
+
+                        {/* Active Restaurant Selector */}
+                        <div className="mt-4 mb-3">
+                            <label className="block text-[10px] font-bold tracking-wider text-mint-100/50 uppercase mb-1.5">
+                                Select Active Merchant Store:
+                            </label>
+                            <select
+                                value={selectedStoreId}
+                                onChange={e => setSelectedStoreId(parseInt(e.target.value))}
+                                className="w-full bg-white/10 border border-white/20 text-white rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:bg-ink-900 cursor-pointer"
+                            >
+                                {stores.map(s => (
+                                    <option key={s.id} value={s.id} className="bg-ink-950 text-white font-medium">
+                                        {s.name} ({s.isOpen ? '🟢 Open' : '🔴 Closed'})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Nav Items */}
+                        <div className="mt-4 mb-2 px-3 text-[10px] font-bold tracking-wider text-mint-100/40 uppercase">
+                            Storefront & Menu Suite
+                        </div>
+                        <nav className="space-y-1">
+                            <NavItem id="menu" icon="book-open" label="Menu Builder & Stock" badge={menuItems.length} active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="categories" icon="layers" label="Categories Manager" badge={categories.length} active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="store" icon="store" label="Storefront & Branding" active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="orders" icon="bell-ring" label="Kitchen Order Tickets" active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="earnings" icon="trending-up" label="Sales & Settlements" active={activeTab} onClick={setActiveTab} />
+                        </nav>
+
+                        {/* Switch Portals */}
+                        <div className="mt-6 mb-2 px-3 text-[10px] font-bold tracking-wider text-mint-100/40 uppercase">
+                            Switch Role Portals
+                        </div>
+                        <div className="space-y-1 text-xs">
+                            <a href="customer.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="shopping-bag" className="w-4 h-4 text-mint-300"></i> Customer Portal
+                            </a>
+                            <a href="driver.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="bike" className="w-4 h-4 text-mint-300"></i> Driver Dispatch
+                            </a>
+                            <a href="admin.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="shield-check" className="w-4 h-4 text-mint-300"></i> Admin Hub
+                            </a>
+                            <a href="index.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="layout-grid" className="w-4 h-4 text-mint-300"></i> Platform Gateway
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Bottom Status Card */}
+                    <div className="pt-4 border-t border-white/10 space-y-2">
+                        <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10">
+                            <div className="flex items-center gap-2.5">
+                                <img src={currentStore.imageUrl} alt="Store" className="w-8 h-8 rounded-full object-cover ring-2 ring-forest-400/50" />
+                                <div>
+                                    <div className="text-xs font-bold text-white truncate w-24">{currentStore.name}</div>
+                                    <div className="text-[10px] text-mint-300 font-semibold">{currentStore.isOpen ? '🟢 Open for Orders' : '🔴 Closed'}</div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={toggleStoreStatus}
+                                className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold transition ${currentStore.isOpen ? 'bg-rust-900 text-cream-100 hover:bg-rust-600' : 'bg-forest-500 text-white hover:bg-forest-600'}`}
+                            >
+                                {currentStore.isOpen ? 'Close' : 'Open'}
+                            </button>
+                        </div>
+                        <button onClick={handleLogout} className="w-full py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-bold text-xs flex items-center justify-center gap-2 transition">
+                            <i data-lucide="log-out" className="w-4 h-4"></i> Sign Out to Customer View
+                        </button>
+                    </div>
+                </aside>
+
+                {/* Main Content Area */}
+                <main className="flex-1 bg-cream-50 overflow-y-auto flex flex-col">
+                    {/* Top Sticky Header */}
+                    <header className="px-6 py-4 bg-cream-50/90 backdrop-blur border-b border-sage-200 flex items-center justify-between sticky top-0 z-30">
+                        <div>
+                            <h2 className="font-display text-xl font-bold text-ink-950 tracking-tight flex items-center gap-2">
+                                {activeTab === 'menu' && 'Menu Catalog & Inventory Stock (US-007, US-008)'}
+                                {activeTab === 'categories' && 'Food Categories & Menu Hierarchy (US-006)'}
+                                {activeTab === 'store' && 'Merchant Storefront & Profile Setup (US-005)'}
+                                {activeTab === 'orders' && 'Live Kitchen Orders & Real-time Webhooks'}
+                                {activeTab === 'earnings' && 'Settlement & Revenue Analytics'}
+                            </h2>
+                            <p className="text-xs text-ink-600 font-medium">
+                                Active Store: <strong className="text-ink-900">{currentStore.name}</strong> • Cuisine: {currentStore.cuisineType}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowAuthModal(true)}
+                                className="px-3.5 py-2 rounded-2xl text-xs font-bold bg-white hover:bg-sage-100 text-ink-900 border border-sage-300 flex items-center gap-2 transition shadow-sm"
+                            >
+                                <i data-lucide="user-plus" className="w-4 h-4 text-forest-600"></i>
+                                <span>Register / Sign In</span>
+                                <span className="text-[10px] bg-mint-100 text-forest-800 px-2 py-0.5 rounded-full font-extrabold uppercase">
+                                    {currentUser.role}
+                                </span>
+                            </button>
+
+                            <button
+                                onClick={toggleStoreStatus}
+                                className={`px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition shadow-sm ${currentStore.isOpen ? 'bg-mint-100 text-forest-800 border border-mint-300 hover:bg-mint-200' : 'bg-rust-900 text-cream-100 hover:bg-rust-600'}`}
+                            >
+                                <span className={`w-2.5 h-2.5 rounded-full ${currentStore.isOpen ? 'bg-forest-500 animate-ping' : 'bg-rust-500'}`}></span>
+                                <span>{currentStore.isOpen ? 'Accepting Orders' : 'Store Currently Closed'}</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* Content Views */}
+                    <div className="p-6 flex-1 space-y-6">
+
+                        {/* ======================================================== */}
+                        {/* TAB 1: MENU BUILDER & INVENTORY (US-007 & US-008) */}
+                        {/* ======================================================== */}
+                        {activeTab === 'menu' && (
+                            <div className="space-y-5">
+                                {/* Action Bar & Filters */}
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-3xl border border-sage-200 shadow-sm">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-xs font-bold text-ink-500 mr-1">Categories:</span>
+                                        <button
+                                            onClick={() => setSelectedCategoryFilter('ALL')}
+                                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${selectedCategoryFilter === 'ALL' ? 'bg-forest-500 text-white' : 'bg-sage-100 text-ink-700 hover:bg-sage-200'}`}
+                                        >
+                                            All Items ({menuItems.length})
+                                        </button>
+                                        {categories.map(cat => (
+                                            <button
+                                                key={cat.id}
+                                                onClick={() => setSelectedCategoryFilter(cat.name)}
+                                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${selectedCategoryFilter === cat.name ? 'bg-forest-500 text-white' : 'bg-sage-100 text-ink-700 hover:bg-sage-200'}`}
+                                            >
+                                                {cat.name}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => { setEditingCategory(null); setShowCategoryModal(true); }}
+                                            className="px-3.5 py-2 bg-sage-100 hover:bg-sage-200 text-ink-800 font-bold text-xs rounded-2xl transition flex items-center gap-1.5"
+                                        >
+                                            <i data-lucide="folder-plus" className="w-4 h-4"></i> New Category
+                                        </button>
+                                        <button
+                                            onClick={() => { setEditingItem(null); setShowItemModal(true); }}
+                                            className="px-4 py-2 bg-forest-500 hover:bg-forest-600 text-white font-extrabold text-xs rounded-2xl shadow-sm transition flex items-center gap-1.5"
+                                        >
+                                            <i data-lucide="plus-circle" className="w-4 h-4"></i> Add New Menu Dish
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Menu Items Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                    {filteredItems.map(item => (
+                                        <div key={item.id} className="bg-white rounded-3xl border border-sage-200 p-5 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition">
+                                            <div>
+                                                {/* Image and Header */}
+                                                <div className="relative mb-3">
+                                                    <img
+                                                        src={item.imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600"}
+                                                        alt={item.name}
+                                                        className="w-full h-40 rounded-2xl object-cover"
+                                                    />
+                                                    <div className="absolute top-2.5 left-2.5 flex gap-1.5">
+                                                        <span className="text-[10px] font-extrabold text-forest-800 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full uppercase shadow-sm">
+                                                            {item.categoryName || (categories.find(c => c.id === item.categoryId)?.name || 'General')}
+                                                        </span>
+                                                        {item.dietaryTag && (
+                                                            <span className="text-[10px] font-extrabold text-amber-900 bg-amber-200/90 backdrop-blur px-2 py-0.5 rounded-full shadow-sm">
+                                                                {item.dietaryTag}
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <p class="text-xs text-slate-600 font-medium mt-1">
-                                                        Items: <strong>{o.items?.map(i => `${i.qty}x ${i.name}`).join(', ')}</strong>
-                                                    </p>
-                                                    <span class="text-[11px] text-slate-400">Total: ${parseFloat(o.totalAmount).toFixed(2)} • Destination: {o.destination}</span>
+                                                    <div className="absolute bottom-2.5 right-2.5 bg-ink-950/80 backdrop-blur text-white text-xs font-extrabold px-2.5 py-1 rounded-xl shadow">
+                                                        ⏱ {item.prepTimeMinutes || 15} mins
+                                                    </div>
                                                 </div>
 
-                                                <div class="flex items-center gap-2">
-                                                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold mr-2">
-                                                            Status: {o.status}
-                                                        </span>
+                                                <div className="flex justify-between items-start gap-2">
+                                                    <h3 className="font-bold text-ink-950 text-base leading-snug">{item.name}</h3>
+                                                    <span className="font-extrabold text-forest-700 text-base shrink-0">${item.price.toFixed(2)}</span>
+                                                </div>
 
-                                                    {o.status === 'PENDING' && (
-                                                        <>
-                                                            <button onClick={() => updateOrderStatus(o.id, 'ACCEPTED')} class="px-4 py-2 rounded-2xl bg-mint-500 hover:bg-mint-600 text-forest-950 font-black text-xs shadow-sm">
-                                                                ✓ Accept Order
-                                                            </button>
-                                                            <button onClick={() => updateOrderStatus(o.id, 'REJECTED')} class="px-4 py-2 rounded-2xl bg-rose-50 text-rose-700 font-bold text-xs hover:bg-rose-100">
-                                                                ✕ Reject
-                                                            </button>
-                                                        </>
+                                                <p className="text-xs text-ink-500 font-medium line-clamp-2 mt-1">{item.description}</p>
+
+                                                {/* Customization Options Pill List (US-008) */}
+                                                <div className="mt-3 pt-3 border-t border-sage-100">
+                                                    <div className="text-[10px] font-bold uppercase text-ink-400 tracking-wider mb-1.5 flex items-center justify-between">
+                                                        <span>Customization Options:</span>
+                                                        <span className="text-forest-700">{item.options?.length || 0} configured</span>
+                                                    </div>
+                                                    {item.options && item.options.length > 0 ? (
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {item.options.slice(0, 4).map((opt, idx) => (
+                                                                <span key={idx} className="text-[10px] font-semibold bg-sage-50 text-ink-700 border border-sage-200 px-2 py-0.5 rounded-lg">
+                                                                    {opt.optionName} {opt.priceAdjustment > 0 ? `(+$${opt.priceAdjustment.toFixed(2)})` : ''}
+                                                                </span>
+                                                            ))}
+                                                            {item.options.length > 4 && (
+                                                                <span className="text-[10px] font-bold text-ink-400 px-1 py-0.5">+{item.options.length - 4} more</span>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-[11px] text-ink-400 italic">No add-ons set yet</p>
                                                     )}
                                                 </div>
                                             </div>
-                                        ))}
+
+                                            {/* Action Footer */}
+                                            <div className="pt-3 border-t border-sage-100 flex items-center justify-between gap-2">
+                                                {/* Real-time Inventory Toggle (US-007) */}
+                                                <button
+                                                    onClick={() => toggleItemAvailability(item)}
+                                                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 ${item.isAvailable ? 'bg-mint-100 text-forest-800 hover:bg-rust-100 hover:text-rust-700' : 'bg-rust-100 text-rust-800 hover:bg-mint-100 hover:text-forest-800'}`}
+                                                >
+                                                    <span className={`w-2 h-2 rounded-full ${item.isAvailable ? 'bg-forest-500' : 'bg-rust-500'}`}></span>
+                                                    <span>{item.isAvailable ? 'In Stock' : 'Sold Out'}</span>
+                                                </button>
+
+                                                <div className="flex items-center gap-1.5">
+                                                    <button
+                                                        onClick={() => { setEditingItem(item); setShowItemModal(true); }}
+                                                        className="p-2 text-ink-600 hover:text-ink-950 bg-sage-50 hover:bg-sage-200 rounded-xl transition font-bold"
+                                                        title="Edit Dish & Customizations"
+                                                    >
+                                                        <i data-lucide="pencil" className="w-4 h-4"></i>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteMenuItem(item.id)}
+                                                        className="p-2 text-rust-600 hover:text-rust-800 bg-rust-50 hover:bg-rust-100 rounded-xl transition font-bold"
+                                                        title="Delete Dish"
+                                                    >
+                                                        <i data-lucide="trash-2" className="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ======================================================== */}
+                        {/* TAB 2: CATEGORIES MANAGEMENT (US-006) */}
+                        {/* ======================================================== */}
+                        {activeTab === 'categories' && (
+                            <div className="space-y-5 max-w-3xl">
+                                <div className="flex justify-between items-center bg-white p-5 rounded-3xl border border-sage-200 shadow-sm">
+                                    <div>
+                                        <h3 className="font-display text-lg font-bold text-ink-950">Store Menu Categories</h3>
+                                        <p className="text-xs text-ink-500">Group your menu items into structured sections for faster ordering.</p>
                                     </div>
-                                )}
+                                    <button
+                                        onClick={() => { setEditingCategory(null); setShowCategoryModal(true); }}
+                                        className="px-4 py-2 bg-forest-500 hover:bg-forest-600 text-white font-extrabold text-xs rounded-2xl shadow-sm transition flex items-center gap-1.5"
+                                    >
+                                        <i data-lucide="plus" className="w-4 h-4"></i> Add Category
+                                    </button>
+                                </div>
+
+                                <div className="bg-white rounded-3xl border border-sage-200 overflow-hidden shadow-sm divide-y divide-sage-100">
+                                    {categories.map((cat, idx) => {
+                                        const count = menuItems.filter(m => m.categoryId === cat.id || m.categoryName === cat.name).length;
+                                        return (
+                                            <div key={cat.id} className="p-4 flex items-center justify-between hover:bg-cream-50/50 transition">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="w-7 h-7 rounded-full bg-forest-50 text-forest-700 font-extrabold text-xs flex items-center justify-center border border-forest-200">
+                                                        {cat.displayOrder || (idx + 1)}
+                                                    </span>
+                                                    <div>
+                                                        <h4 className="font-bold text-ink-950 text-sm">{cat.name}</h4>
+                                                        <span className="text-xs text-ink-500 font-semibold">{count} menu dishes</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => { setEditingCategory(cat); setShowCategoryModal(true); }}
+                                                        className="px-3 py-1.5 rounded-xl bg-sage-100 hover:bg-sage-200 text-ink-800 text-xs font-bold transition flex items-center gap-1"
+                                                    >
+                                                        <i data-lucide="edit-2" className="w-3.5 h-3.5"></i> Rename
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteCategory(cat.id)}
+                                                        className="px-3 py-1.5 rounded-xl bg-rust-50 hover:bg-rust-100 text-rust-700 text-xs font-bold transition flex items-center gap-1"
+                                                    >
+                                                        <i data-lucide="trash-2" className="w-3.5 h-3.5"></i> Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm max-w-lg space-y-4 text-xs">
-                            <h3 class="font-black text-slate-900 text-base">Store Profile & Operating Settings</h3>
-                            <div>
-                                <label class="block font-bold text-slate-700 mb-1">Restaurant Name</label>
-                                <input type="text" value={store.name} onChange={e => setStore({...store, name: e.target.value})} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
+                        )}
+
+                        {/* ======================================================== */}
+                        {/* TAB 3: STORE PROFILE & BRANDING SETUP (US-005) */}
+                        {/* ======================================================== */}
+                        {activeTab === 'store' && (
+                            <form onSubmit={handleSaveStoreProfile} className="space-y-6 max-w-4xl">
+                                {/* Hero Preview Card */}
+                                <div className="relative rounded-3xl overflow-hidden border border-sage-200 shadow-md h-52 bg-ink-950">
+                                    <img src={currentStore.bannerUrl || currentStore.imageUrl} alt="Banner" className="w-full h-full object-cover opacity-80" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/40 to-transparent flex items-end p-6">
+                                        <div className="flex items-center gap-4">
+                                            <img src={currentStore.imageUrl} alt="Logo" className="w-16 h-16 rounded-2xl object-cover ring-4 ring-white shadow-xl" />
+                                            <div>
+                                                <h3 className="font-display text-2xl font-bold text-white leading-tight">{currentStore.name}</h3>
+                                                <p className="text-xs text-mint-200 font-semibold">{currentStore.cuisineType} • {currentStore.address}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white p-6 rounded-3xl border border-sage-200 shadow-sm text-xs">
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="block font-bold text-ink-800 mb-1">Restaurant Store Name</label>
+                                            <input name="storeName" defaultValue={currentStore.name} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                        </div>
+
+                                        <div>
+                                            <label className="block font-bold text-ink-800 mb-1">Cuisine / Category Style</label>
+                                            <input name="cuisineType" defaultValue={currentStore.cuisineType || "Gourmet Dining"} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                        </div>
+
+                                        <div>
+                                            <label className="block font-bold text-ink-800 mb-1">Street Address</label>
+                                            <input name="address" defaultValue={currentStore.address} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                        </div>
+
+                                        <div>
+                                            <label className="block font-bold text-ink-800 mb-1">Store Phone Contact</label>
+                                            <input name="phone" defaultValue={currentStore.phone || "+855 23 888 999"} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="block font-bold text-ink-800 mb-1">Operating Hours</label>
+                                            <input name="openingHours" defaultValue={currentStore.openingHours || "09:00 AM - 10:00 PM"} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block font-bold text-ink-800 mb-1">Delivery Fee ($)</label>
+                                                <input name="deliveryFee" type="number" step="0.10" defaultValue={currentStore.deliveryFee} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                            </div>
+                                            <div>
+                                                <label className="block font-bold text-ink-800 mb-1">Avg Cook Time (mins)</label>
+                                                <input name="deliveryTimeMins" type="number" defaultValue={currentStore.deliveryTimeMins} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block font-bold text-ink-800 mb-1">Store Avatar Image URL</label>
+                                            <input name="imageUrl" defaultValue={currentStore.imageUrl} className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-medium text-ink-900" />
+                                        </div>
+
+                                        <div>
+                                            <label className="block font-bold text-ink-800 mb-1">Hero Banner Image URL</label>
+                                            <input name="bannerUrl" defaultValue={currentStore.bannerUrl} className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-medium text-ink-900" />
+                                        </div>
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block font-bold text-ink-800 mb-1">Store Story & Bio Description</label>
+                                        <textarea name="description" rows="3" defaultValue={currentStore.description} className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-medium text-ink-900" />
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end">
+                                    <button type="submit" className="px-6 py-3 bg-forest-500 hover:bg-forest-600 text-white font-extrabold text-xs rounded-2xl shadow-md transition flex items-center gap-2">
+                                        <i data-lucide="save" className="w-4 h-4"></i> Save Storefront Changes (REST API)
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+
+                        {/* ======================================================== */}
+                        {/* TAB 4: ORDERS (Sprint 4 & 5 Integration Hook) */}
+                        {/* ======================================================== */}
+                        {activeTab === 'orders' && (
+                            <div className="space-y-4">
+                                <div className="p-4 bg-white rounded-3xl border border-sage-200 flex justify-between items-center shadow-sm">
+                                    <div>
+                                        <h3 className="font-display text-lg font-bold text-ink-950">Live Kitchen Tickets</h3>
+                                        <p className="text-xs text-ink-500">Orders automatically route here when customers checkout.</p>
+                                    </div>
+                                    <span className="text-xs font-extrabold text-forest-700 bg-mint-100 px-3 py-1 rounded-full border border-mint-200">
+                                        🟢 Spring Boot Webhook Listening
+                                    </span>
+                                </div>
+                                <div className="text-center py-12 bg-white rounded-3xl border border-sage-200 shadow-sm p-6">
+                                    <i data-lucide="clock" className="w-10 h-10 text-forest-500 mx-auto mb-2"></i>
+                                    <h4 className="font-bold text-ink-950">Kitchen Queue is Ready!</h4>
+                                    <p className="text-xs text-ink-500 max-w-sm mx-auto mt-1">Orders placed from the Customer Portal in Sprint 3 will immediately appear here for live kitchen prep.</p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block font-bold text-slate-700 mb-1">Cuisine Category</label>
-                                <input type="text" value={store.category} onChange={e => setStore({...store, category: e.target.value})} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
+                        )}
+
+                        {/* ======================================================== */}
+                        {/* TAB 5: EARNINGS */}
+                        {/* ======================================================== */}
+                        {activeTab === 'earnings' && (
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-ink-950 via-forest-950 to-ink-900 text-white shadow-xl space-y-4">
+                                <span className="px-3 py-1 rounded-full bg-mint-400/20 text-mint-300 text-xs font-bold border border-mint-400/30">
+                                    Sprint 2 Merchant Financials
+                                </span>
+                                <h3 className="font-display text-3xl font-bold text-white">$1,428.50</h3>
+                                <p className="text-xs text-mint-100/80">Total weekly settled earnings for <strong>{currentStore.name}</strong>.</p>
                             </div>
-                            <div>
-                                <label class="block font-bold text-slate-700 mb-1">Delivery Fee (USD)</label>
-                                <input type="number" value={store.deliveryFee} onChange={e => setStore({...store, deliveryFee: parseFloat(e.target.value) || 0})} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
-                            </div>
-                            <button onClick={() => showToast("Store profile saved successfully!")} class="px-5 py-2.5 bg-forest-950 text-mint-400 font-black text-xs rounded-2xl">
-                                Update Store Profile
-                            </button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </main>
 
-                {/* Add Dish Modal */}
-                {showAddModal && (
-                    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-black text-slate-900 text-base">Add Menu Item</h3>
-                                <button onClick={() => setShowAddModal(false)} class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+                {/* ======================================================== */}
+                {/* MODAL: ADD / EDIT MENU ITEM WITH OPTIONS (US-007, US-008) */}
+                {/* ======================================================== */}
+                {showItemModal && (
+                    <ItemFormModal
+                        item={editingItem}
+                        categories={categories}
+                        onClose={() => { setShowItemModal(false); setEditingItem(null); }}
+                        onSave={handleSaveMenuItem}
+                    />
+                )}
+
+                {/* ======================================================== */}
+                {/* MODAL: ADD / EDIT CATEGORY (US-006) */}
+                {/* ======================================================== */}
+                {showCategoryModal && (
+                    <div className="fixed inset-0 bg-ink-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-cream-50 rounded-3xl max-w-sm w-full p-6 border border-sage-200 shadow-2xl space-y-4">
+                            <div className="flex justify-between items-center pb-3 border-b border-sage-200">
+                                <h3 className="font-display text-lg font-bold text-ink-950">
+                                    {editingCategory ? 'Edit Category' : 'Create Food Category'}
+                                </h3>
+                                <button onClick={() => setShowCategoryModal(false)} className="text-ink-400 hover:text-ink-900 font-bold text-lg">✕</button>
                             </div>
-                            <form onSubmit={handleAddDish} class="space-y-3">
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                handleSaveCategory(e.target.catName.value, e.target.displayOrder.value);
+                            }} className="space-y-3 text-xs">
                                 <div>
-                                    <label class="block font-bold text-slate-700 mb-1">Dish Name</label>
-                                    <input type="text" required value={dishName} onChange={e=>setDishName(e.target.value)} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" placeholder="e.g. Truffle Bacon Burger" />
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Category</label>
-                                        <input type="text" value={dishCat} onChange={e=>setDishCat(e.target.value)} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
-                                    </div>
-                                    <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Price ($)</label>
-                                        <input type="number" step="0.10" value={dishPrice} onChange={e=>setDishPrice(e.target.value)} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
-                                    </div>
+                                    <label className="block font-bold text-ink-800 mb-1">Category Name</label>
+                                    <input name="catName" defaultValue={editingCategory?.name || ''} required placeholder="e.g. Traditional Khmer Mains, Desserts" className="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
                                 </div>
                                 <div>
-                                    <label class="block font-bold text-slate-700 mb-1">Description</label>
-                                    <textarea value={dishDesc} onChange={e=>setDishDesc(e.target.value)} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" rows="2" placeholder="Ingredients and details..."></textarea>
+                                    <label className="block font-bold text-ink-800 mb-1">Display Sort Order</label>
+                                    <input name="displayOrder" type="number" defaultValue={editingCategory?.displayOrder || categories.length + 1} required className="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
                                 </div>
-                                <div>
-                                    <label class="block font-bold text-slate-700 mb-1">Image URL</label>
-                                    <input type="text" value={dishImage} onChange={e=>setDishImage(e.target.value)} class="w-full bg-slate-50 border p-2.5 rounded-2xl focus:outline-none" />
+                                <div className="pt-2 flex justify-end gap-2">
+                                    <button type="button" onClick={() => setShowCategoryModal(false)} className="px-4 py-2 rounded-xl bg-sage-100 font-bold text-ink-700">Cancel</button>
+                                    <button type="submit" className="px-4 py-2 rounded-xl bg-forest-500 hover:bg-forest-600 font-extrabold text-white">Save Category</button>
                                 </div>
-                                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-forest-950 font-black text-xs rounded-2xl shadow-md transition">
-                                    Publish Item to Store Menu
-                                </button>
                             </form>
                         </div>
                     </div>
                 )}
+
+                {/* ======================================================== */}
+                {/* MODAL: FULL MULTI-ROLE REGISTRATION & LOGIN (US-001, US-002, US-003) */}
+                {/* ======================================================== */}
+                {showAuthModal && (
+                    <MultiRoleAuthModal
+                        currentUser={currentUser}
+                        onClose={() => setShowAuthModal(false)}
+                        onSuccessLogin={(user) => {
+                            setCurrentUser(user);
+                            setShowAuthModal(false);
+                            showToast(`Welcome back, ${user.name}! Signed in as ${user.role}.`);
+                            fetchStoresFromBackend();
+                        }}
+                        onSuccessRegister={(user, newStore) => {
+                            setCurrentUser(user);
+                            if (newStore) {
+                                setStores([newStore, ...stores]);
+                                setSelectedStoreId(newStore.id);
+                            }
+                            setShowAuthModal(false);
+                            showToast(`🎉 Account created! Welcome, ${user.name} (${user.role}).`);
+                        }}
+                        showToast={showToast}
+                    />
+                )}
             </div>
+        );
+    }
+
+    // ==========================================
+    // SUB-COMPONENT: ITEM FORM MODAL (US-007 + US-008)
+    // ==========================================
+    function ItemFormModal({ item, categories, onClose, onSave }) {
+        const [name, setName] = useState(item?.name || '');
+        const [categoryId, setCategoryId] = useState(item?.categoryId || categories[0]?.id || 1);
+        const [price, setPrice] = useState(item?.price || '');
+        const [description, setDescription] = useState(item?.description || '');
+        const [imageUrl, setImageUrl] = useState(item?.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80');
+        const [prepTimeMinutes, setPrepTimeMinutes] = useState(item?.prepTimeMinutes || 15);
+        const [dietaryTag, setDietaryTag] = useState(item?.dietaryTag || 'Chef Special');
+
+        // Customization Options Builder (US-008)
+        const [options, setOptions] = useState(item?.options || [
+            { optionGroup: "Portion Size", optionName: "Regular", priceAdjustment: 0.00 },
+            { optionGroup: "Portion Size", optionName: "Large", priceAdjustment: 1.50 }
+        ]);
+
+        const [newOptGroup, setNewOptGroup] = useState('Add-Ons');
+        const [newOptName, setNewOptName] = useState('');
+        const [newOptPrice, setNewOptPrice] = useState('0.50');
+
+        const addOption = () => {
+            if (!newOptName.trim()) return;
+            setOptions([
+                ...options,
+                {
+                    optionGroup: newOptGroup,
+                    optionName: newOptName.trim(),
+                    priceAdjustment: parseFloat(newOptPrice) || 0.00
+                }
+            ]);
+            setNewOptName('');
+            setNewOptPrice('0.00');
+        };
+
+        const removeOption = (idx) => {
+            setOptions(options.filter((_, i) => i !== idx));
+        };
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            const selectedCat = categories.find(c => c.id === parseInt(categoryId));
+            onSave({
+                name,
+                categoryId: parseInt(categoryId),
+                categoryName: selectedCat ? selectedCat.name : 'General',
+                price: parseFloat(price),
+                description,
+                imageUrl,
+                prepTimeMinutes: parseInt(prepTimeMinutes) || 15,
+                dietaryTag,
+                options
+            });
+        };
+
+        return (
+            <div className="fixed inset-0 bg-ink-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+                <div className="bg-cream-50 rounded-3xl max-w-xl w-full p-6 border border-sage-200 shadow-2xl space-y-4 my-8">
+                    <div className="flex justify-between items-center pb-3 border-b border-sage-200">
+                        <div>
+                            <h3 className="font-display text-lg font-bold text-ink-950">
+                                {item ? 'Edit Menu Dish & Customizations' : 'Create New Menu Dish'}
+                            </h3>
+                            <span className="text-xs text-ink-500 font-medium">Sprint 2: Storefront & Menu Customization Engine</span>
+                        </div>
+                        <button onClick={onClose} className="text-ink-400 hover:text-ink-900 font-bold text-lg">✕</button>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+                        {/* Live Image Preview */}
+                        <div className="flex gap-4 items-center bg-white p-3 rounded-2xl border border-sage-200">
+                            <img
+                                src={imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"}
+                                alt="Preview"
+                                className="w-20 h-20 rounded-xl object-cover ring-2 ring-forest-400 shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                                <label className="block font-bold text-ink-800 mb-1">Image URL (Instant Live Preview)</label>
+                                <input
+                                    type="url"
+                                    value={imageUrl}
+                                    onChange={e => setImageUrl(e.target.value)}
+                                    placeholder="https://images.unsplash.com/..."
+                                    className="w-full bg-cream-50 border border-sage-300 rounded-xl px-2.5 py-1.5 text-xs text-ink-900"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block font-bold text-ink-800 mb-1">Dish Name *</label>
+                                <input
+                                    required
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                    placeholder="e.g. Signature Truffle Burger"
+                                    className="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900"
+                                />
+                            </div>
+                            <div>
+                                <label className="block font-bold text-ink-800 mb-1">Food Category *</label>
+                                <select
+                                    value={categoryId}
+                                    onChange={e => setCategoryId(e.target.value)}
+                                    className="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 cursor-pointer"
+                                >
+                                    {categories.map(c => (
+                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <label className="block font-bold text-ink-800 mb-1">Base Price ($) *</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    required
+                                    value={price}
+                                    onChange={e => setPrice(e.target.value)}
+                                    placeholder="6.50"
+                                    className="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900"
+                                />
+                            </div>
+                            <div>
+                                <label className="block font-bold text-ink-800 mb-1">Prep Time (mins)</label>
+                                <input
+                                    type="number"
+                                    value={prepTimeMinutes}
+                                    onChange={e => setPrepTimeMinutes(e.target.value)}
+                                    placeholder="15"
+                                    className="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900"
+                                />
+                            </div>
+                            <div>
+                                <label className="block font-bold text-ink-800 mb-1">Dietary Badge</label>
+                                <select
+                                    value={dietaryTag}
+                                    onChange={e => setDietaryTag(e.target.value)}
+                                    className="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900"
+                                >
+                                    <option value="Chef Special">Chef Special</option>
+                                    <option value="Spicy">Spicy</option>
+                                    <option value="Vegetarian">Vegetarian</option>
+                                    <option value="Vegan">Vegan</option>
+                                    <option value="Gluten-Free">Gluten-Free</option>
+                                    <option value="Dessert">Dessert</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block font-bold text-ink-800 mb-1">Description & Ingredients</label>
+                            <textarea
+                                rows="2"
+                                required
+                                value={description}
+                                onChange={e => setDescription(e.target.value)}
+                                placeholder="Describe flavors, sauces, and ingredients..."
+                                className="w-full bg-white border border-sage-300 rounded-2xl px-3 py-2 text-xs font-medium text-ink-900"
+                            />
+                        </div>
+
+                        {/* US-008: Customization Options Engine */}
+                        <div className="bg-white p-3.5 rounded-2xl border border-sage-200 space-y-3">
+                            <div className="flex justify-between items-center">
+                                <label className="font-bold text-ink-900 text-xs flex items-center gap-1.5">
+                                    <i data-lucide="sliders" className="w-3.5 h-3.5 text-forest-600"></i>
+                                    Dish Customization Options (US-008)
+                                </label>
+                                <span className="text-[10px] text-ink-400 font-semibold">{options.length} options set</span>
+                            </div>
+
+                            {/* Option list */}
+                            <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                                {options.map((opt, idx) => (
+                                    <div key={idx} className="flex items-center justify-between bg-cream-50 p-2 rounded-xl border border-sage-200">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold text-forest-700 bg-forest-50 px-1.5 py-0.5 rounded">
+                                                {opt.optionGroup}
+                                            </span>
+                                            <span className="font-bold text-ink-900 text-xs">{opt.optionName}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-extrabold text-xs text-forest-700">
+                                                {opt.priceAdjustment > 0 ? `+$${opt.priceAdjustment.toFixed(2)}` : '+$0.00'}
+                                            </span>
+                                            <button type="button" onClick={() => removeOption(idx)} className="text-rust-500 hover:text-rust-700 font-bold px-1">✕</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Add Option Row */}
+                            <div className="grid grid-cols-12 gap-2 pt-2 border-t border-sage-100 items-center">
+                                <input
+                                    placeholder="Group (e.g. Size)"
+                                    value={newOptGroup}
+                                    onChange={e => setNewOptGroup(e.target.value)}
+                                    className="col-span-4 bg-cream-50 border border-sage-300 rounded-xl px-2 py-1.5 text-[11px] font-semibold"
+                                />
+                                <input
+                                    placeholder="Option (e.g. Extra Cheese)"
+                                    value={newOptName}
+                                    onChange={e => setNewOptName(e.target.value)}
+                                    className="col-span-4 bg-cream-50 border border-sage-300 rounded-xl px-2 py-1.5 text-[11px] font-semibold"
+                                />
+                                <input
+                                    type="number"
+                                    step="0.10"
+                                    placeholder="+$"
+                                    value={newOptPrice}
+                                    onChange={e => setNewOptPrice(e.target.value)}
+                                    className="col-span-2 bg-cream-50 border border-sage-300 rounded-xl px-2 py-1.5 text-[11px] font-semibold"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={addOption}
+                                    className="col-span-2 bg-forest-500 hover:bg-forest-600 text-white rounded-xl py-1.5 text-[11px] font-extrabold shadow-sm transition"
+                                >
+                                    + Add
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="pt-2 flex justify-end gap-2">
+                            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-sage-100 font-bold text-ink-700">Cancel</button>
+                            <button type="submit" className="px-5 py-2 rounded-xl bg-forest-500 hover:bg-forest-600 font-extrabold text-white shadow-sm">
+                                {item ? 'Save Updates' : 'Add Dish to Menu'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        );
+    }
+
+    // ==========================================
+    // SUB-COMPONENT: MULTI-ROLE REGISTRATION & LOGIN MODAL (US-001 & US-002)
+    // ==========================================
+    function MultiRoleAuthModal({ currentUser, onClose, onSuccessLogin, onSuccessRegister, showToast }) {
+        const [mode, setMode] = useState('register'); // 'register' | 'login'
+        const [selectedRole, setSelectedRole] = useState('MERCHANT'); // 'MERCHANT' | 'DRIVER' | 'CUSTOMER' | 'ADMIN'
+        const [loading, setLoading] = useState(false);
+        const [errorMsg, setErrorMsg] = useState('');
+
+        // Registration form state
+        const [regName, setRegName] = useState('');
+        const [regEmail, setRegEmail] = useState('');
+        const [regPassword, setRegPassword] = useState('password123');
+        const [regPhone, setRegPhone] = useState('+855 12 888 999');
+        // Merchant specific fields
+        const [restaurantName, setRestaurantName] = useState('');
+        const [cuisineType, setCuisineType] = useState('Khmer & Asian Fusion');
+        const [storeAddress, setStoreAddress] = useState('Street 271, Phnom Penh');
+        const [city, setCity] = useState('Phnom Penh');
+        // Driver specific fields
+        const [vehicleType, setVehicleType] = useState('Motorbike');
+        const [plateNumber, setPlateNumber] = useState('PP 1AB-8899');
+        // Customer specific fields
+        const [deliveryAddress, setDeliveryAddress] = useState('Building 10, St. 51, BKK1, Phnom Penh');
+
+        // Login form state
+        const [loginEmail, setLoginEmail] = useState('');
+        const [loginPassword, setLoginPassword] = useState('');
+
+        const handleRegisterSubmit = async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            setErrorMsg('');
+
+            const payload = {
+                name: regName.trim(),
+                email: regEmail.trim().toLowerCase(),
+                password: regPassword,
+                phone: regPhone.trim(),
+                role: selectedRole,
+                restaurantName: selectedRole === 'MERCHANT' ? (restaurantName.trim() || regName + ' Kitchen') : null,
+                cuisineType: selectedRole === 'MERCHANT' ? cuisineType : null,
+                address: selectedRole === 'MERCHANT' ? storeAddress : (selectedRole === 'CUSTOMER' ? deliveryAddress : null),
+                city: city,
+                vehicleType: selectedRole === 'DRIVER' ? vehicleType : null,
+                plateNumber: selectedRole === 'DRIVER' ? plateNumber : null
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const newUser = {
+                        name: data.name,
+                        email: data.email,
+                        role: data.role,
+                        token: data.token,
+                        id: data.userId
+                    };
+
+                    let newStore = null;
+                    if (data.role === 'MERCHANT' && data.merchantId) {
+                        newStore = {
+                            id: data.merchantId,
+                            name: payload.restaurantName,
+                            cuisineType: payload.cuisineType,
+                            description: `Welcome to ${payload.restaurantName}! Fresh gourmet food delivered fast.`,
+                            address: payload.address,
+                            city: payload.city,
+                            phone: payload.phone,
+                            openingHours: "08:00 AM - 10:00 PM",
+                            rating: 5.0,
+                            deliveryFee: 1.50,
+                            deliveryTimeMins: 20,
+                            isOpen: true,
+                            imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80",
+                            bannerUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&auto=format&fit=crop&q=80"
+                        };
+                    }
+
+                    onSuccessRegister(newUser, newStore);
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    setErrorMsg(err.message || "Registration failed. Email might already exist.");
+                }
+            } catch (err) {
+                // Fallback simulation mode
+                const simulatedUser = {
+                    name: payload.name,
+                    email: payload.email,
+                    role: payload.role,
+                    token: "jwt_token_" + Date.now(),
+                    id: Date.now()
+                };
+                let simStore = null;
+                if (payload.role === 'MERCHANT') {
+                    simStore = {
+                        id: Date.now(),
+                        name: payload.restaurantName || payload.name + " Eatery",
+                        cuisineType: payload.cuisineType || "Specialty Kitchen",
+                        description: "Freshly registered merchant kitchen on FoodEats platform.",
+                        address: payload.address || "Phnom Penh Central",
+                        city: "Phnom Penh",
+                        phone: payload.phone,
+                        openingHours: "08:00 AM - 10:00 PM",
+                        rating: 5.0,
+                        deliveryFee: 1.50,
+                        deliveryTimeMins: 20,
+                        isOpen: true,
+                        imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600",
+                        bannerUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200"
+                    };
+                }
+                onSuccessRegister(simUser, simStore);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const handleLoginSubmit = async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            setErrorMsg('');
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: loginEmail.trim().toLowerCase(), password: loginPassword })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    onSuccessLogin({
+                        name: data.name,
+                        email: data.email,
+                        role: data.role,
+                        token: data.token,
+                        id: data.userId
+                    });
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    setErrorMsg(err.message || "Invalid email or password. Please try again.");
+                }
+            } catch (err) {
+                // Fallback
+                onSuccessLogin({
+                    name: loginEmail.split('@')[0],
+                    email: loginEmail,
+                    role: "MERCHANT",
+                    token: "jwt_token_demo"
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        return (
+            <div className="fixed inset-0 bg-ink-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+                <div className="bg-white rounded-3xl max-w-lg w-full p-6 border border-sage-200 shadow-2xl space-y-4 my-8 max-h-[90vh] overflow-y-auto">
+                    {/* Header */}
+                    <div className="flex justify-between items-center pb-3 border-b border-sage-200">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-2xl bg-forest-500 text-white flex items-center justify-center font-bold shadow-md">
+                                <i data-lucide="shield-check" className="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 className="font-display text-lg font-bold text-ink-950">FoodEats Multi-Role Portal</h3>
+                                <p className="text-[11px] text-ink-500 font-medium">Sprint 1: Auth Engine & Onboarding (US-001, US-002)</p>
+                            </div>
+                        </div>
+                        <button onClick={onClose} className="w-8 h-8 rounded-full bg-sage-100 text-ink-600 hover:bg-sage-200 font-bold flex items-center justify-center">✕</button>
+                    </div>
+
+                    {/* Mode Toggle Tabs */}
+                    <div className="grid grid-cols-2 p-1 bg-sage-100 rounded-2xl">
+                        <button
+                            type="button"
+                            onClick={() => { setMode('register'); setErrorMsg(''); }}
+                            className={`py-2 text-xs font-bold rounded-xl transition ${mode === 'register' ? 'bg-white text-forest-800 shadow-sm font-extrabold' : 'text-ink-600 hover:text-ink-900'}`}
+                        >
+                            ✨ Register New Account
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setMode('login'); setErrorMsg(''); }}
+                            className={`py-2 text-xs font-bold rounded-xl transition ${mode === 'login' ? 'bg-white text-forest-800 shadow-sm font-extrabold' : 'text-ink-600 hover:text-ink-900'}`}
+                        >
+                            🔑 Sign In
+                        </button>
+                    </div>
+
+                    {errorMsg && (
+                        <div className="p-3 rounded-2xl bg-rust-50 border border-rust-200 text-rust-800 text-xs font-semibold flex items-center gap-2">
+                            <i data-lucide="alert-circle" className="w-4 h-4 text-rust-600"></i>
+                            <span>{errorMsg}</span>
+                        </div>
+                    )}
+
+                    {/* =================================================== */}
+                    {/* VIEW A: REGISTER (US-001 & US-002 ONBOARDING) */}
+                    {/* =================================================== */}
+                    {mode === 'register' && (
+                        <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-ink-800 mb-1.5">
+                                    Step 1: Choose Your Account Role (US-003)
+                                </label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    {[
+                                        { role: 'MERCHANT', icon: 'store', label: 'Merchant', desc: 'Store & Menu' },
+                                        { role: 'DRIVER', icon: 'bike', label: 'Driver', desc: 'Deliveries' },
+                                        { role: 'CUSTOMER', icon: 'shopping-bag', label: 'Customer', desc: 'Order Food' },
+                                        { role: 'ADMIN', icon: 'shield', label: 'Admin', desc: 'Platform' }
+                                    ].map(item => (
+                                        <button
+                                            key={item.role}
+                                            type="button"
+                                            onClick={() => setSelectedRole(item.role)}
+                                            className={`p-2.5 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-1 ${selectedRole === item.role ? 'bg-forest-500 text-white border-forest-600 shadow-md ring-2 ring-forest-400/30 font-extrabold' : 'bg-cream-50 text-ink-800 border-sage-200 hover:bg-sage-100'}`}
+                                        >
+                                            <i data-lucide={item.icon} className="w-4 h-4"></i>
+                                            <span className="text-xs font-bold leading-none">{item.label}</span>
+                                            <span className={`text-[9px] ${selectedRole === item.role ? 'text-mint-100' : 'text-ink-400'}`}>{item.desc}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-sage-100 space-y-3">
+                                <label className="block text-xs font-bold text-ink-800">
+                                    Step 2: Personal Profile Details (US-001)
+                                </label>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Full Name *</label>
+                                        <input
+                                            required
+                                            value={regName}
+                                            onChange={e => setRegName(e.target.value)}
+                                            placeholder={selectedRole === 'MERCHANT' ? "e.g. Sophy Chhay (Owner)" : "e.g. Sokha Chan"}
+                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Phone Number *</label>
+                                        <input
+                                            required
+                                            value={regPhone}
+                                            onChange={e => setRegPhone(e.target.value)}
+                                            placeholder="+855 12 345 678"
+                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Email Address *</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            value={regEmail}
+                                            onChange={e => setRegEmail(e.target.value)}
+                                            placeholder="youremail@example.com"
+                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Password *</label>
+                                        <input
+                                            type="password"
+                                            required
+                                            value={regPassword}
+                                            onChange={e => setRegPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ROLE SPECIFIC ONBOARDING FIELDS (US-002) */}
+                            {selectedRole === 'MERCHANT' && (
+                                <div className="p-3.5 bg-mint-50/70 rounded-2xl border border-forest-200 space-y-2.5 animate-fadeIn">
+                                    <div className="flex items-center gap-2 text-forest-900 font-extrabold text-xs">
+                                        <i data-lucide="store" className="w-4 h-4 text-forest-700"></i>
+                                        Merchant Storefront Setup (US-002 & US-005)
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-ink-700 mb-0.5">Restaurant Name *</label>
+                                            <input
+                                                required
+                                                value={restaurantName}
+                                                onChange={e => setRestaurantName(e.target.value)}
+                                                placeholder="e.g. Angkor Gourmet BBQ"
+                                                className="w-full bg-white border border-forest-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-ink-700 mb-0.5">Cuisine Type *</label>
+                                            <input
+                                                required
+                                                value={cuisineType}
+                                                onChange={e => setCuisineType(e.target.value)}
+                                                placeholder="e.g. Khmer Traditional, Burgers, Sushi"
+                                                className="w-full bg-white border border-forest-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-ink-700 mb-0.5">Restaurant Address *</label>
+                                        <input
+                                            required
+                                            value={storeAddress}
+                                            onChange={e => setStoreAddress(e.target.value)}
+                                            placeholder="Street 302, Sangkat BKK1, Phnom Penh"
+                                            className="w-full bg-white border border-forest-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedRole === 'DRIVER' && (
+                                <div className="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200 space-y-2.5 animate-fadeIn">
+                                    <div className="flex items-center gap-2 text-amber-900 font-extrabold text-xs">
+                                        <i data-lucide="bike" className="w-4 h-4 text-amber-700"></i>
+                                        Driver Fleet Onboarding (US-002 & US-019)
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-ink-700 mb-0.5">Vehicle Type</label>
+                                            <select
+                                                value={vehicleType}
+                                                onChange={e => setVehicleType(e.target.value)}
+                                                className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
+                                            >
+                                                <option value="Motorbike">🛵 Motorbike / Scooter</option>
+                                                <option value="Bicycle">🚲 Eco Bicycle</option>
+                                                <option value="Electric Scooter">⚡ Electric Scooter</option>
+                                                <option value="Car">🚗 Express Car</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-ink-700 mb-0.5">Plate Number / Hub</label>
+                                            <input
+                                                value={plateNumber}
+                                                onChange={e => setPlateNumber(e.target.value)}
+                                                placeholder="PP 1AB-8899"
+                                                className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedRole === 'CUSTOMER' && (
+                                <div className="p-3.5 bg-sage-50 rounded-2xl border border-sage-200 space-y-2 animate-fadeIn">
+                                    <label className="block text-[10px] font-bold text-ink-700">Default Delivery Address (US-004)</label>
+                                    <input
+                                        value={deliveryAddress}
+                                        onChange={e => setDeliveryAddress(e.target.value)}
+                                        placeholder="Building 42, St. 302, BKK1, Phnom Penh"
+                                        className="w-full bg-white border border-sage-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="pt-2 flex items-center justify-end gap-2">
+                                <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-sage-100 hover:bg-sage-200 font-bold text-xs text-ink-700">
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="px-6 py-2 rounded-xl bg-forest-500 hover:bg-forest-600 font-extrabold text-xs text-white shadow-md transition flex items-center gap-1.5 disabled:opacity-50"
+                                >
+                                    {loading ? 'Creating Account...' : `Register as ${selectedRole} (US-001)`}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
+                    {/* =================================================== */}
+                    {/* VIEW B: SIGN IN WITH JWT */}
+                    {/* =================================================== */}
+                    {mode === 'login' && (
+                        <form onSubmit={handleLoginSubmit} className="space-y-4">
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-ink-700 mb-1">Email Address *</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={loginEmail}
+                                        onChange={e => setLoginEmail(e.target.value)}
+                                        placeholder="merchant@example.com"
+                                        className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-ink-700 mb-1">Password *</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={loginPassword}
+                                        onChange={e => setLoginPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full py-2.5 rounded-2xl bg-forest-500 hover:bg-forest-600 font-extrabold text-xs text-white shadow-md transition disabled:opacity-50"
+                            >
+                                {loading ? 'Authenticating...' : 'Sign In with JWT'}
+                            </button>
+
+                            {/* 1-Click Quick Accounts */}
+                            <div className="pt-3 border-t border-sage-100 space-y-2">
+                                <label className="block text-[11px] font-bold text-ink-500 uppercase tracking-wider">
+                                    ⚡ Quick 1-Click Demo Accounts:
+                                </label>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => onSuccessLogin({ name: "Bopha Merchant", email: "merchant@example.com", role: "MERCHANT", token: "jwt_bopha" })}
+                                        className="p-2 rounded-xl bg-mint-50 border border-mint-200 hover:bg-mint-100 text-left font-bold text-forest-900"
+                                    >
+                                        👨‍🍳 Bopha (Merchant)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onSuccessLogin({ name: "Dara Driver", email: "driver@example.com", role: "DRIVER", token: "jwt_dara" })}
+                                        className="p-2 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-left font-bold text-amber-900"
+                                    >
+                                        🛵 Dara (Driver)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onSuccessLogin({ name: "Sokha Customer", email: "customer@example.com", role: "CUSTOMER", token: "jwt_sokha" })}
+                                        className="p-2 rounded-xl bg-sage-50 border border-sage-200 hover:bg-sage-100 text-left font-bold text-ink-800"
+                                    >
+                                        🛍️ Sokha (Customer)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onSuccessLogin({ name: "System Admin", email: "admin@example.com", role: "ADMIN", token: "jwt_admin" })}
+                                        className="p-2 rounded-xl bg-ink-950 text-mint-300 border border-ink-800 text-left font-bold"
+                                    >
+                                        🛡️ System Admin
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    function NavItem({ id, icon, label, badge, active, onClick }) {
+        const isActive = active === id;
+        return (
+            <button onClick={() => onClick(id)} className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${isActive ? 'bg-forest-500 text-white shadow-md font-extrabold' : 'text-mint-50/70 hover:text-white hover:bg-white/5'}`}>
+                <div className="flex items-center gap-3">
+                    <i data-lucide={icon} className="w-4 h-4"></i>
+                    <span>{label}</span>
+                </div>
+                {badge !== undefined && badge > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-ink-950 text-mint-300' : 'bg-white/10 text-white/80'}`}>{badge}</span>
+                )}
+            </button>
         );
     }
 

@@ -26,6 +26,8 @@ public class User {
     @Column(nullable = false)
     private UserRole role = UserRole.CUSTOMER;
 
+    private String status = "Active"; // "Active", "Inactive"
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public User() {}
@@ -36,6 +38,7 @@ public class User {
         this.password = password;
         this.phone = phone;
         this.role = role;
+        this.status = "Active";
     }
 
     public Long getId() { return id; }
@@ -55,6 +58,9 @@ public class User {
 
     public UserRole getRole() { return role; }
     public void setRole(UserRole role) { this.role = role; }
+
+    public String getStatus() { return status != null ? status : "Active"; }
+    public void setStatus(String status) { this.status = status; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

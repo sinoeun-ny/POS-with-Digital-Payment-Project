@@ -1,486 +1,1394 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50">
+<html lang="en" class="h-full bg-cream-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodEats - Customer Ordering Portal</title>
+    <title>FoodEats - Customer Gourmet Discovery & Ordering</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        forest: { 800: '#114b5f', 900: '#0d3b4b', 950: '#082530' },
-                        mint: { 50: '#f4faf6', 100: '#e1f5e8', 400: '#88d498', 500: '#1a936f', 600: '#157a5c', 700: '#114b5f' },
-                        amber: { 500: '#1a936f', 600: '#114b5f' },
-                        teal: { 950: '#082530', 900: '#114b5f', 800: '#155d76', 700: '#1a936f', 600: '#22ad83', 500: '#88d498' },
-                        sage: { 100: '#f3e9d2', 200: '#c6dabf', 300: '#a8c69f' },
-                        cream: { 50: '#fcfaf6', 100: '#f3e9d2', 200: '#e8dcbd' }
+                        ink: {
+                            50: '#eef4f5', 100: '#d7e6e9', 200: '#adc9cf', 300: '#7ea9b3',
+                            400: '#4c8593', 500: '#2c6575', 600: '#1c5164', 700: '#16455a',
+                            800: '#114b5f', 900: '#0d3b4b', 950: '#082530'
+                        },
+                        forest: {
+                            50: '#eefaf5', 100: '#d3f2e3', 200: '#a7e5c8', 300: '#72d1a8',
+                            400: '#3fb686', 500: '#1a936f', 600: '#157a5c', 700: '#12634c',
+                            800: '#114f3f', 900: '#0f4235', 950: '#08251e'
+                        },
+                        mint: {
+                            50: '#f4faf6', 100: '#e1f5e8', 200: '#c3ebd2', 300: '#a2e0b9',
+                            400: '#88d498', 500: '#63bf79', 600: '#47a25e', 700: '#38814c',
+                            800: '#2f673f', 900: '#295536'
+                        },
+                        sage: {
+                            50: '#f7faf5', 100: '#eef3e9', 200: '#dde9d4', 300: '#c6dabf',
+                            400: '#aec9a4', 500: '#93b487', 600: '#75986a', 700: '#5c7a54',
+                            800: '#4b6345', 900: '#3f523a'
+                        },
+                        cream: {
+                            50: '#fdfbf7', 100: '#f8f2e6', 200: '#f3e9d2', 300: '#e9d8b4',
+                            400: '#dcc48f', 500: '#ceaf6c', 600: '#b5924e', 700: '#927540'
+                        },
+                        rust: { 500: '#b4543d', 600: '#96422f', 900: '#3d1a13' }
                     },
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Fraunces', 'serif']
+                    }
                 }
             }
         }
     </script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-display { font-family: 'Fraunces', serif; font-feature-settings: 'ss01'; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8f2e6; }
+        ::-webkit-scrollbar-thumb { background: #c6dabf; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #aec9a4; }
+        *:focus-visible { outline: 2px solid #1a936f; outline-offset: 2px; }
+        .khqr-pattern {
+            background-color: #ffffff;
+            background-image: radial-gradient(#b4543d 1.5px, transparent 1.5px), radial-gradient(#114b5f 1.5px, #ffffff 1.5px);
+            background-size: 14px 14px;
+            background-position: 0 0, 7px 7px;
+        }
+    </style>
 </head>
-<body class="h-screen w-screen m-0 p-0 text-slate-800 bg-[#f8fafc] overflow-hidden antialiased">
-<div id="root" class="w-full h-full overflow-hidden flex flex-col"></div>
+<body class="min-h-screen bg-cream-50 text-ink-900 antialiased selection:bg-forest-500 selection:text-white">
+<div id="root">
+    <div class="min-h-screen flex items-center justify-center p-6">
+        <div class="text-center p-8 bg-white/80 backdrop-blur rounded-3xl border border-sage-200 shadow-xl max-w-sm">
+            <div class="w-12 h-12 border-4 border-forest-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 class="font-display font-bold text-xl text-ink-950 mb-1">Loading FoodEats Portal...</h2>
+            <p class="text-xs text-ink-500 font-semibold">Connecting to Spring Boot Platform Engine</p>
+        </div>
+    </div>
+</div>
 
 <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useMemo } = React;
 
-    const INITIAL_MERCHANTS = [
+    const API_BASE = "";
+
+    const DEFAULT_CUSTOMERS = [
+        {
+            id: 'c1',
+            name: "Sokha Mean",
+            email: "customer@example.com",
+            phone: "+855 12 345 678",
+            role: "CUSTOMER",
+            addresses: [
+                { id: 'a1', label: "Home (BKK1)", address: "Building 42, St. 302, BKK1, Phnom Penh", isDefault: true },
+                { id: 'a2', label: "Office (Toul Kork)", address: "Vattanac Tower Level 14, Monivong Blvd, Phnom Penh", isDefault: false },
+                { id: 'a3', label: "University", address: "RUPP Campus 1, Russian Blvd, Phnom Penh", isDefault: false }
+            ]
+        }
+    ];
+
+    const INITIAL_RESTAURANTS = [
         {
             id: 1,
             name: "Zando Burger & Grill",
-            category: "Gourmet American",
+            cuisine: "Gourmet American",
+            category: "Burgers",
+            distance: "1.2 km",
             rating: 4.9,
+            reviewsCount: 320,
             deliveryFee: 1.50,
-            deliveryTimeMins: 20,
-            address: "Street 271, Phnom Penh",
+            deliveryTime: "20 min",
+            address: "Street 271, Sangkat Phsar Doeum Thkov, Phnom Penh",
             imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80",
-            description: "Handcrafted smash burgers, caramelized onions, smoked cheddar, and waffle fries.",
+            description: "Juicy artisan smash burgers, crispy truffle fries, and premium thick milkshakes crafted daily.",
             menu: [
-                { id: 101, name: "Double Truffle Smash Burger", category: "Burgers", price: 6.50, description: "Two 100% Angus patties, black truffle mayo", imageUrl: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&auto=format&fit=crop&q=80", isAvailable: true },
-                { id: 102, name: "Crispy Bacon Stack", category: "Burgers", price: 7.20, description: "Applewood bacon, sharp cheddar", imageUrl: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=400&auto=format&fit=crop&q=80", isAvailable: true },
-                { id: 103, name: "Garlic Parmesan Waffle Fries", category: "Sides", price: 2.80, description: "Crispy waffle fries tossed in roasted garlic", imageUrl: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&auto=format&fit=crop&q=80", isAvailable: true }
+                { id: 101, name: "Double Truffle Smash Burger", price: 6.50, category: "Burgers", description: "2x 100% Angus beef patties, Swiss gruyere, black truffle aioli on brioche", imageUrl: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&auto=format&fit=crop&q=80" },
+                { id: 102, name: "Smoky Bacon & Cheddar Burger", price: 5.90, category: "Burgers", description: "Crispy applewood smoked bacon, aged cheddar, caramelised onions, BBQ sauce", imageUrl: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=400&auto=format&fit=crop&q=80" },
+                { id: 103, name: "Golden Truffle Parmesan Fries", price: 2.75, category: "Sides", description: "Skin-on rustic russet fries tossed in white truffle oil and fresh shredded parmesan", imageUrl: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&auto=format&fit=crop&q=80" },
+                { id: 104, name: "Salted Caramel Shake", price: 3.50, category: "Beverages", description: "Hand-spun French vanilla ice cream with artisanal sea salt caramel swirl", imageUrl: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=400&auto=format&fit=crop&q=80" }
             ]
         },
         {
             id: 2,
             name: "Sakura Sushi & Ramen Bar",
-            category: "Japanese Artisan",
+            cuisine: "Japanese Artisan",
+            category: "Japanese",
+            distance: "2.4 km",
             rating: 4.8,
+            reviewsCount: 540,
             deliveryFee: 2.00,
-            deliveryTimeMins: 25,
-            address: "Monivong Blvd, BKK2, Phnom Penh",
+            deliveryTime: "30 min",
+            address: "St. 51 Pasteur, BKK1, Phnom Penh",
             imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&auto=format&fit=crop&q=80",
-            description: "Authentic Tokyo-style tonkotsu ramen and fresh sashimi.",
+            description: "Authentic Hakata tonkotsu ramen simmered for 18 hours, and fresh sashimi rolls.",
             menu: [
-                { id: 201, name: "Signature Tonkotsu Black Ramen", category: "Ramen", price: 8.50, description: "Rich pork bone broth, black garlic oil", imageUrl: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&auto=format&fit=crop&q=80", isAvailable: true },
-                { id: 202, name: "Supreme Salmon Nigiri (6 pcs)", category: "Sushi", price: 9.00, description: "Norwegian salmon with yuzu glaze", imageUrl: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=400&auto=format&fit=crop&q=80", isAvailable: true }
+                { id: 201, name: "Signature Tonkotsu Black Ramen", price: 8.50, category: "Ramen", description: "Rich 18-hour pork broth, charred black garlic oil, tender chashu pork, and nitamago egg", imageUrl: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&auto=format&fit=crop&q=80" },
+                { id: 202, name: "Spicy Miso Ramen", price: 8.00, category: "Ramen", description: "Warming red miso broth with chili oil, ground seasoned pork, sweet corn, and scallions", imageUrl: "https://images.unsplash.com/photo-1618841557871-b4664fbf0cb3?w=400&auto=format&fit=crop&q=80" },
+                { id: 203, name: "Salmon Aburi Dragon Roll (8pcs)", price: 9.20, category: "Sushi", description: "Seared Atlantic salmon over crispy prawn tempura roll with unagi reduction", imageUrl: "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=400&auto=format&fit=crop&q=80" }
             ]
         },
         {
             id: 3,
             name: "Khmer Coffee & Patisserie",
-            category: "Café & Bakery",
+            cuisine: "Café & Bakery",
+            category: "Coffee & Bakery",
+            distance: "0.8 km",
             rating: 4.9,
+            reviewsCount: 410,
             deliveryFee: 1.00,
-            deliveryTimeMins: 15,
+            deliveryTime: "15 min",
             address: "Norodom Blvd, Daun Penh, Phnom Penh",
             imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80",
-            description: "Mondulkiri specialty organic coffee and fresh baked butter croissants.",
+            description: "Mondulkiri specialty organic coffee beans, freshly baked French butter croissants, and iced condensed milk coffee.",
             menu: [
-                { id: 301, name: "Mondulkiri Iced Latte", category: "Coffee", price: 2.20, description: "Double espresso shot with palm syrup", imageUrl: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=400&auto=format&fit=crop&q=80", isAvailable: true },
-                { id: 302, name: "Almond Butter Croissant", category: "Bakery", price: 2.75, description: "Flaky golden croissant", imageUrl: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format&fit=crop&q=80", isAvailable: true }
+                { id: 301, name: "Mondulkiri Iced Latte", price: 2.20, category: "Coffee", description: "Double espresso shot with fresh milk and pure palm sugar syrup", imageUrl: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=400&auto=format&fit=crop&q=80" },
+                { id: 302, name: "Almond Butter Croissant", price: 2.75, category: "Bakery", description: "Flaky golden croissant baked with roasted almond cream", imageUrl: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format&fit=crop&q=80" },
+                { id: 303, name: "Iced Palm Sugar Milk Tea", price: 2.50, category: "Beverages", description: "Slow-brewed red tea infused with caramelized Kampot palm sugar", imageUrl: "https://images.unsplash.com/photo-1558857563-b37cf5429e31?w=400&auto=format&fit=crop&q=80" }
             ]
         }
     ];
 
+    const INITIAL_ORDERS = [
+        {
+            id: 101,
+            customerId: 'c1',
+            merchant: "Zando Burger & Grill",
+            merchantId: 1,
+            items: "2x Double Truffle Smash Burger ($13.00)",
+            itemsCount: 2,
+            subtotal: 13.00,
+            deliveryFee: 1.50,
+            total: 14.50,
+            status: "ACCEPTED",
+            paymentStatus: "PAID_MOCK",
+            time: "10m ago",
+            driver: "Dara K. Express",
+            address: "Building 42, St. 302, BKK1, Phnom Penh"
+        }
+    ];
+
     function CustomerApp() {
-        const [merchants] = useState(() => JSON.parse(localStorage.getItem('foodeats_merchants')) || INITIAL_MERCHANTS);
-        const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('foodeats_orders')) || []);
-        const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('foodeats_cart')) || []);
-        const [cartStoreId, setCartStoreId] = useState(1);
-        const [selectedStore, setSelectedStore] = useState(null);
+        // Authenticated user state
+        const [authUser, setAuthUser] = useState(() => {
+            const saved = localStorage.getItem('foodeats_auth_user');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.role === 'CUSTOMER') return parsed;
+                } catch (e) {}
+            }
+            return DEFAULT_CUSTOMERS[0]; // Active default customer
+        });
+
+        // App state
+        const [restaurants, setRestaurants] = useState(INITIAL_RESTAURANTS);
+        const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+        const [selectedCategory, setSelectedCategory] = useState('ALL');
         const [searchQuery, setSearchQuery] = useState('');
-        const [activeCategory, setActiveCategory] = useState('All');
-        const [tab, setTab] = useState('browse'); // 'browse' | 'orders' | 'profile'
-        const [deliveryAddress, setDeliveryAddress] = useState('Building 42, St. 302, BKK1, Phnom Penh');
-        const [paymentMethod, setPaymentMethod] = useState('KHQR');
-        const [showPaymentModal, setShowPaymentModal] = useState(false);
+        const [cart, setCart] = useState([]);
+        const [orders, setOrders] = useState(INITIAL_ORDERS);
+        const [activeView, setActiveView] = useState('discovery'); // 'discovery' | 'restaurant' | 'orders' | 'profile'
+
+        // Modals
+        const [showAuthModal, setShowAuthModal] = useState(false);
+        const [authTab, setAuthTab] = useState('login'); // 'login' | 'register'
+        const [showCartDrawer, setShowCartDrawer] = useState(false);
+        const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+        const [showItemDetailModal, setShowItemDetailModal] = useState(null);
+        const [selectedAddress, setSelectedAddress] = useState(() => {
+            if (authUser && authUser.addresses && authUser.addresses.length > 0) {
+                return authUser.addresses[0];
+            }
+            return { id: 'default', label: 'Default Delivery', address: 'Building 42, St. 302, BKK1, Phnom Penh' };
+        });
+        const [paymentMethod, setPaymentMethod] = useState('MOCK_KHQR');
+        const [isProcessingPayment, setIsProcessingPayment] = useState(false);
         const [toast, setToast] = useState(null);
 
-        const showToast = (msg) => {
-            setToast(msg);
-            setTimeout(() => setToast(null), 3000);
+        // Auth Form States
+        const [loginEmail, setLoginEmail] = useState('');
+        const [loginPassword, setLoginPassword] = useState('');
+        const [loginError, setLoginError] = useState('');
+
+        const [regName, setRegName] = useState('');
+        const [regEmail, setRegEmail] = useState('');
+        const [regPhone, setRegPhone] = useState('');
+        const [regPassword, setRegPassword] = useState('');
+        const [regAddress, setRegAddress] = useState('');
+        const [regError, setRegError] = useState('');
+
+        const showToast = (msg, type = 'success') => {
+            setToast({ msg, type });
+            setTimeout(() => setToast(null), 3500);
         };
 
-        const saveCart = (newCart) => { setCart(newCart); localStorage.setItem('foodeats_cart', JSON.stringify(newCart)); };
-        const saveOrders = (newOrders) => { setOrders(newOrders); localStorage.setItem('foodeats_orders', JSON.stringify(newOrders)); };
+        // Fetch backend merchants on mount
+        useEffect(() => {
+            const fetchMerchants = async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/api/merchants`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            setRestaurants(data.map(m => ({
+                                id: m.id,
+                                name: m.name,
+                                cuisine: m.cuisineType || m.category || "Gourmet Dining",
+                                category: m.category || "General",
+                                distance: "1.5 km",
+                                rating: m.rating || 4.9,
+                                reviewsCount: m.reviewsCount || 120,
+                                deliveryFee: m.deliveryFee || 1.50,
+                                deliveryTime: "25 min",
+                                address: m.address || "Phnom Penh, Cambodia",
+                                imageUrl: m.imageUrl || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80",
+                                description: m.description || "Authentic culinary favorites prepared fresh upon order.",
+                                menu: m.menuItems || []
+                            })));
+                        }
+                    }
+                } catch (e) {
+                    console.log("Using initial restaurant discovery data");
+                }
+            };
+            fetchMerchants();
+        }, []);
 
         useEffect(() => {
-            lucide.createIcons();
-        }, [tab, selectedStore, cart, orders, toast]);
+            if (window.lucide) window.lucide.createIcons();
+        }, [activeView, selectedRestaurant, cart, orders, showCartDrawer, showCheckoutModal, showAuthModal, authTab, showItemDetailModal, toast, authUser]);
 
-        const addToCart = (item, store) => {
-            if (cart.length > 0 && cartStoreId !== store.id) {
-                if (!confirm(`Your cart contains items from another restaurant. Start a new cart with ${store.name}?`)) return;
-                saveCart([{ ...item, qty: 1 }]);
-                setCartStoreId(store.id);
-                showToast(`Added ${item.name} from ${store.name}!`);
+        // Cart calculations (Strict backend-aligned pricing)
+        const cartSubtotal = useMemo(() => {
+            return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        }, [cart]);
+
+        const currentMerchant = useMemo(() => {
+            if (cart.length === 0) return null;
+            return restaurants.find(r => r.id === cart[0].merchantId) || restaurants[0];
+        }, [cart, restaurants]);
+
+        const cartDeliveryFee = currentMerchant ? (currentMerchant.deliveryFee || 1.50) : 0;
+        const cartTotal = cartSubtotal > 0 ? (cartSubtotal + cartDeliveryFee) : 0;
+
+        const handleAddToCart = (item, merchant) => {
+            if (cart.length > 0 && cart[0].merchantId !== merchant.id) {
+                if (!confirm(`Your cart already contains items from "${cart[0].merchantName}". Would you like to clear your cart and start a new order with "${merchant.name}"?`)) {
+                    return;
+                }
+                setCart([{
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    imageUrl: item.imageUrl,
+                    merchantId: merchant.id,
+                    merchantName: merchant.name,
+                    quantity: 1
+                }]);
+                showToast(`Started new order from ${merchant.name}!`);
                 return;
             }
-            setCartStoreId(store.id);
-            const existing = cart.find(c => c.id === item.id);
-            if (existing) {
-                saveCart(cart.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c));
-            } else {
-                saveCart([...cart, { ...item, qty: 1 }]);
-            }
+
+            setCart(prev => {
+                const existing = prev.find(i => i.id === item.id);
+                if (existing) {
+                    return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+                } else {
+                    return [...prev, {
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        imageUrl: item.imageUrl,
+                        merchantId: merchant.id,
+                        merchantName: merchant.name,
+                        quantity: 1
+                    }];
+                }
+            });
             showToast(`Added ${item.name} to cart!`);
         };
 
-        const updateQty = (id, delta) => {
-            const updated = cart.map(c => {
-                if (c.id === id) {
-                    const newQty = c.qty + delta;
-                    return newQty > 0 ? { ...c, qty: newQty } : null;
-                }
-                return c;
-            }).filter(Boolean);
-            saveCart(updated);
+        const handleUpdateQuantity = (itemId, delta) => {
+            setCart(prev => {
+                return prev.map(item => {
+                    if (item.id === itemId) {
+                        const newQ = item.quantity + delta;
+                        return newQ > 0 ? { ...item, quantity: newQ } : null;
+                    }
+                    return item;
+                }).filter(Boolean);
+            });
         };
 
-        const activeStore = merchants.find(m => m.id === cartStoreId) || merchants[0];
-        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        const deliveryFee = cart.length > 0 ? (activeStore?.deliveryFee || 1.50) : 0;
-        const total = subtotal + deliveryFee;
+        // Authentication Handlers
+        const handleLoginSubmit = async (e) => {
+            e.preventDefault();
+            setLoginError('');
 
-        const handlePlaceOrder = () => {
-            if (cart.length === 0) return;
-            const newOrder = {
-                id: 100 + orders.length + 1,
-                customer: "Dominica Reed (Customer)",
-                customerEmail: "customer@example.com",
-                merchant: activeStore.name,
-                merchantId: activeStore.id,
-                items: cart.map(c => ({ name: c.name, qty: c.qty, price: c.price })),
-                totalAmount: total,
-                status: "PENDING",
-                time: "Just now",
-                destination: deliveryAddress,
-                paymentMethod: paymentMethod,
-                driver: null
+            const email = loginEmail.trim().toLowerCase();
+            const password = loginPassword.trim();
+
+            if (!email || !password) {
+                setLoginError('Please provide both email and password.');
+                return;
+            }
+
+            // Role-based redirection if Admin, Merchant, or Driver credentials used
+            if (email === 'admin@example.com' || email.includes('admin')) {
+                localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Alex Admin", email, role: "ADMIN" }));
+                showToast("Admin account identified. Redirecting to Admin Hub...", "info");
+                setTimeout(() => window.location.href = 'admin.html', 1000);
+                return;
+            }
+            if (email === 'merchant@example.com' || email.includes('merchant')) {
+                localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Bopha Culinary", email, role: "MERCHANT" }));
+                showToast("Merchant account identified. Redirecting to Merchant Portal...", "info");
+                setTimeout(() => window.location.href = 'merchant.html', 1000);
+                return;
+            }
+            if (email === 'driver@example.com' || email.includes('driver')) {
+                localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Dara Express", email, role: "DRIVER" }));
+                showToast("Driver account identified. Redirecting to Driver Dispatch...", "info");
+                setTimeout(() => window.location.href = 'driver.html', 1000);
+                return;
+            }
+
+            // Customer Login
+            const customerUser = {
+                id: 'c_' + Date.now(),
+                name: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                email: email,
+                phone: "+855 12 345 678",
+                role: "CUSTOMER",
+                addresses: [
+                    { id: 'a1', label: "Home (BKK1)", address: "Building 42, St. 302, BKK1, Phnom Penh", isDefault: true },
+                    { id: 'a2', label: "Office", address: "Vattanac Tower Level 14, Phnom Penh", isDefault: false }
+                ]
             };
 
-            saveOrders([newOrder, ...orders]);
-            saveCart([]);
-            setShowPaymentModal(false);
-            setTab('orders');
-            showToast(`Order #${newOrder.id} placed successfully!`);
+            setAuthUser(customerUser);
+            localStorage.setItem('foodeats_auth_user', JSON.stringify(customerUser));
+            setShowAuthModal(false);
+            showToast(`Welcome back, ${customerUser.name}!`);
         };
 
-        const filteredMerchants = merchants.filter(m => {
-            const matchSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.category.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchCat = activeCategory === 'All' || m.category.toLowerCase().includes(activeCategory.toLowerCase());
-            return matchSearch && matchCat;
-        });
+        const handleRegisterSubmit = async (e) => {
+            e.preventDefault();
+            setRegError('');
+
+            if (!regName.trim() || !regEmail.trim() || !regPassword.trim()) {
+                setRegError('Please complete all required fields.');
+                return;
+            }
+
+            const newCustomer = {
+                id: 'c_' + Date.now(),
+                name: regName.trim(),
+                email: regEmail.trim().toLowerCase(),
+                phone: regPhone.trim() || "+855 12 888 999",
+                role: "CUSTOMER",
+                addresses: [
+                    {
+                        id: 'a_' + Date.now(),
+                        label: "Default Address",
+                        address: regAddress.trim() || "Phnom Penh, Cambodia",
+                        isDefault: true
+                    }
+                ]
+            };
+
+            setAuthUser(newCustomer);
+            localStorage.setItem('foodeats_auth_user', JSON.stringify(newCustomer));
+            setSelectedAddress(newCustomer.addresses[0]);
+            setShowAuthModal(false);
+            showToast(`Account created! Welcome to FoodEats, ${newCustomer.name}!`);
+        };
+
+        const handleLogout = () => {
+            localStorage.removeItem('foodeats_auth_token');
+            localStorage.removeItem('foodeats_auth_user');
+            setAuthUser(null);
+            showToast("You have been signed out.", "info");
+        };
+
+        const handleProceedToCheckout = () => {
+            if (!authUser) {
+                setShowCartDrawer(false);
+                setAuthTab('login');
+                setShowAuthModal(true);
+                showToast("Please sign in or register to place your order.", "info");
+                return;
+            }
+            setShowCartDrawer(false);
+            setShowCheckoutModal(true);
+        };
+
+        const handleConfirmPayment = () => {
+            setIsProcessingPayment(true);
+            setTimeout(() => {
+                const newOrder = {
+                    id: 100 + orders.length + 1,
+                    customerId: authUser ? authUser.id : 'guest',
+                    customerName: authUser ? authUser.name : 'Customer',
+                    merchant: currentMerchant.name,
+                    merchantId: currentMerchant.id,
+                    items: cart.map(i => `${i.quantity}x ${i.name}`).join(", "),
+                    itemsCount: cart.reduce((s, i) => s + i.quantity, 0),
+                    subtotal: cartSubtotal,
+                    deliveryFee: cartDeliveryFee,
+                    total: cartTotal,
+                    status: "ACCEPTED",
+                    paymentStatus: "PAID_MOCK",
+                    time: "Just now",
+                    driver: "Dara K. Express (Auto-assigned)",
+                    address: selectedAddress ? selectedAddress.address : "Phnom Penh, Cambodia"
+                };
+
+                setOrders([newOrder, ...orders]);
+                setCart([]);
+                setIsProcessingPayment(false);
+                setShowCheckoutModal(false);
+                setActiveView('orders');
+                showToast("Order placed successfully! Kitchen is preparing your meal.");
+            }, 1800);
+        };
+
+        // Filtered restaurants
+        const filteredRestaurants = useMemo(() => {
+            return restaurants.filter(r => {
+                const matchCategory = selectedCategory === 'ALL' || r.category.toLowerCase().includes(selectedCategory.toLowerCase()) || r.cuisine.toLowerCase().includes(selectedCategory.toLowerCase());
+                const matchSearch = !searchQuery || r.name.toLowerCase().includes(searchQuery.toLowerCase()) || r.cuisine.toLowerCase().includes(searchQuery.toLowerCase()) || r.menu.some(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
+                return matchCategory && matchSearch;
+            });
+        }, [restaurants, selectedCategory, searchQuery]);
+
+        const categoriesList = ['ALL', 'Burgers', 'Japanese', 'Coffee & Bakery', 'Khmer', 'Desserts'];
 
         return (
-            <div class="w-full h-full flex flex-col bg-[#f8fafc]">
+            <div className="min-h-screen flex flex-col bg-cream-50">
+                {/* Toast Notification */}
                 {toast && (
-                    <div class="fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl bg-forest-950 text-mint-400 font-bold text-xs shadow-xl border border-forest-800 flex items-center gap-2 animate-bounce">
-                        <i data-lucide="check-circle" class="w-4 h-4 text-mint-400"></i> {toast}
+                    <div className="fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border text-sm font-semibold bg-ink-950 text-mint-300 border-forest-700 animate-bounce">
+                        <i data-lucide={toast.type === 'info' ? 'info' : 'check-circle-2'} className="w-5 h-5 text-mint-400"></i>
+                        {toast.msg}
                     </div>
                 )}
 
-                {/* Top Navigation Bar */}
-                <header class="bg-forest-950 text-white px-6 py-3.5 flex items-center justify-between border-b border-forest-900 shrink-0">
-                    <div class="flex items-center gap-6">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-mint-500 flex items-center justify-center text-forest-950 font-black shadow-md">
-                                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                {/* Top Guest / Welcome Alert Banner */}
+                {!authUser && (
+                    <div className="bg-gradient-to-r from-forest-700 via-forest-600 to-ink-900 text-white px-4 py-2 text-xs font-semibold flex items-center justify-between shadow-sm">
+                        <div className="flex items-center gap-2 max-w-2xl truncate">
+                            <span className="bg-mint-400 text-ink-950 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">Guest Mode</span>
+                            <span>Sign in or create a Customer account to save delivery addresses and track live orders!</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => { setAuthTab('login'); setShowAuthModal(true); }}
+                                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-white font-bold transition text-xs"
+                            >
+                                Log In
+                            </button>
+                            <button
+                                onClick={() => { setAuthTab('register'); setShowAuthModal(true); }}
+                                className="px-3 py-1 bg-mint-400 hover:bg-mint-300 text-ink-950 rounded-lg font-bold transition text-xs shadow"
+                            >
+                                Register
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Main Header / Navigation Bar */}
+                <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-sage-200 shadow-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
+
+                        {/* Brand Logo & Tagline */}
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveView('discovery'); setSelectedRestaurant(null); }}>
+                            <div className="w-10 h-10 rounded-2xl bg-forest-500 flex items-center justify-center text-white font-black text-xl shadow-md shadow-forest-500/30">
+                                <i data-lucide="utensils" className="w-5 h-5"></i>
                             </div>
                             <div>
-                                <h1 class="font-black text-base tracking-tight text-white leading-tight">FoodEats</h1>
-                                <span class="text-[10px] text-mint-400 font-bold uppercase tracking-wider">Customer Portal (Sprint 3)</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-display font-black text-xl tracking-tight text-ink-950">FoodEats</span>
+                                    <span className="px-2 py-0.5 rounded-full bg-forest-50 text-forest-700 text-[10px] font-extrabold border border-forest-200">Customer</span>
+                                </div>
+                                <span className="text-[11px] font-semibold text-ink-400 block -mt-1">Gourmet Food Discovery</span>
                             </div>
                         </div>
 
-                        <nav class="hidden md:flex items-center gap-2 text-xs font-bold">
-                            <button onClick={() => { setSelectedStore(null); setTab('browse'); }} class={`px-3 py-1.5 rounded-xl transition ${tab === 'browse' && !selectedStore ? 'bg-mint-500 text-forest-950' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                Browse Restaurants
-                            </button>
-                            <button onClick={() => { setSelectedStore(null); setTab('orders'); }} class={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${tab === 'orders' ? 'bg-mint-500 text-forest-950' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                <span>My Orders</span>
-                                {orders.length > 0 && <span class="px-1.5 py-0.2 rounded-full bg-forest-900 text-mint-300 text-[10px]">{orders.length}</span>}
-                            </button>
-                            <button onClick={() => { setSelectedStore(null); setTab('profile'); }} class={`px-3 py-1.5 rounded-xl transition ${tab === 'profile' ? 'bg-mint-500 text-forest-950' : 'text-white/70 hover:text-white hover:bg-white/10'}`}>
-                                Delivery Addresses
-                            </button>
-                        </nav>
-                    </div>
-
-                    {/* Right Portal Switcher / Links */}
-                    <div class="flex items-center gap-3">
-                        <div class="hidden lg:flex items-center gap-1 bg-white/10 p-1 rounded-xl text-[11px] font-bold text-white/80">
-                            <span class="px-2 text-white/50">Routes:</span>
-                            <a href="/main/customer" class="px-2 py-1 bg-mint-500/20 text-mint-300 rounded-lg">🛒 Customer</a>
-                            <a href="/main/merchant" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🏪 /main/merchant</a>
-                            <a href="/main/driver" class="px-2 py-1 hover:bg-white/10 rounded-lg text-amber-300">🛵 /main/driver</a>
-                            <a href="/main/admin" class="px-2 py-1 hover:bg-white/10 rounded-lg text-sky-300">⚙️ /main/admin</a>
+                        {/* Location / Delivery Address Pill */}
+                        <div className="hidden md:flex items-center gap-2 bg-cream-100/70 hover:bg-cream-200/60 border border-sage-200 px-3.5 py-1.5 rounded-2xl transition cursor-pointer"
+                             onClick={() => { if (authUser) setActiveView('profile'); else { setAuthTab('login'); setShowAuthModal(true); } }}>
+                            <div className="w-6 h-6 rounded-lg bg-rust-500/10 text-rust-600 flex items-center justify-center">
+                                <i data-lucide="map-pin" className="w-3.5 h-3.5"></i>
+                            </div>
+                            <div className="text-left text-xs">
+                                <div className="text-[10px] font-bold uppercase text-ink-400 tracking-wider">Deliver to</div>
+                                <div className="font-bold text-ink-900 truncate max-w-[200px]">
+                                    {selectedAddress ? selectedAddress.label + " • " + selectedAddress.address.split(',')[0] : "Set Phnom Penh Address"}
+                                </div>
+                            </div>
+                            <i data-lucide="chevron-down" className="w-3.5 h-3.5 text-ink-400 ml-1"></i>
                         </div>
 
-                        <div class="flex items-center gap-2 pl-3 border-l border-white/15 text-xs font-bold text-white">
-                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" class="w-7 h-7 rounded-full ring-2 ring-mint-400" />
-                            <span class="hidden sm:inline">Dominica</span>
+                        {/* Global Search Bar */}
+                        <div className="hidden lg:flex flex-1 max-w-md relative">
+                            <i data-lucide="search" className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400"></i>
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="Search dishes, burgers, sushi, cafes..."
+                                className="w-full bg-sage-50/60 hover:bg-sage-100/50 focus:bg-white border border-sage-200 rounded-2xl pl-10 pr-4 py-2 text-xs font-semibold text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-forest-500 transition"
+                            />
+                        </div>
+
+                        {/* Action Buttons & Auth Controls */}
+                        <div className="flex items-center gap-3">
+
+                            {/* Orders Link */}
+                            <button
+                                onClick={() => setActiveView('orders')}
+                                className={`relative px-3.5 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2 ${activeView === 'orders' ? 'bg-forest-50 text-forest-700 border border-forest-300' : 'bg-cream-100/60 hover:bg-cream-200/60 text-ink-700 border border-sage-200'}`}
+                            >
+                                <i data-lucide="receipt" className="w-4 h-4 text-forest-600"></i>
+                                <span className="hidden sm:inline">My Orders</span>
+                                {orders.length > 0 && (
+                                    <span className="w-5 h-5 rounded-full bg-forest-600 text-white text-[10px] flex items-center justify-center font-black">
+                                        {orders.length}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Cart Trigger */}
+                            <button
+                                onClick={() => setShowCartDrawer(true)}
+                                className="relative px-3.5 py-2 rounded-2xl bg-ink-950 hover:bg-ink-900 text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-ink-950/20"
+                            >
+                                <i data-lucide="shopping-bag" className="w-4 h-4 text-mint-400"></i>
+                                <span className="hidden sm:inline">Cart</span>
+                                {cart.length > 0 ? (
+                                    <span className="px-2 py-0.5 rounded-full bg-mint-400 text-ink-950 text-[10px] font-black">
+                                        ${cartTotal.toFixed(2)}
+                                    </span>
+                                ) : (
+                                    <span className="w-2 h-2 rounded-full bg-sage-400"></span>
+                                )}
+                            </button>
+
+                            {/* Authentication Status Section */}
+                            {authUser ? (
+                                <div className="flex items-center gap-2 pl-2 border-l border-sage-200">
+                                    <div
+                                        onClick={() => setActiveView('profile')}
+                                        className="flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl bg-forest-50/70 hover:bg-forest-100/70 border border-forest-200 cursor-pointer transition"
+                                    >
+                                        <div className="w-7 h-7 rounded-xl bg-forest-600 text-white flex items-center justify-center font-black text-xs shadow-sm">
+                                            {authUser.name.charAt(0)}
+                                        </div>
+                                        <div className="text-left hidden md:block">
+                                            <div className="text-xs font-bold text-ink-950 leading-none">{authUser.name}</div>
+                                            <span className="text-[9px] font-semibold text-forest-700 uppercase">Customer</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Prominent Log Out Button */}
+                                    <button
+                                        onClick={handleLogout}
+                                        title="Sign Out of Customer Account"
+                                        className="px-3 py-2 bg-rust-500/10 hover:bg-rust-500/20 text-rust-600 hover:text-rust-700 border border-rust-500/20 rounded-2xl text-xs font-bold transition flex items-center gap-1.5"
+                                    >
+                                        <i data-lucide="log-out" className="w-3.5 h-3.5"></i>
+                                        <span className="hidden xl:inline">Log Out</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2 pl-2 border-l border-sage-200">
+                                    <button
+                                        onClick={() => { setAuthTab('login'); setShowAuthModal(true); }}
+                                        className="px-3 py-2 bg-forest-500 hover:bg-forest-600 text-white rounded-2xl text-xs font-bold transition shadow-sm flex items-center gap-1.5"
+                                    >
+                                        <i data-lucide="log-in" className="w-3.5 h-3.5"></i>
+                                        <span>Sign In / Log In</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setAuthTab('register'); setShowAuthModal(true); }}
+                                        className="hidden sm:flex px-3 py-2 bg-cream-100 hover:bg-cream-200 text-ink-800 border border-sage-300 rounded-2xl text-xs font-bold transition items-center gap-1.5"
+                                    >
+                                        <i data-lucide="user-plus" className="w-3.5 h-3.5 text-forest-600"></i>
+                                        <span>Register</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Gateway link */}
+                            <a href="index.html" title="Platform Gateway" className="w-9 h-9 rounded-2xl bg-cream-100 hover:bg-cream-200 border border-sage-300 flex items-center justify-center text-ink-600 hover:text-ink-950 transition">
+                                <i data-lucide="layout-grid" className="w-4 h-4"></i>
+                            </a>
                         </div>
                     </div>
                 </header>
 
-                {/* Main Layout Area */}
-                <div class="flex-1 overflow-hidden flex flex-col md:flex-row">
-                    {/* Center Content */}
-                    <main class="flex-1 overflow-y-auto p-6 space-y-6">
-                        {selectedStore ? (
-                            <div class="space-y-6">
-                                <button onClick={() => setSelectedStore(null)} class="px-3.5 py-1.5 bg-white border rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 shadow-sm">
-                                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Restaurants
-                                </button>
+                {/* Subheader / Role Portals Fast Navigation Bar */}
+                <div className="bg-white border-b border-sage-200 px-4 py-2 text-xs">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-4">
+                        <div className="flex items-center gap-2 text-ink-500 text-[11px] font-semibold shrink-0">
+                            <span className="text-ink-400">Quick Navigation:</span>
+                            <button onClick={() => { setActiveView('discovery'); setSelectedRestaurant(null); }} className={`px-2.5 py-1 rounded-lg font-bold ${activeView === 'discovery' && !selectedRestaurant ? 'bg-forest-100 text-forest-800' : 'hover:bg-sage-100'}`}>
+                                Restaurants
+                            </button>
+                            <button onClick={() => setActiveView('orders')} className={`px-2.5 py-1 rounded-lg font-bold ${activeView === 'orders' ? 'bg-forest-100 text-forest-800' : 'hover:bg-sage-100'}`}>
+                                Order History
+                            </button>
+                            <button onClick={() => { if (authUser) setActiveView('profile'); else { setAuthTab('login'); setShowAuthModal(true); } }} className={`px-2.5 py-1 rounded-lg font-bold ${activeView === 'profile' ? 'bg-forest-100 text-forest-800' : 'hover:bg-sage-100'}`}>
+                                Address Book
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] font-bold shrink-0">
+                            <span className="text-ink-400">Other Role Portals:</span>
+                            <a href="merchant.html" className="text-ink-600 hover:text-forest-600 hover:underline flex items-center gap-1">
+                                <i data-lucide="store" className="w-3 h-3 text-forest-500"></i> Merchant
+                            </a>
+                            <span className="text-sage-300">•</span>
+                            <a href="driver.html" className="text-ink-600 hover:text-forest-600 hover:underline flex items-center gap-1">
+                                <i data-lucide="bike" className="w-3 h-3 text-forest-500"></i> Driver
+                            </a>
+                            <span className="text-sage-300">•</span>
+                            <a href="admin.html" className="text-ink-600 hover:text-forest-600 hover:underline flex items-center gap-1">
+                                <i data-lucide="shield-check" className="w-3 h-3 text-forest-500"></i> Admin
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-                                <div class="relative rounded-3xl overflow-hidden shadow-lg h-56">
-                                    <img src={selectedStore.imageUrl} class="w-full h-full object-cover" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-forest-950 via-forest-950/40 to-transparent p-6 flex flex-col justify-end text-white">
-                                            <span class="px-2.5 py-0.5 rounded-full bg-mint-500 text-forest-950 font-black text-[10px] w-fit uppercase">
-                                                {selectedStore.category}
-                                            </span>
-                                        <h2 class="text-2xl font-black mt-1">{selectedStore.name}</h2>
-                                        <p class="text-xs text-white/80 mt-0.5">{selectedStore.description}</p>
-                                        <div class="flex gap-4 mt-2 text-xs font-bold text-mint-400">
-                                            <span>⭐ {selectedStore.rating} (300+ reviews)</span>
-                                            <span>⏱️ {selectedStore.deliveryTimeMins} mins</span>
-                                            <span>🛵 ${selectedStore.deliveryFee.toFixed(2)} delivery</span>
+                {/* Main Content Body */}
+                <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+                    {/* VIEW 1: DISCOVERY (All Restaurants) */}
+                    {activeView === 'discovery' && !selectedRestaurant && (
+                        <div className="space-y-8">
+
+                            {/* Hero Banner */}
+                            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-ink-950 via-forest-900 to-ink-900 text-white p-8 md:p-12 shadow-xl">
+                                <div className="relative z-10 max-w-2xl space-y-4">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-500/20 border border-forest-400/30 text-mint-300 text-xs font-bold">
+                                        <i data-lucide="sparkles" className="w-3.5 h-3.5 text-mint-400"></i>
+                                        <span>Sprint 3: Customer Discovery & Live Cart Engine</span>
+                                    </div>
+                                    <h1 className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight leading-tight">
+                                        Craving artisan food, delivered straight to your door?
+                                    </h1>
+                                    <p className="text-mint-100/80 text-sm sm:text-base font-medium leading-relaxed">
+                                        Explore top-rated restaurants across Phnom Penh. Enjoy handcrafted burgers, authentic Japanese ramen, specialty brews, and rapid live dispatch.
+                                    </p>
+                                    <div className="pt-2 flex flex-wrap items-center gap-3">
+                                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-3.5 py-2 rounded-2xl text-xs font-bold border border-white/10">
+                                            <i data-lucide="clock" className="w-4 h-4 text-mint-400"></i> Avg. 20-30 Min Delivery
+                                        </div>
+                                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-3.5 py-2 rounded-2xl text-xs font-bold border border-white/10">
+                                            <i data-lucide="qr-code" className="w-4 h-4 text-mint-400"></i> KHQR & Card Mock Payments
                                         </div>
                                     </div>
                                 </div>
+                                <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 bg-[radial-gradient(#1a936f_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+                            </div>
 
-                                <div>
-                                    <h3 class="text-base font-black text-slate-900 mb-4">Available Menu Items</h3>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {selectedStore.menu?.map(item => (
-                                            <div key={item.id} class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between">
-                                                <div>
-                                                    <img src={item.imageUrl} class="w-full h-36 object-cover rounded-xl mb-3" />
-                                                    <h4 class="font-bold text-slate-900 text-xs">{item.name}</h4>
-                                                    <p class="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{item.description}</p>
+                            {/* Category Filter Chips */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="font-display font-bold text-xl text-ink-950">Explore Cuisines</h2>
+                                    <span className="text-xs font-semibold text-ink-500">{filteredRestaurants.length} Restaurants Available</span>
+                                </div>
+                                <div className="flex items-center gap-2.5 overflow-x-auto pb-2">
+                                    {categoriesList.map(cat => (
+                                        <button
+                                            key={cat}
+                                            onClick={() => setSelectedCategory(cat)}
+                                            className={`px-4 py-2 rounded-2xl text-xs font-bold transition whitespace-nowrap ${selectedCategory === cat ? 'bg-forest-600 text-white shadow-md shadow-forest-600/20' : 'bg-white hover:bg-sage-100 text-ink-700 border border-sage-200'}`}
+                                        >
+                                            {cat === 'ALL' ? '🍽️ All Cuisines' : cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Restaurants Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredRestaurants.map(rest => (
+                                    <div
+                                        key={rest.id}
+                                        onClick={() => setSelectedRestaurant(rest)}
+                                        className="group bg-white rounded-3xl border border-sage-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-forest-400/50 transition-all duration-300 cursor-pointer flex flex-col"
+                                    >
+                                        <div className="relative h-48 w-full overflow-hidden bg-sage-100">
+                                            <img
+                                                src={rest.imageUrl}
+                                                alt={rest.name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                                            />
+                                            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-1 rounded-xl text-xs font-bold text-ink-900 border border-sage-200 shadow-sm flex items-center gap-1">
+                                                <i data-lucide="star" className="w-3.5 h-3.5 text-amber-500 fill-amber-500"></i>
+                                                <span>{rest.rating}</span>
+                                                <span className="text-ink-400 font-normal">({rest.reviewsCount})</span>
+                                            </div>
+                                            <div className="absolute top-3 right-3 bg-ink-950/80 backdrop-blur px-2.5 py-1 rounded-xl text-xs font-bold text-mint-300">
+                                                {rest.deliveryTime}
+                                            </div>
+                                            <div className="absolute bottom-3 left-3 bg-forest-600/90 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-lg">
+                                                {rest.cuisine}
+                                            </div>
+                                        </div>
+
+                                        <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                                            <div>
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <h3 className="font-display font-bold text-lg text-ink-950 group-hover:text-forest-700 transition">
+                                                        {rest.name}
+                                                    </h3>
+                                                    <span className="text-xs font-bold text-ink-500 whitespace-nowrap">
+                                                        ${rest.deliveryFee.toFixed(2)} delivery
+                                                    </span>
                                                 </div>
-                                                <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                                                    <span class="font-black text-forest-900 text-sm">${item.price.toFixed(2)}</span>
-                                                    <button onClick={() => addToCart(item, selectedStore)} class="px-3 py-1.5 rounded-xl bg-forest-950 hover:bg-forest-900 text-mint-400 font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition">
-                                                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add
+                                                <p className="text-xs text-ink-500 mt-1 line-clamp-2 leading-relaxed">
+                                                    {rest.description}
+                                                </p>
+                                            </div>
+
+                                            <div className="pt-3 border-t border-sage-100 flex items-center justify-between text-xs font-semibold text-ink-600">
+                                                <span className="flex items-center gap-1 text-ink-400">
+                                                    <i data-lucide="map-pin" className="w-3.5 h-3.5"></i> {rest.distance}
+                                                </span>
+                                                <button className="px-3.5 py-1.5 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 font-bold group-hover:bg-forest-500 group-hover:text-white transition flex items-center gap-1.5">
+                                                    <span>View Menu</span>
+                                                    <i data-lucide="arrow-right" className="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                        </div>
+                    )}
+
+                    {/* VIEW 2: RESTAURANT MENU DETAIL */}
+                    {selectedRestaurant && (
+                        <div className="space-y-6">
+
+                            {/* Back to Restaurants Bar */}
+                            <button
+                                onClick={() => setSelectedRestaurant(null)}
+                                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white hover:bg-sage-100 border border-sage-200 text-xs font-bold text-ink-700 transition"
+                            >
+                                <i data-lucide="arrow-left" className="w-4 h-4"></i>
+                                <span>Back to All Restaurants</span>
+                            </button>
+
+                            {/* Merchant Banner Header */}
+                            <div className="bg-white rounded-3xl border border-sage-200 overflow-hidden shadow-sm">
+                                <div className="relative h-56 md:h-64 w-full">
+                                    <img
+                                        src={selectedRestaurant.imageUrl}
+                                        alt={selectedRestaurant.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-ink-950/40 to-transparent"></div>
+                                    <div className="absolute bottom-6 left-6 right-6 text-white space-y-2">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="px-2.5 py-0.5 rounded-md bg-forest-500 text-white text-[11px] font-black uppercase">
+                                                {selectedRestaurant.cuisine}
+                                            </span>
+                                            <span className="px-2.5 py-0.5 rounded-md bg-white/20 backdrop-blur text-white text-[11px] font-bold">
+                                                ⭐ {selectedRestaurant.rating} ({selectedRestaurant.reviewsCount} reviews)
+                                            </span>
+                                            <span className="px-2.5 py-0.5 rounded-md bg-white/20 backdrop-blur text-white text-[11px] font-bold">
+                                                🕒 {selectedRestaurant.deliveryTime}
+                                            </span>
+                                        </div>
+                                        <h1 className="font-display font-black text-2xl sm:text-3xl lg:text-4xl text-white">
+                                            {selectedRestaurant.name}
+                                        </h1>
+                                        <p className="text-xs sm:text-sm text-mint-100/90 max-w-2xl">
+                                            {selectedRestaurant.address}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Menu Items List */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="font-display font-bold text-2xl text-ink-950">Signature Menu Items</h2>
+                                    <span className="text-xs font-semibold text-ink-500">{selectedRestaurant.menu.length} Dishes</span>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {selectedRestaurant.menu.map(item => (
+                                        <div
+                                            key={item.id}
+                                            className="bg-white rounded-3xl border border-sage-200 p-4 hover:border-forest-400/60 transition shadow-sm flex items-center justify-between gap-4"
+                                        >
+                                            <div className="flex-1 space-y-1.5">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-forest-700 bg-forest-50 px-2 py-0.5 rounded-md">
+                                                    {item.category}
+                                                </span>
+                                                <h3 className="font-display font-bold text-base text-ink-950">{item.name}</h3>
+                                                <p className="text-xs text-ink-500 line-clamp-2">{item.description}</p>
+                                                <div className="pt-2 flex items-center gap-3">
+                                                    <span className="font-display font-black text-base text-forest-700">
+                                                        ${item.price.toFixed(2)}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => handleAddToCart(item, selectedRestaurant)}
+                                                        className="px-3 py-1.5 bg-forest-600 hover:bg-forest-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm"
+                                                    >
+                                                        <i data-lucide="plus" className="w-3.5 h-3.5"></i> Add to Cart
                                                     </button>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
+                                            <img
+                                                src={item.imageUrl}
+                                                alt={item.name}
+                                                className="w-24 h-24 rounded-2xl object-cover border border-sage-200 shrink-0"
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        ) : tab === 'browse' ? (
-                            <div class="space-y-6">
-                                {/* Search & Hero Banner */}
-                                <div class="p-6 rounded-3xl bg-forest-950 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                    <div class="relative z-10 max-w-lg">
-                                        <span class="px-3 py-1 rounded-full bg-mint-500/20 text-mint-400 text-xs font-bold uppercase tracking-wider">Fast Food Delivery</span>
-                                        <h2 class="text-2xl font-black mt-2">What are you craving today?</h2>
-                                        <p class="text-xs text-white/70 mt-1">Discover top-rated local restaurants delivered to your doorstep in 20 minutes.</p>
-                                    </div>
-                                    <div class="w-full sm:w-72 relative z-10">
-                                        <input
-                                            type="text"
-                                            value={searchQuery}
-                                            onChange={e => setSearchQuery(e.target.value)}
-                                            placeholder="Search burgers, ramen, sushi..."
-                                            class="w-full bg-white/10 backdrop-blur border border-white/20 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-white/50 focus:outline-none focus:bg-white/20"
-                                        />
-                                    </div>
-                                </div>
 
-                                {/* Restaurant Grid */}
-                                <div>
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h3 class="font-black text-slate-900 text-base">Popular Restaurants</h3>
-                                        <span class="text-xs text-slate-500 font-semibold">{filteredMerchants.length} restaurants found</span>
-                                    </div>
+                        </div>
+                    )}
 
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {filteredMerchants.map(m => (
-                                            <div
-                                                key={m.id}
-                                                onClick={() => setSelectedStore(m)}
-                                                class="bg-white rounded-3xl border border-slate-200/80 overflow-hidden cursor-pointer hover:shadow-lg transition group p-4 flex flex-col justify-between"
-                                            >
-                                                <div>
-                                                    <div class="relative rounded-2xl overflow-hidden mb-3">
-                                                        <img src={m.imageUrl} class="w-full h-44 object-cover group-hover:scale-105 transition duration-300" />
-                                                        <span class="absolute top-2.5 right-2.5 px-2.5 py-1 bg-forest-950/80 backdrop-blur-md text-white rounded-full text-[10px] font-extrabold flex items-center gap-1">
-                                                                ⭐ {m.rating}
-                                                            </span>
-                                                    </div>
-                                                    <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-mint-600 transition">{m.name}</h4>
-                                                    <p class="text-xs text-slate-500">{m.category} • {m.address}</p>
-                                                </div>
-                                                <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 text-xs font-bold text-slate-700">
-                                                    <span class="text-mint-700">⏱️ {m.deliveryTimeMins} mins</span>
-                                                    <span class="text-slate-500">Delivery: ${m.deliveryFee.toFixed(2)}</span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : tab === 'orders' ? (
-                            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-                                <h3 class="font-black text-slate-900 text-base">Your Order History & Live Tracking</h3>
-                                {orders.length === 0 ? (
-                                    <p class="text-xs text-slate-400 py-8 text-center">You have not placed any orders yet.</p>
-                                ) : (
-                                    <div class="divide-y divide-slate-100">
-                                        {orders.map(o => (
-                                            <div key={o.id} class="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                                <div>
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="font-black text-slate-900 text-xs">Order #{o.id}</span>
-                                                        <span class="text-xs font-bold text-mint-700">• {o.merchant}</span>
-                                                    </div>
-                                                    <p class="text-[11px] text-slate-500 mt-0.5">Delivering to: {o.destination}</p>
-                                                    <p class="text-[11px] text-slate-400">Items: {o.items?.map(i => `${i.qty}x ${i.name}`).join(', ')}</p>
-                                                </div>
-                                                <div class="flex items-center gap-3">
-                                                    <span class="font-black text-forest-950 text-sm">${parseFloat(o.totalAmount).toFixed(2)}</span>
-                                                    <span class={`px-3 py-1 rounded-full text-xs font-black ${
-                                                        o.status === 'DELIVERED' ? 'bg-mint-100 text-mint-800' :
-                                                            o.status === 'ACCEPTED' ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-800'
-                                                    }`}>
-                                                            {o.status}
-                                                        </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm max-w-lg space-y-4">
-                                <h3 class="font-black text-slate-900 text-base">Saved Delivery Address</h3>
+                    {/* VIEW 3: ORDER HISTORY & REAL-TIME TRACKING */}
+                    {activeView === 'orders' && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Primary Street Address</label>
-                                    <input
-                                        type="text"
-                                        value={deliveryAddress}
-                                        onChange={e => setDeliveryAddress(e.target.value)}
-                                        class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs focus:outline-none focus:border-mint-500"
-                                    />
+                                    <h1 className="font-display font-bold text-2xl sm:text-3xl text-ink-950">Order History & Live Tracking</h1>
+                                    <p className="text-xs font-semibold text-ink-500">Real-time status updates powered by the Spring Boot state machine</p>
                                 </div>
-                                <button onClick={() => showToast("Address updated successfully!")} class="px-5 py-2.5 bg-forest-950 text-mint-400 font-black text-xs rounded-2xl">
-                                    Save Default Address
+                                <button
+                                    onClick={() => { setActiveView('discovery'); setSelectedRestaurant(null); }}
+                                    className="px-3.5 py-2 bg-forest-600 text-white rounded-2xl text-xs font-bold hover:bg-forest-700 transition"
+                                >
+                                    + Browse More Food
                                 </button>
                             </div>
-                        )}
-                    </main>
 
-                    {/* Right Shopping Cart Panel */}
-                    <aside class="w-full md:w-80 bg-white border-l border-slate-200/80 p-6 flex flex-col justify-between shrink-0 overflow-y-auto">
-                        <div>
-                            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-                                <div class="flex items-center gap-2 font-black text-slate-900 text-sm">
-                                    <i data-lucide="shopping-cart" class="w-4 h-4 text-mint-600"></i>
-                                    <span>Active Cart ({cart.reduce((s, i) => s + i.qty, 0)})</span>
-                                </div>
-                                {cart.length > 0 && (
-                                    <button onClick={() => saveCart([])} class="text-[11px] text-rose-600 font-bold hover:underline">
-                                        Clear
+                            {orders.length === 0 ? (
+                                <div className="text-center py-16 bg-white rounded-3xl border border-sage-200 p-8 space-y-4">
+                                    <div className="w-16 h-16 rounded-full bg-sage-100 text-sage-500 flex items-center justify-center mx-auto">
+                                        <i data-lucide="receipt" className="w-8 h-8"></i>
+                                    </div>
+                                    <h3 className="font-display font-bold text-lg text-ink-950">No orders placed yet</h3>
+                                    <p className="text-xs text-ink-500 max-w-sm mx-auto">Browse our delicious restaurant partners and enjoy rapid delivery across Phnom Penh.</p>
+                                    <button
+                                        onClick={() => { setActiveView('discovery'); setSelectedRestaurant(null); }}
+                                        className="px-5 py-2.5 bg-forest-600 text-white rounded-2xl text-xs font-bold hover:bg-forest-700 shadow-md transition"
+                                    >
+                                        Order Now
                                     </button>
-                                )}
-                            </div>
-
-                            {cart.length === 0 ? (
-                                <div class="py-12 text-center text-slate-400 space-y-2">
-                                    <i data-lucide="shopping-bag" class="w-8 h-8 mx-auto stroke-1"></i>
-                                    <p class="text-xs">Your shopping cart is empty.<br/>Add dishes to get started.</p>
                                 </div>
                             ) : (
-                                <div class="space-y-3">
-                                    <div class="text-xs font-bold text-mint-800 bg-mint-50 p-2.5 rounded-xl border border-mint-200">
-                                        Ordering from: <strong>{activeStore.name}</strong>
-                                    </div>
-                                    <div class="divide-y divide-slate-100 max-h-60 overflow-y-auto">
-                                        {cart.map(item => (
-                                            <div key={item.id} class="py-2.5 flex items-center justify-between text-xs">
-                                                <div class="flex-1 pr-2">
-                                                    <div class="font-bold text-slate-800">{item.name}</div>
-                                                    <div class="text-slate-500 font-semibold">${item.price.toFixed(2)}</div>
+                                <div className="space-y-4">
+                                    {orders.map(order => (
+                                        <div key={order.id} className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-4">
+
+                                            {/* Order Header */}
+                                            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-sage-100">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-2xl bg-forest-50 text-forest-700 border border-forest-200 flex items-center justify-center font-black text-sm">
+                                                        #{order.id}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-display font-bold text-base text-ink-950">{order.merchant}</h3>
+                                                        <span className="text-[11px] font-semibold text-ink-400">{order.time} • Payment: {order.paymentStatus}</span>
+                                                    </div>
                                                 </div>
-                                                <div class="flex items-center gap-2 bg-slate-100 rounded-xl px-2 py-1">
-                                                    <button onClick={() => updateQty(item.id, -1)} class="text-slate-600 font-bold hover:text-rose-600">-</button>
-                                                    <span class="font-black text-xs">{item.qty}</span>
-                                                    <button onClick={() => updateQty(item.id, 1)} class="text-slate-600 font-bold hover:text-mint-600">+</button>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                                                        order.status === 'DELIVERED' ? 'bg-mint-100 text-forest-800 border border-mint-300' :
+                                                            order.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+                                                                'bg-amber-100 text-amber-800 border border-amber-300'
+                                                    }`}>
+                                                        {order.status}
+                                                    </span>
+                                                    <span className="font-display font-black text-lg text-ink-950">${order.total.toFixed(2)}</span>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
+
+                                            {/* Order Items & Address */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                                                <div>
+                                                    <span className="font-bold text-ink-400 uppercase text-[10px] block mb-1">Ordered Dishes:</span>
+                                                    <p className="font-semibold text-ink-800">{order.items}</p>
+                                                </div>
+                                                <div>
+                                                    <span className="font-bold text-ink-400 uppercase text-[10px] block mb-1">Delivery Destination:</span>
+                                                    <p className="font-semibold text-ink-800 flex items-center gap-1.5">
+                                                        <i data-lucide="map-pin" className="w-3.5 h-3.5 text-rust-500"></i>
+                                                        {order.address}
+                                                    </p>
+                                                    <p className="text-[11px] text-forest-700 font-semibold mt-1">
+                                                        Assigned Courier: <span className="font-bold">{order.driver}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* State Machine Visual Progress Tracker */}
+                                            <div className="pt-2">
+                                                <div className="flex items-center justify-between text-[11px] font-bold text-ink-500 mb-2">
+                                                    <span className="text-forest-700">1. Order Placed</span>
+                                                    <span className="text-forest-700">2. Merchant Accepted</span>
+                                                    <span className="text-ink-400">3. Driver Picked Up</span>
+                                                    <span className="text-ink-400">4. Delivered</span>
+                                                </div>
+                                                <div className="w-full h-2 bg-sage-100 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-gradient-to-r from-forest-500 to-mint-400 rounded-full" style={{ width: order.status === 'DELIVERED' ? '100%' : '50%' }}></div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
+                    )}
 
-                        {cart.length > 0 && (
-                            <div class="pt-4 border-t border-slate-100 space-y-3 text-xs">
-                                <div class="space-y-1.5 text-slate-600">
-                                    <div class="flex justify-between">
-                                        <span>Subtotal</span>
-                                        <span class="font-bold text-slate-900">${subtotal.toFixed(2)}</span>
+                    {/* VIEW 4: USER PROFILE & ADDRESS BOOK */}
+                    {activeView === 'profile' && authUser && (
+                        <div className="max-w-2xl mx-auto space-y-6">
+                            <div className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-6">
+                                <div className="flex items-center justify-between pb-4 border-b border-sage-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-forest-600 text-white flex items-center justify-center font-black text-xl">
+                                            {authUser.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h2 className="font-display font-bold text-xl text-ink-950">{authUser.name}</h2>
+                                            <span className="text-xs font-semibold text-ink-500">{authUser.email} • {authUser.phone}</span>
+                                        </div>
                                     </div>
-                                    <div class="flex justify-between">
-                                        <span>Delivery Fee</span>
-                                        <span class="font-bold text-slate-900">${deliveryFee.toFixed(2)}</span>
+                                    <span className="px-3 py-1 rounded-full bg-forest-50 text-forest-700 font-black text-xs border border-forest-200">
+                                        Active Customer
+                                    </span>
+                                </div>
+
+                                {/* Saved Addresses (US-004) */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="font-display font-bold text-base text-ink-950">Saved Delivery Addresses (US-004)</h3>
                                     </div>
-                                    <div class="flex justify-between font-black text-sm text-forest-950 pt-2 border-t">
-                                        <span>Total (USD)</span>
-                                        <span class="text-mint-600">${total.toFixed(2)}</span>
+                                    <div className="space-y-2.5">
+                                        {authUser.addresses && authUser.addresses.map(addr => (
+                                            <div
+                                                key={addr.id}
+                                                onClick={() => {
+                                                    setSelectedAddress(addr);
+                                                    showToast(`Selected "${addr.label}" as active delivery location`);
+                                                }}
+                                                className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${selectedAddress && selectedAddress.id === addr.id ? 'bg-forest-50 border-forest-500 ring-2 ring-forest-500/20' : 'bg-white hover:bg-sage-50 border-sage-200'}`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-xl bg-forest-100 text-forest-700 flex items-center justify-center">
+                                                        <i data-lucide="map-pin" className="w-4 h-4"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-xs font-bold text-ink-950 flex items-center gap-2">
+                                                            <span>{addr.label}</span>
+                                                            {addr.isDefault && (
+                                                                <span className="text-[9px] font-black bg-cream-200 text-ink-800 px-1.5 py-0.5 rounded">Default</span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-ink-500">{addr.address}</p>
+                                                    </div>
+                                                </div>
+                                                <i data-lucide={selectedAddress && selectedAddress.id === addr.id ? "check-circle" : "circle"} className={`w-4 h-4 ${selectedAddress && selectedAddress.id === addr.id ? 'text-forest-600' : 'text-sage-300'}`}></i>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={() => setShowPaymentModal(true)}
-                                    class="w-full py-3 bg-forest-950 hover:bg-forest-900 text-mint-400 font-black text-xs rounded-2xl shadow-lg transition flex items-center justify-center gap-2"
-                                >
-                                    <i data-lucide="credit-card" class="w-4 h-4"></i>
-                                    Proceed to Checkout
-                                </button>
-                            </div>
-                        )}
-                    </aside>
-                </div>
-
-                {/* Mock Payment & KHQR Checkout Modal */}
-                {showPaymentModal && (
-                    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-xs">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-black text-slate-900 text-base">Payment Checkout</h3>
-                                <button onClick={() => setShowPaymentModal(false)} class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
-                            </div>
-
-                            <div class="p-4 bg-slate-50 rounded-2xl border text-center space-y-2">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase">Scan to Pay via Bakong / KHQR</span>
-                                <div class="w-40 h-40 bg-white mx-auto p-2 border-2 border-dashed border-mint-500 rounded-2xl flex flex-col items-center justify-center shadow-inner">
-                                    <i data-lucide="qr-code" class="w-24 h-24 text-forest-950"></i>
-                                    <span class="font-black text-xs text-forest-950 mt-1">${total.toFixed(2)} USD</span>
+                                {/* Sign Out Action */}
+                                <div className="pt-4 border-t border-sage-100 flex items-center justify-between">
+                                    <button
+                                        onClick={handleLogout}
+                                        className="px-4 py-2 bg-rust-500/10 hover:bg-rust-500/20 text-rust-600 rounded-2xl text-xs font-bold transition flex items-center gap-2"
+                                    >
+                                        <i data-lucide="log-out" className="w-4 h-4"></i>
+                                        <span>Sign Out</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setActiveView('discovery'); setSelectedRestaurant(null); }}
+                                        className="px-4 py-2 bg-forest-600 hover:bg-forest-700 text-white rounded-2xl text-xs font-bold transition"
+                                    >
+                                        Return to Food Discovery
+                                    </button>
                                 </div>
-                                <p class="text-[10px] text-slate-500">Deliver to: {deliveryAddress}</p>
-                            </div>
 
-                            <button
-                                onClick={handlePlaceOrder}
-                                class="w-full py-3 bg-mint-500 hover:bg-mint-600 text-forest-950 font-black text-xs rounded-2xl shadow-md transition"
-                            >
-                                Confirm Mock Payment ($ {total.toFixed(2)})
-                            </button>
+                            </div>
+                        </div>
+                    )}
+
+                </main>
+
+                {/* CART DRAWER / SIDEBAR */}
+                {showCartDrawer && (
+                    <div className="fixed inset-0 z-50 overflow-hidden">
+                        <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm transition-opacity" onClick={() => setShowCartDrawer(false)}></div>
+                        <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+                            <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
+
+                                {/* Cart Header */}
+                                <div className="p-6 border-b border-sage-200 flex items-center justify-between">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-9 h-9 rounded-xl bg-forest-100 text-forest-700 flex items-center justify-center font-black">
+                                            <i data-lucide="shopping-bag" className="w-5 h-5"></i>
+                                        </div>
+                                        <div>
+                                            <h2 className="font-display font-bold text-lg text-ink-950">Your Cart</h2>
+                                            <span className="text-[11px] font-semibold text-ink-500">{currentMerchant ? currentMerchant.name : 'No items added'}</span>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setShowCartDrawer(false)} className="p-2 hover:bg-sage-100 rounded-full text-ink-400 hover:text-ink-900 transition">
+                                        <i data-lucide="x" className="w-5 h-5"></i>
+                                    </button>
+                                </div>
+
+                                {/* Cart Items */}
+                                <div className="p-6 flex-1 overflow-y-auto space-y-4">
+                                    {cart.length === 0 ? (
+                                        <div className="text-center py-12 space-y-3">
+                                            <div className="w-14 h-14 rounded-full bg-sage-100 text-sage-400 flex items-center justify-center mx-auto">
+                                                <i data-lucide="shopping-cart" className="w-6 h-6"></i>
+                                            </div>
+                                            <h4 className="font-display font-bold text-ink-900">Your basket is empty</h4>
+                                            <p className="text-xs text-ink-500">Add dishes from our menu to start your order.</p>
+                                        </div>
+                                    ) : (
+                                        cart.map(item => (
+                                            <div key={item.id} className="p-3.5 rounded-2xl bg-cream-50/70 border border-sage-200 flex items-center justify-between gap-3">
+                                                <div className="flex-1">
+                                                    <h4 className="text-xs font-bold text-ink-950">{item.name}</h4>
+                                                    <span className="text-xs font-black text-forest-700">${(item.price * item.quantity).toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 bg-white border border-sage-200 rounded-xl px-2 py-1">
+                                                    <button onClick={() => handleUpdateQuantity(item.id, -1)} className="w-5 h-5 flex items-center justify-center font-black text-ink-600 hover:text-rust-600">-</button>
+                                                    <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
+                                                    <button onClick={() => handleUpdateQuantity(item.id, 1)} className="w-5 h-5 flex items-center justify-center font-black text-ink-600 hover:text-forest-600">+</button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                {/* Cart Summary & Checkout */}
+                                {cart.length > 0 && (
+                                    <div className="p-6 bg-cream-50 border-t border-sage-200 space-y-4">
+                                        <div className="space-y-1.5 text-xs">
+                                            <div className="flex justify-between text-ink-600">
+                                                <span>Subtotal</span>
+                                                <span className="font-bold text-ink-950">${cartSubtotal.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-ink-600">
+                                                <span>Delivery Fee</span>
+                                                <span className="font-bold text-ink-950">${cartDeliveryFee.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm font-black text-ink-950 pt-2 border-t border-sage-200">
+                                                <span>Total</span>
+                                                <span className="text-forest-700 font-display text-base">${cartTotal.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={handleProceedToCheckout}
+                                            className="w-full py-3.5 bg-forest-600 hover:bg-forest-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-forest-600/30 transition flex items-center justify-center gap-2"
+                                        >
+                                            <i data-lucide="lock" className="w-4 h-4 text-mint-300"></i>
+                                            <span>Proceed to Checkout (${cartTotal.toFixed(2)})</span>
+                                        </button>
+                                    </div>
+                                )}
+
+                            </div>
                         </div>
                     </div>
                 )}
+
+                {/* CHECKOUT & MOCK KHQR PAYMENT MODAL */}
+                {showCheckoutModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-ink-950/70 backdrop-blur-sm" onClick={() => setShowCheckoutModal(false)}></div>
+                        <div className="relative bg-white rounded-3xl border border-sage-200 max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 z-10">
+
+                            <div className="flex items-center justify-between pb-4 border-b border-sage-100">
+                                <div>
+                                    <h3 className="font-display font-bold text-xl text-ink-950">Mock Payment & Checkout</h3>
+                                    <span className="text-xs font-semibold text-ink-500">Sprint 4 Payment Service Module</span>
+                                </div>
+                                <button onClick={() => setShowCheckoutModal(false)} className="p-2 hover:bg-sage-100 rounded-full text-ink-400">
+                                    <i data-lucide="x" className="w-5 h-5"></i>
+                                </button>
+                            </div>
+
+                            {/* Destination */}
+                            <div className="p-3.5 bg-cream-50 rounded-2xl border border-sage-200 space-y-1 text-xs">
+                                <span className="font-bold text-ink-400 uppercase text-[10px]">Delivering to:</span>
+                                <div className="font-bold text-ink-950">{selectedAddress ? selectedAddress.address : "Phnom Penh, Cambodia"}</div>
+                            </div>
+
+                            {/* Payment Method Selector */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-ink-700">Select Mock Payment Method:</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethod('MOCK_KHQR')}
+                                        className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1.5 transition ${paymentMethod === 'MOCK_KHQR' ? 'bg-rust-500/10 border-rust-500 text-rust-700' : 'bg-white border-sage-200 text-ink-700'}`}
+                                    >
+                                        <i data-lucide="qr-code" className="w-5 h-5 text-rust-600"></i>
+                                        <span>Bakong / KHQR</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethod('MOCK_CARD')}
+                                        className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1.5 transition ${paymentMethod === 'MOCK_CARD' ? 'bg-forest-50 border-forest-500 text-forest-700' : 'bg-white border-sage-200 text-ink-700'}`}
+                                    >
+                                        <i data-lucide="credit-card" className="w-5 h-5 text-forest-600"></i>
+                                        <span>Visa / Mastercard</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* KHQR Visual Pattern */}
+                            {paymentMethod === 'MOCK_KHQR' && (
+                                <div className="p-4 bg-rust-500/5 rounded-2xl border border-rust-500/20 text-center space-y-2">
+                                    <div className="w-32 h-32 mx-auto rounded-xl khqr-pattern border-2 border-rust-500 p-2 shadow-inner flex items-center justify-center">
+                                        <span className="bg-white/90 px-2 py-1 rounded text-[9px] font-black text-rust-700 uppercase tracking-widest border border-rust-300">KHQR TEST</span>
+                                    </div>
+                                    <span className="text-[11px] font-bold text-rust-700 block">Simulated National KHQR Stand-in</span>
+                                </div>
+                            )}
+
+                            {/* Payment Summary */}
+                            <div className="flex items-center justify-between p-4 bg-forest-50 rounded-2xl border border-forest-200 text-sm font-black text-ink-950">
+                                <span>Grand Total:</span>
+                                <span className="font-display text-xl text-forest-700">${cartTotal.toFixed(2)}</span>
+                            </div>
+
+                            {/* Submit Payment */}
+                            <button
+                                onClick={handleConfirmPayment}
+                                disabled={isProcessingPayment}
+                                className="w-full py-3.5 bg-forest-600 hover:bg-forest-700 text-white rounded-2xl text-xs font-bold shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isProcessingPayment ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <span>Verifying Mock Settlement...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <i data-lucide="check" className="w-4 h-4"></i>
+                                        <span>Confirm Mock Payment & Place Order</span>
+                                    </>
+                                )}
+                            </button>
+
+                        </div>
+                    </div>
+                )}
+
+                {/* AUTHENTICATION MODAL (SIGN IN / REGISTER TABS) */}
+                {showAuthModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-ink-950/70 backdrop-blur-sm" onClick={() => setShowAuthModal(false)}></div>
+                        <div className="relative bg-white rounded-3xl border border-sage-200 max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 z-10">
+
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between pb-3 border-b border-sage-100">
+                                <div>
+                                    <h3 className="font-display font-bold text-xl text-ink-950">
+                                        {authTab === 'login' ? 'Customer Sign In / Log In' : 'Create Customer Account'}
+                                    </h3>
+                                    <span className="text-xs font-semibold text-ink-500">Access personalized orders and saved addresses</span>
+                                </div>
+                                <button onClick={() => setShowAuthModal(false)} className="p-2 hover:bg-sage-100 rounded-full text-ink-400">
+                                    <i data-lucide="x" className="w-5 h-5"></i>
+                                </button>
+                            </div>
+
+                            {/* Tab Switcher */}
+                            <div className="flex p-1 bg-cream-100 rounded-2xl border border-sage-200 text-xs font-bold">
+                                <button
+                                    onClick={() => { setAuthTab('login'); setLoginError(''); }}
+                                    className={`flex-1 py-2 rounded-xl transition ${authTab === 'login' ? 'bg-white text-ink-950 shadow-sm' : 'text-ink-600 hover:text-ink-950'}`}
+                                >
+                                    Log In / Sign In
+                                </button>
+                                <button
+                                    onClick={() => { setAuthTab('register'); setRegError(''); }}
+                                    className={`flex-1 py-2 rounded-xl transition ${authTab === 'register' ? 'bg-white text-ink-950 shadow-sm' : 'text-ink-600 hover:text-ink-950'}`}
+                                >
+                                    Register Account
+                                </button>
+                            </div>
+
+                            {/* TAB 1: LOG IN */}
+                            {authTab === 'login' && (
+                                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                                    {loginError && (
+                                        <div className="p-3 rounded-xl bg-rust-500/10 border border-rust-500/30 text-xs font-semibold text-rust-600 flex items-center gap-2">
+                                            <i data-lucide="alert-circle" className="w-4 h-4 shrink-0"></i>
+                                            <span>{loginError}</span>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1.5">Email Address</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            value={loginEmail}
+                                            onChange={e => setLoginEmail(e.target.value)}
+                                            placeholder="customer@example.com"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1.5">Password</label>
+                                        <input
+                                            type="password"
+                                            required
+                                            value={loginPassword}
+                                            onChange={e => setLoginPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
+
+                                    {/* Quick Fill Button */}
+                                    <div className="flex items-center justify-between text-xs pt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setLoginEmail('customer@example.com');
+                                                setLoginPassword('password123');
+                                            }}
+                                            className="text-forest-700 hover:text-forest-800 font-bold underline"
+                                        >
+                                            ⚡ Auto-fill Customer Demo Login
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className="w-full py-3 bg-forest-600 hover:bg-forest-700 text-white rounded-2xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2"
+                                    >
+                                        <i data-lucide="log-in" className="w-4 h-4"></i>
+                                        <span>Sign In as Customer</span>
+                                    </button>
+                                </form>
+                            )}
+
+                            {/* TAB 2: REGISTER */}
+                            {authTab === 'register' && (
+                                <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+                                    {regError && (
+                                        <div className="p-3 rounded-xl bg-rust-500/10 border border-rust-500/30 text-xs font-semibold text-rust-600 flex items-center gap-2">
+                                            <i data-lucide="alert-circle" className="w-4 h-4 shrink-0"></i>
+                                            <span>{regError}</span>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1">Full Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={regName}
+                                            onChange={e => setRegName(e.target.value)}
+                                            placeholder="Sokha Mean"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1">Email Address</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            value={regEmail}
+                                            onChange={e => setRegEmail(e.target.value)}
+                                            placeholder="sokha@example.com"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1">Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            value={regPhone}
+                                            onChange={e => setRegPhone(e.target.value)}
+                                            placeholder="+855 12 345 678"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1">Delivery Address</label>
+                                        <input
+                                            type="text"
+                                            value={regAddress}
+                                            onChange={e => setRegAddress(e.target.value)}
+                                            placeholder="Building 42, St. 302, BKK1, Phnom Penh"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-ink-700 mb-1">Password</label>
+                                        <input
+                                            type="password"
+                                            required
+                                            value={regPassword}
+                                            onChange={e => setRegPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className="w-full py-3 bg-forest-600 hover:bg-forest-700 text-white rounded-2xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2"
+                                    >
+                                        <i data-lucide="user-plus" className="w-4 h-4"></i>
+                                        <span>Complete Registration</span>
+                                    </button>
+                                </form>
+                            )}
+
+                        </div>
+                    </div>
+                )}
+
             </div>
         );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<CustomerApp />);
+    ReactDOM.render(<CustomerApp />, document.getElementById('root'));
 </script>
 </body>
 </html>

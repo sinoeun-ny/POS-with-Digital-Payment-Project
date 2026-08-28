@@ -22,12 +22,14 @@ com\foodeats\model\UserRole.class
 com\foodeats\repository\OrderRepository.class
 com\foodeats\controller\MerchantController.class
 com\foodeats\controller\AdminController.class
+com\foodeats\model\ItemOption.class
 com\foodeats\dto\AuthResponse.class
 com\foodeats\FoodeatsApplication.class
 com\foodeats\repository\UserRepository.class
 com\foodeats\repository\PaymentRepository.class
 com\foodeats\security\SecurityConfig.class
 com\foodeats\dto\RegisterRequest.class
+com\foodeats\repository\ItemOptionRepository.class
 com\foodeats\security\JwtUtil.class
 com\foodeats\controller\CategoryController.class
 com\foodeats\controller\OrderController.class
