@@ -1,32 +1,24 @@
 package com.foodeats.controller;
 
 import com.foodeats.dto.CartItemRequest;
-import com.foodeats.model.*;
-import com.foodeats.repository.*;
+import com.foodeats.model.Cart;
+import com.foodeats.model.User;
 import com.foodeats.security.JwtUtil;
+import com.foodeats.service.CartService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {
 
-    private final CartRepository cartRepository;
-    private final CartItemRepository cartItemRepository;
-    private final MenuItemRepository menuItemRepository;
-    private final UserRepository userRepository;
+    private final CartService cartService;
     private final JwtUtil jwtUtil;
 
-    public CartController(CartRepository cartRepository, CartItemRepository cartItemRepository,
-                          MenuItemRepository menuItemRepository, UserRepository userRepository,
-                          JwtUtil jwtUtil) {
-        this.cartRepository = cartRepository;
-        this.cartItemRepository = cartItemRepository;
-        this.menuItemRepository = menuItemRepository;
-        this.userRepository = userRepository;
+    public CartController(CartService cartService, JwtUtil jwtUtil) {
+        this.cartService = cartService;
         this.jwtUtil = jwtUtil;
     }
 
@@ -35,7 +27,9 @@ public class CartController {
         String token = authHeader.substring(7);
         Long userId = jwtUtil.extractUserId(token);
         if (userId == null) return null;
-        return userRepository.findById(userId).orElse(null);
+        User user = new User();
+        user.setId(userId);
+        return user;
     }
 
     @GetMapping
@@ -45,60 +39,46 @@ public class CartController {
             return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
         }
 
-        Cart cart = cartRepository.findByCustomerId(user.getId())
-                .orElseGet(() -> cartRepository.save(new Cart(user)));
-
+        Cart cart = cartService.getOrCreateCart(user.getId());
         return ResponseEntity.ok(cart);
     }
 
     @PostMapping("/items")
-    public ResponseEntity<?> addItemToCart(@RequestHeader("Authorization") String authHeader, @RequestBody CartItemRequest request) {
+    public ResponseEntity<?> addItemToCart(@RequestHeader("Authorization") String authHeader, 
+                                           @RequestBody CartItemRequest request) {
         User user = getAuthenticatedUser(authHeader);
-        if (user == null) return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
-
-        Cart cart = cartRepository.findByCustomerId(user.getId())
-                .orElseGet(() -> cartRepository.save(new Cart(user)));
-
-        Optional<MenuItem> menuItemOpt = menuItemRepository.findById(request.getMenuItemId());
-        if (menuItemOpt.isEmpty()) return ResponseEntity.badRequest().body(Map.of("message", "Menu item not found"));
-
-        MenuItem menuItem = menuItemOpt.get();
-
-        Optional<CartItem> existingItemOpt = cart.getItems().stream()
-                .filter(item -> item.getMenuItem().getId().equals(menuItem.getId()))
-                .findFirst();
-
-        if (existingItemOpt.isPresent()) {
-            CartItem existing = existingItemOpt.get();
-            existing.setQuantity(existing.getQuantity() + request.getQuantity());
-            cartItemRepository.save(existing);
-        } else {
-            CartItem newItem = new CartItem(cart, menuItem, request.getQuantity());
-            cart.getItems().add(newItem);
-            cartRepository.save(cart);
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
         }
 
-        return ResponseEntity.ok(cartRepository.findByCustomerId(user.getId()).orElse(cart));
+        try {
+            Cart cart = cartService.addItemToCart(user.getId(), request.getMenuItemId(), request.getQuantity());
+            return ResponseEntity.ok(cart);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/items/{itemId}")
-    public ResponseEntity<?> removeItem(@RequestHeader("Authorization") String authHeader, @PathVariable Long itemId) {
+    public ResponseEntity<?> removeItem(@RequestHeader("Authorization") String authHeader, 
+                                        @PathVariable Long itemId) {
         User user = getAuthenticatedUser(authHeader);
-        if (user == null) return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
+        }
 
-        cartItemRepository.deleteById(itemId);
+        cartService.removeItem(itemId);
         return ResponseEntity.ok(Map.of("message", "Item removed"));
     }
 
     @DeleteMapping("/clear")
     public ResponseEntity<?> clearCart(@RequestHeader("Authorization") String authHeader) {
         User user = getAuthenticatedUser(authHeader);
-        if (user == null) return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
-
-        Optional<Cart> cartOpt = cartRepository.findByCustomerId(user.getId());
-        if (cartOpt.isPresent()) {
-            cartItemRepository.deleteByCartId(cartOpt.get().getId());
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
         }
+
+        cartService.clearCart(user.getId());
         return ResponseEntity.ok(Map.of("message", "Cart cleared"));
     }
 }
