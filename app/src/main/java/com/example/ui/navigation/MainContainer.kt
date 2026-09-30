@@ -5,108 +5,129 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocalOffer
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.PersonOutline
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.repository.FoodEatsRepository
+import com.example.data.repository.Restaurant
 import com.example.ui.admin.AdminRoleDivisionScreen
 import com.example.ui.auth.AuthViewModel
 import com.example.ui.auth.LoginScreen
 import com.example.ui.auth.RegisterScreen
 import com.example.ui.cart.ShoppingBagScreen
-import com.example.ui.category.CategoryMenuScreen
 import com.example.ui.country.CountrySelectionScreen
+import com.example.ui.driver.DriverDashboardScreen
 import com.example.ui.home.HomeScreen
+import com.example.ui.orders.OrderHistoryScreen
 import com.example.ui.profile.AddressBookScreen
 import com.example.ui.profile.ProfileScreen
+import com.example.ui.restaurant.RestaurantDetailScreen
+import com.example.ui.theme.*
 
 enum class AppScreen {
-    HOME,
-    CATEGORY_MENU,
-    BRANDS,
-    WISHLIST,
+    DISCOVER,
+    RESTAURANT_DETAIL,
+    ORDERS,
+    CART,
     PROFILE,
     LOGIN,
     REGISTER,
-    SHOPPING_BAG,
     ADDRESS_BOOK,
     COUNTRY_SELECTION,
-    ADMIN_ROLE_DIVISION
+    ADMIN_ROLE_DIVISION ,
+
+    DRIVER_DASHBOARD
 }
 
 @Composable
 fun MainContainer(authViewModel: AuthViewModel) {
-    var currentScreen by remember { mutableStateOf(AppScreen.HOME) }
+    var currentScreen by remember { mutableStateOf(AppScreen.DISCOVER) }
+    var selectedRestaurant by remember { mutableStateOf<Restaurant?>(null) }
+
+    val cart by FoodEatsRepository.cart.collectAsState()
+    val orders by FoodEatsRepository.orders.collectAsState()
+
+    val cartCount = cart.sumOf { it.quantity }
+    val activeOrdersCount = orders.count { it.status != "DELIVERED" }
 
     val bottomNavScreens = listOf(
-        AppScreen.HOME to ("Home" to Icons.Default.Home),
-        AppScreen.CATEGORY_MENU to ("Menu" to Icons.Default.Menu),
-        AppScreen.BRANDS to ("Stores" to Icons.Default.LocalOffer),
-        AppScreen.WISHLIST to ("Wish List" to Icons.Default.FavoriteBorder),
-        AppScreen.PROFILE to ("Me" to Icons.Default.PersonOutline)
+        AppScreen.DISCOVER to Triple("Discover", Icons.Default.Explore, 0),
+        AppScreen.ORDERS to Triple("Orders", Icons.Default.ReceiptLong, activeOrdersCount),
+        AppScreen.CART to Triple("Cart", Icons.Default.ShoppingCart, cartCount),
+        AppScreen.PROFILE to Triple("Profile", Icons.Default.Person, 0)
     )
 
     val showBottomBar = currentScreen in listOf(
-        AppScreen.HOME,
-        AppScreen.CATEGORY_MENU,
-        AppScreen.BRANDS,
-        AppScreen.WISHLIST,
+        AppScreen.DISCOVER,
+        AppScreen.ORDERS,
+        AppScreen.CART,
         AppScreen.PROFILE
     )
 
     Scaffold(
-        containerColor = Color.White,
+        containerColor = Cream50,
         bottomBar = {
             if (showBottomBar) {
                 Column {
-                    HorizontalDivider(color = Color(0xFFEEEEEE))
+                    HorizontalDivider(color = Sage200)
                     NavigationBar(
                         containerColor = Color.White,
-                        contentColor = Color.Black
+                        contentColor = Ink950
                     ) {
                         bottomNavScreens.forEach { (screen, info) ->
                             val isSelected = currentScreen == screen
+                            val badgeNumber = info.third
+
                             NavigationBarItem(
                                 selected = isSelected,
                                 onClick = { currentScreen = screen },
                                 icon = {
-                                    Icon(
-                                        imageVector = info.second,
-                                        contentDescription = info.first,
-                                        tint = if (isSelected) Color.Black else Color.Gray
-                                    )
+                                    if (badgeNumber > 0) {
+                                        BadgedBox(
+                                            badge = {
+                                                Badge(
+                                                    containerColor = if (screen == AppScreen.CART) Forest500 else Rust500,
+                                                    contentColor = Color.White
+                                                ) {
+                                                    Text(badgeNumber.toString())
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = info.second,
+                                                contentDescription = info.first,
+                                                tint = if (isSelected) Forest600 else Ink400,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = info.second,
+                                            contentDescription = info.first,
+                                            tint = if (isSelected) Forest600 else Ink400,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
                                 },
                                 label = {
                                     Text(
                                         text = info.first,
                                         fontSize = 11.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) Color.Black else Color.Gray
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Forest700 else Ink400
                                     )
                                 },
                                 colors = NavigationBarItemDefaults.colors(
-                                    indicatorColor = Color(0xFFF2F2F2)
+                                    indicatorColor = Forest100,
+                                    selectedIconColor = Forest600,
+                                    unselectedIconColor = Ink400
                                 )
                             )
                         }
@@ -119,24 +140,35 @@ fun MainContainer(authViewModel: AuthViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
+                .background(Cream50)
         ) {
             when (currentScreen) {
-                AppScreen.HOME -> HomeScreen(
-                    onNavigateToBag = { currentScreen = AppScreen.SHOPPING_BAG },
-                    onNavigateToMerchant = { currentScreen = AppScreen.CATEGORY_MENU }
+                AppScreen.DISCOVER -> HomeScreen(
+                    onNavigateToBag = { currentScreen = AppScreen.CART },
+                    onNavigateToRestaurantDetail = { restaurant ->
+                        selectedRestaurant = restaurant
+                        currentScreen = AppScreen.RESTAURANT_DETAIL
+                    }
                 )
-                AppScreen.CATEGORY_MENU -> CategoryMenuScreen(
-                    onNavigateToBag = { currentScreen = AppScreen.SHOPPING_BAG },
-                    onCategoryClick = { currentScreen = AppScreen.SHOPPING_BAG }
+                AppScreen.RESTAURANT_DETAIL -> {
+                    selectedRestaurant?.let { restaurant ->
+                        RestaurantDetailScreen(
+                            restaurant = restaurant,
+                            onNavigateBack = { currentScreen = AppScreen.DISCOVER },
+                            onNavigateToCart = { currentScreen = AppScreen.CART }
+                        )
+                    } ?: run {
+                        currentScreen = AppScreen.DISCOVER
+                    }
+                }
+                AppScreen.ORDERS -> OrderHistoryScreen(
+                    onNavigateToDiscover = { currentScreen = AppScreen.DISCOVER }
                 )
-                AppScreen.BRANDS -> CategoryMenuScreen(
-                    onNavigateToBag = { currentScreen = AppScreen.SHOPPING_BAG },
-                    onCategoryClick = { currentScreen = AppScreen.SHOPPING_BAG }
-                )
-                AppScreen.WISHLIST -> ShoppingBagScreen(
-                    onNavigateBack = { currentScreen = AppScreen.HOME },
-                    onStartShopping = { currentScreen = AppScreen.HOME }
+                AppScreen.CART -> ShoppingBagScreen(
+                    onNavigateBack = { currentScreen = AppScreen.DISCOVER },
+                    onStartShopping = { currentScreen = AppScreen.DISCOVER },
+                    onOrderPlaced = { currentScreen = AppScreen.ORDERS },
+                    authViewModel = authViewModel // pass auth view model here
                 )
                 AppScreen.PROFILE -> ProfileScreen(
                     authViewModel = authViewModel,
@@ -144,7 +176,8 @@ fun MainContainer(authViewModel: AuthViewModel) {
                     onNavigateToRegister = { currentScreen = AppScreen.REGISTER },
                     onNavigateToAddresses = { currentScreen = AppScreen.ADDRESS_BOOK },
                     onNavigateToCountry = { currentScreen = AppScreen.COUNTRY_SELECTION },
-                    onNavigateToAdminRoleDivision = { currentScreen = AppScreen.ADMIN_ROLE_DIVISION }
+                    onNavigateToAdminRoleDivision = { currentScreen = AppScreen.ADMIN_ROLE_DIVISION },
+                    onNavigateToDriver = { currentScreen = AppScreen.DRIVER_DASHBOARD }
                 )
                 AppScreen.LOGIN -> LoginScreen(
                     viewModel = authViewModel,
@@ -158,10 +191,6 @@ fun MainContainer(authViewModel: AuthViewModel) {
                     onNavigateToLogin = { currentScreen = AppScreen.LOGIN },
                     onRegisterSuccess = { currentScreen = AppScreen.PROFILE }
                 )
-                AppScreen.SHOPPING_BAG -> ShoppingBagScreen(
-                    onNavigateBack = { currentScreen = AppScreen.HOME },
-                    onStartShopping = { currentScreen = AppScreen.HOME }
-                )
                 AppScreen.ADDRESS_BOOK -> AddressBookScreen(
                     authViewModel = authViewModel,
                     onNavigateBack = { currentScreen = AppScreen.PROFILE }
@@ -172,6 +201,10 @@ fun MainContainer(authViewModel: AuthViewModel) {
                 AppScreen.ADMIN_ROLE_DIVISION -> AdminRoleDivisionScreen(
                     authViewModel = authViewModel,
                     onNavigateBack = { currentScreen = AppScreen.PROFILE }
+                )
+                AppScreen.DRIVER_DASHBOARD -> DriverDashboardScreen(
+                    onNavigateBack = {currentScreen = AppScreen.PROFILE},
+                    authViewModel = authViewModel
                 )
             }
         }

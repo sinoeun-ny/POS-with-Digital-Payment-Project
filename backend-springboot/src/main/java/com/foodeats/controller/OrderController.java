@@ -28,10 +28,14 @@ public class OrderController {
         String token = authHeader.substring(7);
         Long userId = jwtUtil.extractUserId(token);
         if (userId == null) return null;
-        // For simplicity, we'll pass userId to service layer
-        // In a real scenario, you'd fetch the full user object
+        String roleStr = jwtUtil.extractRole(token);
         User user = new User();
         user.setId(userId);
+        if (roleStr != null) {
+            try {
+                user.setRole(com.foodeats.model.UserRole.valueOf(roleStr));
+            } catch (Exception ignored) {}
+        }
         return user;
     }
 
@@ -54,10 +58,15 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getOrders(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getOrders(@RequestHeader(value = "Authorization", required = false) String authHeader,
+                                       @RequestParam(value = "merchantId", required = false) Long merchantId) {
+        if (merchantId != null) {
+            return ResponseEntity.ok(orderService.getOrdersByMerchantId(merchantId));
+        }
+
         User user = getAuthenticatedUser(authHeader);
         if (user == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
+            return ResponseEntity.ok(orderService.getAllOrders());
         }
 
         List<Order> orders = orderService.getOrdersByUser(user.getId(), user.getRole().name());

@@ -98,69 +98,113 @@
             if (window.lucide) window.lucide.createIcons();
         }, [showAuthModal, authTab, toast]);
 
-        const handleLoginSubmit = (e) => {
+        const handleLoginSubmit = async (e) => {
             e.preventDefault();
             setAuthError('');
             const email = authEmail.trim().toLowerCase();
+            const password = authPassword.trim();
 
-            if (!email || !authPassword.trim()) {
+            if (!email || !password) {
                 setAuthError('Please enter both email and password.');
                 return;
             }
 
-            // Automatic Role-Based Routing
-            if (email === 'admin@example.com' || email.includes('admin')) {
-                localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Alex Admin", email, role: "ADMIN" }));
-                showToast("Admin authenticated. Redirecting to Admin Hub...", "info");
-                setTimeout(() => window.location.href = 'admin.html', 800);
-                return;
-            }
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
 
-            if (email === 'merchant@example.com' || email.includes('merchant')) {
-                localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Bopha Culinary Co.", email, role: "MERCHANT" }));
-                showToast("Merchant authenticated. Redirecting to Merchant Kitchen...", "info");
-                setTimeout(() => window.location.href = 'merchant.html', 800);
-                return;
-            }
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('foodeats_auth_token', data.token);
+                    localStorage.setItem('foodeats_auth_user', JSON.stringify(data));
 
-            if (email === 'driver@example.com' || email.includes('driver')) {
-                localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Dara K. Express", email, role: "DRIVER" }));
-                showToast("Driver authenticated. Redirecting to Driver Dispatch...", "info");
-                setTimeout(() => window.location.href = 'driver.html', 800);
-                return;
-            }
+                    const role = (data.role || '').toUpperCase();
+                    if (role === 'ADMIN' || role.includes('ADMIN')) {
+                        showToast(`Welcome Admin ${data.name}! Redirecting...`, "info");
+                        setTimeout(() => window.location.href = 'admin.html', 800);
+                        return;
+                    }
+                    if (role === 'MERCHANT' || role.includes('MERCHANT')) {
+                        showToast(`Welcome Merchant ${data.name}! Redirecting...`, "info");
+                        setTimeout(() => window.location.href = 'merchant.html', 800);
+                        return;
+                    }
+                    if (role === 'DRIVER' || role.includes('DRIVER')) {
+                        showToast(`Welcome Driver ${data.name}! Redirecting...`, "info");
+                        setTimeout(() => window.location.href = 'driver.html', 800);
+                        return;
+                    }
 
-            // Customer
-            const customer = {
-                id: 'c_' + Date.now(),
-                name: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                email,
-                role: "CUSTOMER",
-                addresses: [{ id: 'a1', label: "Home (BKK1)", address: "Building 42, St. 302, BKK1, Phnom Penh", isDefault: true }]
-            };
-            localStorage.setItem('foodeats_auth_user', JSON.stringify(customer));
-            showToast("Customer authenticated. Redirecting to Customer Portal...", "info");
-            setTimeout(() => window.location.href = 'customer.html', 800);
+                    showToast(`Welcome back, ${data.name}! Redirecting...`, "info");
+                    setTimeout(() => window.location.href = 'customer.html', 800);
+                    return;
+                }
+
+                const errData = await response.json().catch(() => ({}));
+                setAuthError(errData.message || 'Invalid email or password.');
+            } catch (err) {
+                // Fallback for pre-seeded offline demo accounts if backend is unreachable
+                if (email === 'admin@example.com') {
+                    localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Alex Admin", email, role: "ADMIN" }));
+                    showToast("Admin authenticated. Redirecting to Admin Hub...", "info");
+                    setTimeout(() => window.location.href = 'admin.html', 800);
+                    return;
+                }
+                if (email === 'merchant@example.com') {
+                    localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Bopha Culinary Co.", email, role: "MERCHANT" }));
+                    showToast("Merchant authenticated. Redirecting to Merchant Kitchen...", "info");
+                    setTimeout(() => window.location.href = 'merchant.html', 800);
+                    return;
+                }
+                if (email === 'driver@example.com') {
+                    localStorage.setItem('foodeats_auth_user', JSON.stringify({ name: "Dara K. Express", email, role: "DRIVER" }));
+                    showToast("Driver authenticated. Redirecting to Driver Dispatch...", "info");
+                    setTimeout(() => window.location.href = 'driver.html', 800);
+                    return;
+                }
+                setAuthError('Cannot connect to backend server. Make sure Spring Boot is running.');
+            }
         };
 
-        const handleRegisterSubmit = (e) => {
+        const handleRegisterSubmit = async (e) => {
             e.preventDefault();
+            setAuthError('');
+
             if (!regName.trim() || !regEmail.trim() || !regPassword.trim()) {
                 setAuthError('Please complete all required fields.');
                 return;
             }
 
-            const customer = {
-                id: 'c_' + Date.now(),
-                name: regName.trim(),
-                email: regEmail.trim().toLowerCase(),
-                phone: regPhone.trim() || "+855 12 345 678",
-                role: "CUSTOMER",
-                addresses: [{ id: 'a1', label: "Default Address", address: regAddress.trim() || "Phnom Penh, Cambodia", isDefault: true }]
-            };
-            localStorage.setItem('foodeats_auth_user', JSON.stringify(customer));
-            showToast("Account created successfully! Redirecting to Customer Portal...", "info");
-            setTimeout(() => window.location.href = 'customer.html', 800);
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: regName.trim(),
+                        email: regEmail.trim().toLowerCase(),
+                        password: regPassword.trim(),
+                        phone: regPhone.trim() || "+855 12 345 678",
+                        address: regAddress.trim() || "Phnom Penh, Cambodia",
+                        role: "CUSTOMER"
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    setAuthError(data.message || 'Registration failed. Please try again.');
+                    return;
+                }
+
+                localStorage.setItem('foodeats_auth_token', data.token);
+                localStorage.setItem('foodeats_auth_user', JSON.stringify(data));
+                showToast(`Account created! Welcome ${data.name}! Redirecting...`, "info");
+                setTimeout(() => window.location.href = 'customer.html', 800);
+            } catch (err) {
+                setAuthError('Cannot connect to backend server. Make sure Spring Boot is running.');
+            }
         };
 
         return (

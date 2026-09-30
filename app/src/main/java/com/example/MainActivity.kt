@@ -18,6 +18,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val db = AppDatabase.getInstance(applicationContext)
+        com.example.data.remote.ApiClient.init(applicationContext)
+        com.example.data.repository.FoodEatsRepository.loadFromBackend()
+
         val authRepository = AuthRepository(
             userDao = db.userDao(),
             addressDao = db.addressDao(),

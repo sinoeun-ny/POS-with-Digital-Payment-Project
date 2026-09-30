@@ -436,7 +436,7 @@ fun RegisterScreen(
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
+                    containerColor = com.example.ui.theme.Forest500,
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(6.dp),

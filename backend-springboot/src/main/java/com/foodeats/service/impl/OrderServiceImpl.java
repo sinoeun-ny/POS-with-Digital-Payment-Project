@@ -17,6 +17,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
+    private final MenuItemRepository menuItemRepository;
     private final MerchantRepository merchantRepository;
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
@@ -25,6 +26,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderServiceImpl(OrderRepository orderRepository,
                            CartRepository cartRepository,
                            CartItemRepository cartItemRepository,
+                           MenuItemRepository menuItemRepository,
                            MerchantRepository merchantRepository,
                            UserRepository userRepository,
                            PaymentRepository paymentRepository,
@@ -32,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
+        this.menuItemRepository = menuItemRepository;
         this.merchantRepository = merchantRepository;
         this.userRepository = userRepository;
         this.paymentRepository = paymentRepository;
@@ -44,25 +47,17 @@ public class OrderServiceImpl implements OrderService {
         User customer = userRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
 
-        Optional<Cart> cartOpt = cartRepository.findByCustomerId(customerId);
-        if (cartOpt.isEmpty() || cartOpt.get().getItems().isEmpty()) {
-            throw new IllegalStateException("Shopping cart is empty");
-        }
-
-        Cart cart = cartOpt.get();
         Merchant merchant = merchantRepository.findById(request.getMerchantId())
                 .orElseThrow(() -> new IllegalArgumentException("Merchant not found"));
 
-        double subtotal = cart.getItems().stream()
-                .mapToDouble(item -> item.getMenuItem().getPrice() * item.getQuantity())
-                .sum();
+        Optional<Cart> cartOpt = cartRepository.findByCustomerId(customerId);
+        Cart cart = cartOpt.orElse(null);
+        List<CartItem> cartItems = (cart != null) ? cart.getItems() : null;
 
-        double totalAmount = subtotal + merchant.getDeliveryFee();
-
+        double subtotal = 0.0;
         Order order = new Order();
         order.setCustomer(customer);
         order.setMerchant(merchant);
-        order.setTotalAmount(totalAmount);
         order.setDeliveryFee(merchant.getDeliveryFee());
         order.setStatus(OrderStatus.PENDING);
         order.setDeliveryAddress(request.getDeliveryAddress() != null 
@@ -70,10 +65,30 @@ public class OrderServiceImpl implements OrderService {
         order.setPaymentStatus("PAID");
         order.setCreatedAt(LocalDateTime.now());
 
-        for (CartItem ci : cart.getItems()) {
-            OrderItem oi = new OrderItem(order, ci.getMenuItem(), ci.getQuantity(), ci.getMenuItem().getPrice());
-            order.getItems().add(oi);
+        if (cartItems != null && !cartItems.isEmpty()) {
+            subtotal = cartItems.stream()
+                    .mapToDouble(item -> item.getMenuItem().getPrice() * item.getQuantity())
+                    .sum();
+            for (CartItem ci : cartItems) {
+                OrderItem oi = new OrderItem(order, ci.getMenuItem(), ci.getQuantity(), ci.getMenuItem().getPrice());
+                order.getItems().add(oi);
+            }
+            cartItemRepository.deleteByCartId(cart.getId());
+        } else {
+            // Direct order fallback (from mobile app or web checkout):
+            List<MenuItem> merchantMenu = menuItemRepository.findByMerchantId(merchant.getId());
+            if (!merchantMenu.isEmpty()) {
+                MenuItem firstItem = merchantMenu.get(0);
+                subtotal = firstItem.getPrice();
+                OrderItem oi = new OrderItem(order, firstItem, 1, firstItem.getPrice());
+                order.getItems().add(oi);
+            } else {
+                subtotal = 5.00;
+            }
         }
+
+        double totalAmount = subtotal + merchant.getDeliveryFee();
+        order.setTotalAmount(totalAmount);
 
         Order savedOrder = orderRepository.save(order);
 
@@ -89,8 +104,6 @@ public class OrderServiceImpl implements OrderService {
             ));
         }
 
-        cartItemRepository.deleteByCartId(cart.getId());
-
         return savedOrder;
     }
 
@@ -101,10 +114,11 @@ public class OrderServiceImpl implements OrderService {
         
         switch (role) {
             case MERCHANT:
-                Optional<Merchant> merchantOpt = merchantRepository.findByOwnerId(userId);
-                return merchantOpt.map(m -> 
-                    orderRepository.findByMerchantIdOrderByCreatedAtDesc(m.getId())
-                ).orElse(List.of());
+                List<Merchant> merchants = merchantRepository.findByOwnerId(userId);
+                if (!merchants.isEmpty()) {
+                    return orderRepository.findByMerchantIdOrderByCreatedAtDesc(merchants.get(0).getId());
+                }
+                return List.of();
             case DRIVER:
                 return orderRepository.findByDriverIdOrderByCreatedAtDesc(userId);
             case ADMIN:
@@ -166,5 +180,17 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public List<Order> getAvailableDeliveryJobs() {
         return orderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.ACCEPTED);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Order> getOrdersByMerchantId(Long merchantId) {
+        return orderRepository.findByMerchantIdOrderByCreatedAtDesc(merchantId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
     }
 }

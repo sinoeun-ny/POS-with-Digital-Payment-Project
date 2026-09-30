@@ -363,23 +363,59 @@
                 return;
             }
 
-            // Customer Login
-            const customerUser = {
-                id: 'c_' + Date.now(),
-                name: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                email: email,
-                phone: "+855 12 345 678",
-                role: "CUSTOMER",
-                addresses: [
-                    { id: 'a1', label: "Home (BKK1)", address: "Building 42, St. 302, BKK1, Phnom Penh", isDefault: true },
-                    { id: 'a2', label: "Office", address: "Vattanac Tower Level 14, Phnom Penh", isDefault: false }
-                ]
-            };
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
 
-            setAuthUser(customerUser);
-            localStorage.setItem('foodeats_auth_user', JSON.stringify(customerUser));
-            setShowAuthModal(false);
-            showToast(`Welcome back, ${customerUser.name}!`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const customerUser = {
+                        id: data.id,
+                        name: data.name,
+                        email: data.email,
+                        phone: data.phone || "+855 12 345 678",
+                        role: data.role || "CUSTOMER",
+                        token: data.token,
+                        addresses: [
+                            { id: 'a1', label: "Home (BKK1)", address: "Building 42, St. 302, BKK1, Phnom Penh", isDefault: true },
+                            { id: 'a2', label: "Office", address: "Vattanac Tower Level 14, Phnom Penh", isDefault: false }
+                        ]
+                    };
+
+                    setAuthUser(customerUser);
+                    localStorage.setItem('foodeats_auth_token', data.token);
+                    localStorage.setItem('foodeats_auth_user', JSON.stringify(customerUser));
+                    setShowAuthModal(false);
+                    showToast(`Welcome back, ${customerUser.name}!`);
+                    return;
+                }
+
+                const errData = await response.json().catch(() => ({}));
+                setLoginError(errData.message || 'Invalid email or password.');
+            } catch (err) {
+                // Offline fallback for demo customer
+                if (email === 'customer@example.com') {
+                    const customerUser = {
+                        id: 1,
+                        name: "Sokha Customer",
+                        email: email,
+                        phone: "+855 12 345 678",
+                        role: "CUSTOMER",
+                        addresses: [
+                            { id: 'a1', label: "Home (BKK1)", address: "Building 42, St. 302, BKK1, Phnom Penh", isDefault: true }
+                        ]
+                    };
+                    setAuthUser(customerUser);
+                    localStorage.setItem('foodeats_auth_user', JSON.stringify(customerUser));
+                    setShowAuthModal(false);
+                    showToast(`Welcome back, ${customerUser.name}!`);
+                    return;
+                }
+                setLoginError('Cannot connect to backend server. Make sure Spring Boot is running.');
+            }
         };
 
         const handleRegisterSubmit = async (e) => {
@@ -391,27 +427,52 @@
                 return;
             }
 
-            const newCustomer = {
-                id: 'c_' + Date.now(),
-                name: regName.trim(),
-                email: regEmail.trim().toLowerCase(),
-                phone: regPhone.trim() || "+855 12 888 999",
-                role: "CUSTOMER",
-                addresses: [
-                    {
-                        id: 'a_' + Date.now(),
-                        label: "Default Address",
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: regName.trim(),
+                        email: regEmail.trim().toLowerCase(),
+                        password: regPassword.trim(),
+                        phone: regPhone.trim() || "+855 12 888 999",
                         address: regAddress.trim() || "Phnom Penh, Cambodia",
-                        isDefault: true
-                    }
-                ]
-            };
+                        role: "CUSTOMER"
+                    })
+                });
 
-            setAuthUser(newCustomer);
-            localStorage.setItem('foodeats_auth_user', JSON.stringify(newCustomer));
-            setSelectedAddress(newCustomer.addresses[0]);
-            setShowAuthModal(false);
-            showToast(`Account created! Welcome to FoodEats, ${newCustomer.name}!`);
+                const data = await response.json();
+                if (!response.ok) {
+                    setRegError(data.message || 'Registration failed. Please try again.');
+                    return;
+                }
+
+                const newCustomer = {
+                    id: data.id,
+                    name: data.name,
+                    email: data.email,
+                    phone: regPhone.trim() || "+855 12 888 999",
+                    role: data.role || "CUSTOMER",
+                    token: data.token,
+                    addresses: [
+                        {
+                            id: 'a_' + Date.now(),
+                            label: "Default Address",
+                            address: regAddress.trim() || "Phnom Penh, Cambodia",
+                            isDefault: true
+                        }
+                    ]
+                };
+
+                setAuthUser(newCustomer);
+                localStorage.setItem('foodeats_auth_token', data.token);
+                localStorage.setItem('foodeats_auth_user', JSON.stringify(newCustomer));
+                setSelectedAddress(newCustomer.addresses[0]);
+                setShowAuthModal(false);
+                showToast(`Account created! Welcome to FoodEats, ${newCustomer.name}!`);
+            } catch (err) {
+                setRegError('Cannot connect to backend server. Make sure Spring Boot is running.');
+            }
         };
 
         const handleLogout = () => {
@@ -433,11 +494,40 @@
             setShowCheckoutModal(true);
         };
 
-        const handleConfirmPayment = () => {
+        const handleConfirmPayment = async () => {
             setIsProcessingPayment(true);
+
+            const token = localStorage.getItem('foodeats_auth_token') || (authUser && authUser.token);
+            let backendOrderId = 100 + orders.length + 1;
+
+            if (token && currentMerchant) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/orders`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            merchantId: currentMerchant.id,
+                            deliveryAddress: selectedAddress ? selectedAddress.address : "Phnom Penh, Cambodia",
+                            paymentMethod: paymentMethod
+                        })
+                    });
+                    if (res.ok) {
+                        const orderData = await res.json();
+                        if (orderData && orderData.id) {
+                            backendOrderId = orderData.id;
+                        }
+                    }
+                } catch (e) {
+                    console.log("Backend order sync fallback to local list");
+                }
+            }
+
             setTimeout(() => {
                 const newOrder = {
-                    id: 100 + orders.length + 1,
+                    id: backendOrderId,
                     customerId: authUser ? authUser.id : 'guest',
                     customerName: authUser ? authUser.name : 'Customer',
                     merchant: currentMerchant.name,
@@ -460,7 +550,7 @@
                 setShowCheckoutModal(false);
                 setActiveView('orders');
                 showToast("Order placed successfully! Kitchen is preparing your meal.");
-            }, 1800);
+            }, 1200);
         };
 
         // Filtered restaurants

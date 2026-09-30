@@ -28,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,7 +57,7 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var selectedTab by remember { mutableStateOf(AuthTab.PHONE) }
+    var selectedTab by remember { mutableStateOf(AuthTab.EMAIL) }
     var phoneNumber by remember { mutableStateOf("12345678") }
     var emailAddress by remember { mutableStateOf("customer@example.com") }
     var password by remember { mutableStateOf("password123") }
@@ -118,7 +119,78 @@ fun LoginScreen(
                 lineHeight = 20.sp
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Quick Demo Accounts from Database
+            Text(
+                text = "DATABASE DEMO ACCOUNTS (TAP TO FILL)",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = com.example.ui.theme.Forest700,
+                letterSpacing = 1.sp
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            androidx.compose.foundation.lazy.LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    Surface(
+                        modifier = Modifier.clickable {
+                            selectedTab = AuthTab.EMAIL
+                            emailAddress = "customer@example.com"
+                            password = "password123"
+                        },
+                        color = com.example.ui.theme.Forest100,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Customer: customer@example.com",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = com.example.ui.theme.Forest800,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+                item {
+                    Surface(
+                        modifier = Modifier.clickable {
+                            selectedTab = AuthTab.EMAIL
+                            emailAddress = "merchant@example.com"
+                            password = "password123"
+                        },
+                        color = com.example.ui.theme.Mint100,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Merchant: merchant@example.com",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = com.example.ui.theme.Forest700,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+                item {
+                    Surface(
+                        modifier = Modifier.clickable {
+                            selectedTab = AuthTab.EMAIL
+                            emailAddress = "driver@example.com"
+                            password = "password123"
+                        },
+                        color = com.example.ui.theme.Cream200,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Driver: driver@example.com",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = com.example.ui.theme.Ink800,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Phone / Email Toggle Tabs
             Row(
@@ -128,28 +200,6 @@ fun LoginScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .clickable { selectedTab = AuthTab.PHONE }
-                        .padding(bottom = 8.dp)
-                ) {
-                    Text(
-                        text = "Phone",
-                        fontSize = 15.sp,
-                        fontWeight = if (selectedTab == AuthTab.PHONE) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selectedTab == AuthTab.PHONE) Color.Black else Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(50.dp)
-                            .height(2.dp)
-                            .background(if (selectedTab == AuthTab.PHONE) Color.Black else Color.Transparent)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(28.dp))
-
-                Column(
-                    modifier = Modifier
                         .clickable { selectedTab = AuthTab.EMAIL }
                         .padding(bottom = 8.dp)
                 ) {
@@ -157,14 +207,36 @@ fun LoginScreen(
                         text = "Email",
                         fontSize = 15.sp,
                         fontWeight = if (selectedTab == AuthTab.EMAIL) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selectedTab == AuthTab.EMAIL) Color.Black else Color.Gray
+                        color = if (selectedTab == AuthTab.EMAIL) com.example.ui.theme.Forest600 else Color.Gray
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Box(
                         modifier = Modifier
                             .width(50.dp)
                             .height(2.dp)
-                            .background(if (selectedTab == AuthTab.EMAIL) Color.Black else Color.Transparent)
+                            .background(if (selectedTab == AuthTab.EMAIL) com.example.ui.theme.Forest500 else Color.Transparent)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(28.dp))
+
+                Column(
+                    modifier = Modifier
+                        .clickable { selectedTab = AuthTab.PHONE }
+                        .padding(bottom = 8.dp)
+                ) {
+                    Text(
+                        text = "Phone",
+                        fontSize = 15.sp,
+                        fontWeight = if (selectedTab == AuthTab.PHONE) FontWeight.Bold else FontWeight.Normal,
+                        color = if (selectedTab == AuthTab.PHONE) com.example.ui.theme.Forest600 else Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(50.dp)
+                            .height(2.dp)
+                            .background(if (selectedTab == AuthTab.PHONE) com.example.ui.theme.Forest500 else Color.Transparent)
                     )
                 }
             }
@@ -217,7 +289,7 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
+                    containerColor = com.example.ui.theme.Forest500,
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(6.dp),
