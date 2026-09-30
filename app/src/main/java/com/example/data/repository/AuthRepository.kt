@@ -39,8 +39,78 @@ class AuthRepository(
 
     suspend fun login(identifier: String, password: String): AuthResult<SessionEntity> {
         val cleanIdentifier = identifier.trim()
+        // Try Spring Boot REST API login if email provided
+        if (cleanIdentifier.contains("@")) {
+            try {
+                val remoteRes = com.example.data.remote.ApiClient.authApi.login(
+                    com.example.data.remote.dto.LoginRequestDto(
+                        email = cleanIdentifier,
+                        password = password
+                    )
+                )
+                if (remoteRes.isSuccessful && remoteRes.body() != null) {
+                    val authBody = remoteRes.body()!!
+                    var localUser = userDao.getUserByEmail(authBody.email)
+                    if (localUser == null) {
+                        val newId = userDao.insertUser(
+                            UserEntity(
+                                id = authBody.id,
+                                fullName = authBody.name,
+                                phone = "+85512345678",
+                                email = authBody.email,
+                                passwordHash = password,
+                                currentActiveRole = authBody.role
+                            )
+                        )
+                        localUser = userDao.getUserById(newId)
+                    }
+                    val session = SessionEntity(
+                        userId = localUser?.id ?: authBody.id,
+                        jwtToken = authBody.token,
+                        activeRole = authBody.role
+                    )
+                    sessionDao.saveSession(session)
+                    return AuthResult.Success(session)
+                }
+            } catch (e: Exception) {
+                // Offline fallback to Room
+            }
+        }
+
         val user = if (cleanIdentifier.contains("@")) {
-            userDao.getUserByEmail(cleanIdentifier)
+            var found = userDao.getUserByEmail(cleanIdentifier.lowercase())
+            if (found == null) {
+                // If account is one of the database pre-seeded accounts from DataInitializer, auto-create locally
+                val lowerEmail = cleanIdentifier.lowercase()
+                if (lowerEmail == "customer@example.com" ||
+                    lowerEmail == "merchant@example.com" ||
+                    lowerEmail == "driver@example.com" ||
+                    lowerEmail == "admin@example.com") {
+                    val roleCode = when {
+                        lowerEmail.contains("admin") -> "ROLE_ADMIN"
+                        lowerEmail.contains("merchant") -> "ROLE_MERCHANT"
+                        lowerEmail.contains("driver") -> "ROLE_DRIVER"
+                        else -> "ROLE_CUSTOMER"
+                    }
+                    val name = when {
+                        lowerEmail.contains("admin") -> "System Admin"
+                        lowerEmail.contains("merchant") -> "Bopha Merchant"
+                        lowerEmail.contains("driver") -> "Dara Driver"
+                        else -> "Sokha Customer"
+                    }
+                    val newId = userDao.insertUser(
+                        UserEntity(
+                            fullName = name,
+                            email = lowerEmail,
+                            phone = "+85512345678",
+                            passwordHash = "password123",
+                            currentActiveRole = roleCode
+                        )
+                    )
+                    found = userDao.getUserById(newId)
+                }
+            }
+            found
         } else {
             userDao.getUserByPhone(cleanIdentifier)
         }
@@ -103,7 +173,40 @@ class AuthRepository(
 
         val primaryEmail = if (email.isNotBlank()) email else "user_${System.currentTimeMillis()}@fooddelivery.com"
 
+        // 1. Persist directly to Spring Boot & MySQL DB
+        var backendUserId: Long? = null
+        var backendToken: String? = null
+        try {
+            val roleName = when (selectedRole) {
+                UserRole.MERCHANT -> "MERCHANT"
+                UserRole.DRIVER -> "DRIVER"
+                UserRole.ADMIN -> "ADMIN"
+                else -> "CUSTOMER"
+            }
+            val res = com.example.data.remote.ApiClient.authApi.register(
+                com.example.data.remote.dto.RegisterRequestDto(
+                    name = fullName,
+                    email = primaryEmail,
+                    password = password,
+                    phone = phone,
+                    role = roleName,
+                    restaurantName = if (storeName.isNotBlank()) storeName else null,
+                    address = cityProvince,
+                    city = "Phnom Penh"
+                )
+            )
+            if (res.isSuccessful && res.body() != null) {
+                backendUserId = res.body()!!.id
+                backendToken = res.body()!!.token
+                android.util.Log.d("AuthRepository", "Registered user #${backendUserId} in MySQL!")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "Remote register skipped or offline: ${e.message}")
+        }
+
+        // 2. Persist locally to Room SQLite
         val newUser = UserEntity(
+            id = backendUserId ?: 0,
             fullName = fullName,
             email = primaryEmail,
             phone = phone,
@@ -153,7 +256,7 @@ class AuthRepository(
             )
         }
 
-        val token = JwtTokenUtil.generateSimulatedToken(
+        val token = backendToken ?: JwtTokenUtil.generateSimulatedToken(
             userId = userId,
             email = primaryEmail,
             name = fullName,

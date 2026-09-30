@@ -1,7 +1,9 @@
 package com.foodeats.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "merchants")
@@ -11,29 +13,55 @@ public class Merchant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "owner_id")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "owner_user_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password"})
     private User owner;
 
-    @Column(nullable = false)
+    @Column(name = "store_name", nullable = false, length = 150)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "store_logo_url", length = 500)
     private String imageUrl;
+
+    @Column(name = "store_banner_url", length = 500)
     private String bannerUrl;
-    private String phone;
-    private String cuisineType = "Various";
-    private String openingHours = "08:00 AM - 10:00 PM";
-    private Double rating = 4.8;
-    private Double deliveryFee = 1.50;
-    private Integer deliveryTimeMins = 25;
-    private Boolean isOpen = true;
-    private String status = "Active"; // "Active", "Inactive"
+
+    @Column(name = "address", nullable = false)
     private String address;
+
+    @Column(name = "city", length = 100)
     private String city = "Phnom Penh";
+
+    @Column(name = "phone", nullable = false, length = 20)
+    private String phone;
+
+    @Column(name = "cuisine_type", length = 100)
+    private String cuisineType = "Various";
+
+    @Column(name = "opening_hours", length = 100)
+    private String openingHours = "08:00 AM - 10:00 PM";
+
+    @Column(name = "rating")
+    private Double rating = 4.8;
+
+    @Column(name = "delivery_fee")
+    private Double deliveryFee = 1.50;
+
+    @Column(name = "delivery_time_mins")
+    private Integer deliveryTimeMins = 25;
+
+    @Column(name = "is_open")
+    private Boolean isOpen = true;
+
+    @Column(name = "status", length = 50)
+    private String status = "Active"; // "Active", "Inactive"
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     public Merchant() {}
 
@@ -48,6 +76,7 @@ public class Merchant {
         this.isOpen = isOpen != null ? isOpen : true;
         this.status = "Active";
         this.address = address;
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() { return id; }
@@ -56,17 +85,29 @@ public class Merchant {
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }
 
+    @JsonProperty("name")
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getStoreName() { return name; }
+    public void setStoreName(String storeName) { this.name = storeName; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
+    @JsonProperty("imageUrl")
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
+    public String getStoreLogoUrl() { return imageUrl; }
+    public void setStoreLogoUrl(String storeLogoUrl) { this.imageUrl = storeLogoUrl; }
+
+    @JsonProperty("bannerUrl")
     public String getBannerUrl() { return bannerUrl; }
     public void setBannerUrl(String bannerUrl) { this.bannerUrl = bannerUrl; }
+
+    public String getStoreBannerUrl() { return bannerUrl; }
+    public void setStoreBannerUrl(String storeBannerUrl) { this.bannerUrl = storeBannerUrl; }
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
@@ -97,4 +138,7 @@ public class Merchant {
 
     public String getStatus() { return status != null ? status : "Active"; }
     public void setStatus(String status) { this.status = status; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

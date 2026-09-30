@@ -34,6 +34,8 @@ dist/
 build/
 target/
 .gradle/
+local.properties
+*.iml
 
 # Python specific
 *.pyc

@@ -1,0 +1,131 @@
+-- USE smartfood_db;
+--
+-- -- -----------------------------------------------------------------------------
+-- -- 1. ADD NEW HIGH-RATED RESTAURANTS IN PHNOM PENH
+-- -- -----------------------------------------------------------------------------
+-- INSERT INTO merchants (id, owner_user_id, store_name, description, store_logo_url, store_banner_url, address, city, phone, cuisine_type, opening_hours, rating, delivery_fee, delivery_time_mins, is_open, status)
+-- VALUES
+-- (4, 2, 'Angkor Spice & Khmer Kitchen', 'Authentic Cambodian specialties featuring slow-simmered fish amok, Kampot pepper beef lok lak, and fragrant lemongrass curries.', 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&auto=format&fit=crop&q=80', 'Street 240, Daun Penh, Phnom Penh', 'Phnom Penh', '+855 23 881 234', 'Authentic Khmer & Asian', '09:00 AM - 10:00 PM', 4.9, 1.25, 20, 1, 'Active'),
+-- (5, 2, 'La Bella Italia Pizzeria & Pasta', 'Authentic Neapolitan wood-fired sourdough pizzas, handcrafted ribbons of fresh pasta, and decadent mascarpone tiramisu.', 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&auto=format&fit=crop&q=80', 'St. 302, BKK1, Phnom Penh', 'Phnom Penh', '+855 23 992 567', 'Italian Artisan', '11:00 AM - 10:30 PM', 4.8, 1.50, 25, 1, 'Active'),
+-- (6, 2, 'Golden Dragon Dim Sum & Wok', 'Freshly steamed Shanghai soup dumplings, translucent crystal shrimp har gow, and honey-glazed BBQ pork over jasmine rice.', 'https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&auto=format&fit=crop&q=80', 'Mao Tse Toung Blvd, Toul Kork, Phnom Penh', 'Phnom Penh', '+855 23 773 890', 'Dim Sum & Chinese Roast', '07:30 AM - 09:30 PM', 4.9, 1.00, 20, 1, 'Active')
+-- ON DUPLICATE KEY UPDATE
+--     store_name = VALUES(store_name),
+--     description = VALUES(description),
+--     rating = VALUES(rating),
+--     is_open = 1;
+--
+-- -- -----------------------------------------------------------------------------
+-- -- 2. ADD CATEGORIES FOR ALL RESTAURANTS
+-- -- -----------------------------------------------------------------------------
+-- INSERT INTO categories (id, merchant_id, category_name, display_order)
+-- VALUES
+-- -- Angkor Spice
+-- (8, 4, 'Royal Khmer Specialties', 1),
+-- (9, 4, 'Stir-Fry & Wok Delights', 2),
+-- (10, 4, 'Cambodian Drinks & Desserts', 3),
+-- -- La Bella Italia
+-- (11, 5, 'Wood-Fired Neapolitan Pizzas', 1),
+-- (12, 5, 'Handmade Artisan Pasta', 2),
+-- (13, 5, 'Dolci & Italian Desserts', 3),
+-- -- Golden Dragon Dim Sum
+-- (14, 6, 'Handcrafted Dim Sum', 1),
+-- (15, 6, 'Roast BBQ & Noodles', 2),
+-- (16, 6, 'Traditional Beverages', 3)
+-- ON DUPLICATE KEY UPDATE category_name = VALUES(category_name);
+--
+-- -- -----------------------------------------------------------------------------
+-- -- 3. EXPAND MENU ITEMS ACROSS ALL MERCHANTS
+-- -- -----------------------------------------------------------------------------
+--
+-- -- Merchant 1: Zando Burger (Add more items)
+-- INSERT INTO menu_items (id, merchant_id, category_id, category_name, name, description, price, image_url, is_available, popular_score, prep_time_minutes, dietary_tag)
+-- VALUES
+-- (9, 1, 1, 'Signature Burgers', 'Smoky Bacon & Aged Cheddar Burger', 'Crispy applewood smoked bacon, sharp aged Wisconsin cheddar, caramelized balsamic onions, and house BBQ aioli on toasted brioche.', 6.80, 'https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=600&auto=format&fit=crop&q=80', 1, 95, 15, 'Chef Special'),
+-- (10, 1, 1, 'Signature Burgers', 'Classic Deluxe Cheeseburger', '100% prime Angus patty, double melted American cheese, crisp romaine, ripe beefsteak tomatoes, house burger relish.', 5.25, 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=600&auto=format&fit=crop&q=80', 1, 90, 12, 'Best Value'),
+-- (11, 1, 2, 'Artisan Sides', 'Crispy Golden Onion Rings', 'Thick-cut sweet jumbo yellow onions double battered in seasoned panko crumbs with smoked chipotle dip.', 3.20, 'https://images.unsplash.com/photo-1639024471285-0afc27e85c88?w=600&auto=format&fit=crop&q=80', 1, 80, 10, 'Vegetarian'),
+-- (12, 1, 3, 'Craft Beverages', 'Rich Dark Chocolate Fudge Shake', 'Hand-spun Dutch cocoa ice cream topped with dark chocolate ganache swirl, whipped sweet cream, and shaved cacao.', 3.75, 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=600&auto=format&fit=crop&q=80', 1, 88, 5, 'Sweet Treat')
+-- ON DUPLICATE KEY UPDATE name = VALUES(name), price = VALUES(price), description = VALUES(description);
+--
+-- -- Merchant 2: Sakura Sushi & Ramen Bar (Add more items)
+-- INSERT INTO menu_items (id, merchant_id, category_id, category_name, name, description, price, image_url, is_available, popular_score, prep_time_minutes, dietary_tag)
+-- VALUES
+-- (13, 2, 5, 'Hot Broth Ramen', 'Spicy Chashu Miso Ramen', 'Warming 12-hour rich pork bone broth infused with charred red chili miso, tender braised pork belly chashu, sweet corn, and nitamago egg.', 8.50, 'https://images.unsplash.com/photo-1618841557871-b4664fbf0cb3?w=600&auto=format&fit=crop&q=80', 1, 98, 18, 'Spicy Favorite'),
+-- (14, 2, 4, 'Specialty Rolls', 'Crunchy Spicy Tuna Dragon Roll (8pcs)', 'Fresh sashimi-grade Atlantic tuna tossed with Japanese sriracha mayo, rolled with English cucumber and avocado, topped with crispy tempura crisps.', 8.90, 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&auto=format&fit=crop&q=80', 1, 92, 15, 'Chef Special'),
+-- (15, 2, 4, 'Specialty Rolls', 'Wagyu Beef Truffle Donburi', 'Thinly sliced premium Australian Wagyu beef simmered in sweet mirin onion broth, served over steamed Koshihikari sushi rice with onsen poached egg.', 9.50, 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80', 1, 94, 15, 'Premium'),
+-- (16, 2, 5, 'Hot Broth Ramen', 'Pan-Fried Kurobuta Pork Gyoza (6pcs)', 'Crispy pan-fried Japanese dumplings packed with minced Kurobuta pork, garlic chives, and cabbage with tangy sesame soy dip.', 4.20, 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&auto=format&fit=crop&q=80', 1, 85, 10, 'Appetizer')
+-- ON DUPLICATE KEY UPDATE name = VALUES(name), price = VALUES(price), description = VALUES(description);
+--
+-- -- Merchant 3: Khmer Coffee & Patisserie (Add more items)
+-- INSERT INTO menu_items (id, merchant_id, category_id, category_name, name, description, price, image_url, is_available, popular_score, prep_time_minutes, dietary_tag)
+-- VALUES
+-- (17, 3, 6, 'Single Origin Coffee', 'Iced Palm Sugar Cream Cappuccino', 'Double shot of dark roasted Mondulkiri espresso shaken with cold fresh milk and topped with organic Kampot palm sugar cold foam.', 2.95, 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80', 1, 96, 5, 'Signature Drink'),
+-- (18, 3, 7, 'Fresh Bakery', 'Traditional Pain au Chocolat', 'Flaky butter-layered French viennoiserie pastry folded around two batons of 70% bittersweet Belgian dark chocolate.', 2.40, 'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=600&auto=format&fit=crop&q=80', 1, 89, 5, 'Bakery Fresh'),
+-- (19, 3, 7, 'Fresh Bakery', 'Avocado Toast with Farm Poached Egg', 'Thick toasted artisanal sourdough topped with smashed Hass avocado, chili flakes, feta cheese crumble, and a cage-free runny poached egg.', 4.50, 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&auto=format&fit=crop&q=80', 1, 87, 12, 'Healthy Brunch'),
+-- (20, 3, 6, 'Single Origin Coffee', 'Fresh Mango & Passionfruit Tropical Smoothie', 'Pure ripe Cambodian yellow mangoes blended with tart purple passionfruit pulp, Greek yogurt, and crushed ice.', 3.00, 'https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=600&auto=format&fit=crop&q=80', 1, 86, 5, 'Refreshing')
+-- ON DUPLICATE KEY UPDATE name = VALUES(name), price = VALUES(price), description = VALUES(description);
+--
+-- -- Merchant 4: Angkor Spice & Khmer Kitchen
+-- INSERT INTO menu_items (id, merchant_id, category_id, category_name, name, description, price, image_url, is_available, popular_score, prep_time_minutes, dietary_tag)
+-- VALUES
+-- (21, 4, 8, 'Royal Khmer Specialties', 'Traditional Steamed Fish Amok (Trey Amok)', 'Fresh Tonle Sap lake fish fillet gently steamed in banana leaf cup with rich coconut cream, lemongrass paste (kroeung), kaffir lime leaf, and fragrant jasmine rice.', 6.50, 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80', 1, 99, 20, 'National Dish'),
+-- (22, 4, 9, 'Stir-Fry & Wok Delights', 'Phnom Penh Beef Lok Lak with Kampot Pepper', 'Tender cubes of grass-fed beef quickly flash-fried in sweet savory glaze, served over crisp lettuce, sliced tomatoes, cucumber, fried egg, and lime Kampot pepper dip.', 6.90, 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80', 1, 98, 15, 'Cambodian Icon'),
+-- (23, 4, 8, 'Royal Khmer Specialties', 'Khmer Red Chicken Curry (Kari Sach Moan)', 'Slow-simmered chicken thigh pieces, sweet potatoes, and green beans in mild aromatic red kroeung curry with rich coconut milk and warm baguette.', 5.50, 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&auto=format&fit=crop&q=80', 1, 91, 15, 'Comfort Food'),
+-- (24, 4, 9, 'Stir-Fry & Wok Delights', 'Crispy Golden Khmer Spring Rolls (4pcs)', 'Hand-rolled crispy imperial rolls filled with minced pork, taro root, wood ear mushrooms, glass noodles, served with sweet peanut dipping sauce.', 3.20, 'https://images.unsplash.com/photo-1548946526-f69e2424cf45?w=600&auto=format&fit=crop&q=80', 1, 88, 10, 'Appetizer'),
+-- (25, 4, 10, 'Cambodian Drinks & Desserts', 'Fresh Sweet Young Coconut', 'Chilled whole fresh sweet young coconut from Kampot province, cracked open on order with sweet water and tender coconut meat.', 2.00, 'https://images.unsplash.com/photo-1525385133512-2f3bdd039054?w=600&auto=format&fit=crop&q=80', 1, 92, 3, 'Organic Natural')
+-- ON DUPLICATE KEY UPDATE name = VALUES(name), price = VALUES(price), description = VALUES(description);
+--
+-- -- Merchant 5: La Bella Italia Pizzeria & Pasta
+-- INSERT INTO menu_items (id, merchant_id, category_id, category_name, name, description, price, image_url, is_available, popular_score, prep_time_minutes, dietary_tag)
+-- VALUES
+-- (26, 5, 11, 'Wood-Fired Neapolitan Pizzas', 'Margherita D.O.P. di Bufala Pizza (12")', 'San Marzano tomato sauce, fresh creamy buffalo mozzarella, sweet fresh basil leaves, extra virgin olive oil on blistered wood-fired sourdough crust.', 8.50, 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=600&auto=format&fit=crop&q=80', 1, 97, 15, 'Vegetarian Classic'),
+-- (27, 5, 11, 'Wood-Fired Neapolitan Pizzas', 'Black Truffle & Wild Mushroom Pizza (12")', 'Roasted portobello and cremini mushrooms, white truffle cream sauce, fresh thyme, fior di latte mozzarella, and aged parmesan.', 9.90, 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&auto=format&fit=crop&q=80', 1, 94, 15, 'Chef Special'),
+-- (28, 5, 12, 'Handmade Artisan Pasta', 'Authentic Roman Spaghetti Carbonara', 'Imported bronze-die spaghetti tossed with crispy Italian guanciale cured pork, pasteurized egg yolks, cracked black pepper, and aged Pecorino Romano.', 7.90, 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=600&auto=format&fit=crop&q=80', 1, 93, 14, 'Italian Icon'),
+-- (29, 5, 13, 'Dolci & Italian Desserts', 'Artisanal Espresso Tiramisu Classico', 'Savoiardi ladyfinger biscuits soaked in strong Italian espresso and amaretto, layered with velvety sweet mascarpone cream and dusted with cacao.', 4.25, 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=600&auto=format&fit=crop&q=80', 1, 96, 5, 'Classic Dessert')
+-- ON DUPLICATE KEY UPDATE name = VALUES(name), price = VALUES(price), description = VALUES(description);
+--
+-- -- Merchant 6: Golden Dragon Dim Sum & Wok
+-- INSERT INTO menu_items (id, merchant_id, category_id, category_name, name, description, price, image_url, is_available, popular_score, prep_time_minutes, dietary_tag)
+-- VALUES
+-- (30, 6, 14, 'Handcrafted Dim Sum', 'Steamed Crystal Shrimp Har Gow (4pcs)', 'Translucent pleated wheat starch wrappers filled with plump whole tiger prawns, bamboo shoots, and fragrant sesame oil.', 4.20, 'https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?w=600&auto=format&fit=crop&q=80', 1, 98, 12, 'Dim Sum Classic'),
+-- (31, 6, 14, 'Handcrafted Dim Sum', 'Shanghai Pork Xiao Long Bao (6pcs)', 'Hand-folded delicate dumplings bursting with savory rich broth and seasoned minced Kurobuta pork, served with shredded ginger black vinegar dip.', 4.80, 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&auto=format&fit=crop&q=80', 1, 97, 12, 'Soup Dumplings'),
+-- (32, 6, 15, 'Roast BBQ & Noodles', 'Crispy Golden Pork Belly with Jasmine Rice', 'Five-spice marinated pork belly with crackling golden crispy skin, served with steamed jasmine rice, pickled mustard greens, and sweet plum sauce.', 5.80, 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=80', 1, 92, 12, 'House Favorite'),
+-- (33, 6, 16, 'Traditional Beverages', 'Authentic Hong Kong Iced Milk Tea', 'Slow-brewed strong Ceylon black tea blended with rich evaporated milk, served over crushed ice for the perfect creamy balance.', 2.25, 'https://images.unsplash.com/photo-1558857563-b37cf5429e31?w=600&auto=format&fit=crop&q=80', 1, 91, 4, 'Classic Beverage')
+-- ON DUPLICATE KEY UPDATE name = VALUES(name), price = VALUES(price), description = VALUES(description);
+--
+-- -- -----------------------------------------------------------------------------
+-- -- 4. ADD CUSTOMIZATION OPTIONS (US-008 Customization Engine)
+-- -- -----------------------------------------------------------------------------
+-- INSERT INTO item_options (menu_item_id, option_group, option_name, price_adjustment, is_available)
+-- VALUES
+-- -- Options for Smoky Bacon Burger (id 9)
+-- (9, 'Patty Temperature', 'Juicy Medium (Chef Recommendation)', 0.00, 1),
+-- (9, 'Patty Temperature', 'Well Done', 0.00, 1),
+-- (9, 'Add-Ons', 'Extra Applewood Smoked Bacon Slice', 1.25, 1),
+-- (9, 'Add-Ons', 'Fried Farm Egg', 0.75, 1),
+--
+-- -- Options for Fish Amok (id 21)
+-- (21, 'Rice Choice', 'Steamed Jasmine Rice (Included)', 0.00, 1),
+-- (21, 'Rice Choice', 'Organic Brown Rice', 0.50, 1),
+-- (21, 'Spice Level', 'Mild Traditional', 0.00, 1),
+-- (21, 'Spice Level', 'Extra Chili Kick', 0.00, 1),
+--
+-- -- Options for Beef Lok Lak (id 22)
+-- (22, 'Egg Style', 'Sunny Side Up Egg (Runny)', 0.00, 1),
+-- (22, 'Egg Style', 'Fully Cooked Fried Egg', 0.00, 1),
+-- (22, 'Add-Ons', 'Extra Beef Portion (50g)', 2.00, 1),
+--
+-- -- Options for Margherita Pizza (id 26)
+-- (26, 'Crust Type', 'Traditional Wood-Fired Neapolitan Crust', 0.00, 1),
+-- (26, 'Crust Type', 'Crispy Extra Thin Crust', 0.00, 1),
+-- (26, 'Extra Topping', 'Prosciutto di Parma Ham', 2.50, 1),
+-- (26, 'Extra Topping', 'Extra Buffalo Mozzarella', 1.75, 1),
+--
+-- -- Options for Xiao Long Bao (id 31)
+-- (31, 'Portion Size', 'Standard Steamer (6 pieces)', 0.00, 1),
+-- (31, 'Portion Size', 'Party Steamer (10 pieces)', 2.80, 1),
+--
+-- -- Options for HK Milk Tea (id 33)
+-- (33, 'Sweetness', 'Standard Sweetness (100%)', 0.00, 1),
+-- (33, 'Sweetness', 'Less Sweet (50%)', 0.00, 1),
+-- (33, 'Ice Level', 'Normal Ice', 0.00, 1),
+-- (33, 'Ice Level', 'No Ice', 0.00, 1);

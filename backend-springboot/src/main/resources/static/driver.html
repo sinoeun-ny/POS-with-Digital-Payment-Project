@@ -49,6 +49,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // Prevent React 18 crash when Lucide replaces DOM nodes (removeChild / insertBefore)
+        if (typeof Node === 'function' && Node.prototype) {
+            const originalRemoveChild = Node.prototype.removeChild;
+            Node.prototype.removeChild = function(child) {
+                if (child.parentNode !== this) {
+                    if (console && console.warn) console.warn('SafeDOM: prevented removeChild on unparented node', child);
+                    return child;
+                }
+                return originalRemoveChild.apply(this, arguments);
+            };
+
+            const originalInsertBefore = Node.prototype.insertBefore;
+            Node.prototype.insertBefore = function(newNode, referenceNode) {
+                if (referenceNode && referenceNode.parentNode !== this) {
+                    if (console && console.warn) console.warn('SafeDOM: prevented insertBefore on unparented node', referenceNode);
+                    return this.appendChild(newNode);
+                }
+                return originalInsertBefore.apply(this, arguments);
+            };
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -72,55 +94,38 @@
 <script type="text/babel">
     const { useState, useEffect } = React;
 
+    const API_BASE = window.location.port === '8080' ? '' : 'http://localhost:8080';
+
     const INITIAL_JOBS = [
         {
-            id: 101,
+            id: 1,
+            orderNumber: "ORD-1001",
             merchant: "Zando Burger & Grill",
-            merchantAddress: "Street 271, Boeng Tumpun",
-            customer: "Dominica Reed",
-            customerAddress: "Building 42, St. 302, BKK1",
+            merchantAddress: "Street 271, Sangkat Phsar Doeum Thkov",
+            customer: "Sokha Customer",
+            customerAddress: "Building 42, St. 302, BKK1, Phnom Penh",
             distance: "2.4 km",
-            itemsSummary: "2x Double Truffle Smash Burger",
+            itemsSummary: "1x Double Truffle Smash Burger, 1x Parmesan Truffle French Fries",
             deliveryFee: 1.50,
             tip: 1.00,
             status: "AVAILABLE",
             time: "3m ago"
-        },
-        {
-            id: 102,
-            merchant: "Sakura Sushi & Ramen Bar",
-            merchantAddress: "Monivong Blvd, BKK2",
-            customer: "Chan Dara",
-            customerAddress: "Tower 4, Russian Market",
-            distance: "3.1 km",
-            itemsSummary: "2x Signature Tonkotsu Black Ramen",
-            deliveryFee: 2.00,
-            tip: 1.50,
-            status: "AVAILABLE",
-            time: "8m ago"
-        },
-        {
-            id: 103,
-            merchant: "Khmer Coffee & Patisserie",
-            merchantAddress: "Norodom Blvd, Daun Penh",
-            customer: "Sreypov Meas",
-            customerAddress: "Norodom Blvd, Daun Penh",
-            distance: "1.1 km",
-            itemsSummary: "1x Mondulkiri Iced Latte, 1x Almond Butter Croissant",
-            deliveryFee: 1.00,
-            tip: 0.80,
-            status: "AVAILABLE",
-            time: "1m ago"
         }
     ];
 
     const INITIAL_COMPLETED = [
-        { id: 98, merchant: "Khmer Coffee & Patisserie", customer: "Sokha Mean", payout: 2.50, time: "1 hr ago", rating: 5.0 },
+        { id: 98, merchant: "Khmer Coffee & Patisserie", customer: "Sokha Customer", payout: 2.50, time: "1 hr ago", rating: 5.0 },
         { id: 99, merchant: "Zando Burger & Grill", customer: "Vannak Long", payout: 3.20, time: "2 hrs ago", rating: 5.0 }
     ];
 
     function DriverApp() {
-        const [currentUser, setCurrentUser] = useState({ name: "Dara K. Express", email: "driver@example.com", role: "DRIVER", token: "jwt_driver" });
+        const [currentUser, setCurrentUser] = useState(() => {
+            const saved = localStorage.getItem('foodeats_auth_user');
+            if (saved) {
+                try { return JSON.parse(saved); } catch (e) {}
+            }
+            return { name: "Dara Driver", email: "driver@example.com", role: "DRIVER", token: localStorage.getItem('foodeats_auth_token') || "" };
+        });
         const [showAuthModal, setShowAuthModal] = useState(false);
         const [activeTab, setActiveTab] = useState('jobs');
         const [isOnline, setIsOnline] = useState(true);
@@ -141,22 +146,76 @@
             window.location.href = 'index.html';
         };
 
+        const fetchAvailableJobs = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/driver/orders`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        setAvailableJobs(data.map(o => ({
+                            id: o.id,
+                            orderNumber: o.orderNumber || ('ORD-' + o.id),
+                            merchant: o.merchantName || (o.merchant ? o.merchant.name : "Restaurant"),
+                            merchantAddress: o.merchant ? o.merchant.address : "Phnom Penh Central",
+                            customer: o.customer ? (o.customer.name || o.customer.fullName) : "Customer",
+                            customerAddress: o.deliveryAddress || "Phnom Penh",
+                            distance: "2.1 km",
+                            itemsSummary: (o.items && o.items.length > 0)
+                                ? o.items.map(i => `${i.quantity}x ${i.name || i.menuItemName || 'Dish'}`).join(', ')
+                                : "Prepared Dishes",
+                            deliveryFee: o.deliveryFee || 1.50,
+                            tip: 1.00,
+                            status: "AVAILABLE",
+                            time: "Just now"
+                        })));
+                    }
+                }
+            } catch (err) {
+                console.log("Could not load delivery jobs from server");
+            }
+        };
+
+        useEffect(() => {
+            fetchAvailableJobs();
+            const interval = setInterval(fetchAvailableJobs, 10000);
+            return () => clearInterval(interval);
+        }, []);
+
         useEffect(() => {
             if (window.lucide) window.lucide.createIcons();
         }, [activeTab, isOnline, availableJobs, activeDelivery, completedDeliveries, deliveryStep, toast]);
 
-        const acceptJob = (job) => {
+        const acceptJob = async (job) => {
             if (!isOnline) {
                 showToast("Please toggle your status to ONLINE first!", "error");
                 return;
             }
+
+            const token = localStorage.getItem('foodeats_auth_token');
+            try {
+                const res = await fetch(`${API_BASE}/api/driver/orders/${job.id}/accept`, {
+                    method: 'PUT',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+                if (res.ok) {
+                    const saved = await res.json();
+                    setActiveDelivery({ ...job, id: saved.id });
+                    setDeliveryStep(0);
+                    setAvailableJobs(prev => prev.filter(j => j.id !== job.id));
+                    showToast(`Accepted Delivery Job #${job.orderNumber || job.id}! Navigate to ${job.merchant}`);
+                    return;
+                }
+            } catch (err) {
+                console.log("Error accepting job on server, fallback to local state");
+            }
+
             setActiveDelivery(job);
             setDeliveryStep(0);
             setAvailableJobs(availableJobs.filter(j => j.id !== job.id));
             showToast(`Accepted Delivery Job #${job.id}! Navigate to ${job.merchant}`);
         };
 
-        const advanceDeliveryStep = () => {
+        const advanceDeliveryStep = async () => {
             if (deliveryStep === 0) {
                 setDeliveryStep(1);
                 showToast("Broadcasted status: Arrived at Restaurant");
@@ -164,7 +223,22 @@
                 setDeliveryStep(2);
                 showToast("Broadcasted status: Food Picked Up & On Route to Customer");
             } else if (deliveryStep === 2) {
-                const payout = activeDelivery.deliveryFee + activeDelivery.tip;
+                const payout = (activeDelivery.deliveryFee || 1.50) + (activeDelivery.tip || 1.00);
+                const token = localStorage.getItem('foodeats_auth_token');
+
+                try {
+                    await fetch(`${API_BASE}/api/driver/orders/${activeDelivery.id}/status`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                        },
+                        body: JSON.stringify({ status: "DELIVERED" })
+                    });
+                } catch (err) {
+                    console.log("Failed to sync delivery status to server");
+                }
+
                 const doneItem = {
                     id: activeDelivery.id,
                     merchant: activeDelivery.merchant,
@@ -214,23 +288,6 @@
                             <NavItem id="earnings" icon="wallet" label="Earnings & Tips" active={activeTab} onClick={setActiveTab} />
                         </nav>
 
-                        <div className="mt-6 mb-2 px-3 text-[10px] font-bold tracking-wider text-mint-100/40 uppercase">
-                            Switch Role Portal
-                        </div>
-                        <div className="space-y-1 text-xs">
-                            <a href="customer.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
-                                <i data-lucide="shopping-bag" className="w-4 h-4 text-mint-300"></i> Customer Portal
-                            </a>
-                            <a href="merchant.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
-                                <i data-lucide="store" className="w-4 h-4 text-mint-300"></i> Merchant Portal
-                            </a>
-                            <a href="admin.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
-                                <i data-lucide="shield-check" className="w-4 h-4 text-mint-300"></i> Admin Hub
-                            </a>
-                            <a href="index.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
-                                <i data-lucide="layout-grid" className="w-4 h-4 text-mint-300"></i> Platform Gateway
-                            </a>
-                        </div>
                     </div>
 
                     <div className="pt-4 border-t border-white/10 space-y-3">
@@ -264,9 +321,8 @@
                                 onClick={() => setShowAuthModal(true)}
                                 className="px-3.5 py-1.5 rounded-2xl text-xs font-bold bg-white hover:bg-sage-100 text-ink-900 border border-sage-300 flex items-center gap-1.5 transition shadow-sm"
                             >
-                                <i data-lucide="user-plus" className="w-3.5 h-3.5 text-forest-600"></i>
-                                <span>Register / Sign In</span>
-                                <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-extrabold uppercase">{currentUser.role}</span>
+                                <i data-lucide="log-in" className="w-3.5 h-3.5 text-forest-600"></i>
+                                <span>Driver Sign In</span>
                             </button>
 
                             <button
@@ -446,18 +502,19 @@
                 </main>
 
                 {showAuthModal && (
-                    <MultiRoleAuthModal
+                    <DriverLoginModal
                         currentUser={currentUser}
                         onClose={() => setShowAuthModal(false)}
                         onSuccessLogin={(user) => {
+                            if (user.role !== 'DRIVER') {
+                                showToast("Access denied: This portal is for Driver accounts only.", "error");
+                                return;
+                            }
                             setCurrentUser(user);
+                            localStorage.setItem('foodeats_auth_user', JSON.stringify(user));
+                            if (user.token) localStorage.setItem('foodeats_auth_token', user.token);
                             setShowAuthModal(false);
                             showToast(`Welcome back, ${user.name}!`);
-                        }}
-                        onSuccessRegister={(user) => {
-                            setCurrentUser(user);
-                            setShowAuthModal(false);
-                            showToast(`🎉 Account created! Welcome, ${user.name} (${user.role}).`);
                         }}
                         showToast={showToast}
                     />
@@ -467,109 +524,48 @@
     }
 
     // ==========================================
-    // MULTI-ROLE REGISTRATION & LOGIN MODAL (US-001 & US-002)
+    // DRIVER SIGN IN MODAL
+    // (Driver accounts are created in MySQL only)
     // ==========================================
-    function MultiRoleAuthModal({ currentUser, onClose, onSuccessLogin, onSuccessRegister, showToast }) {
-        const [mode, setMode] = useState('register'); // 'register' | 'login'
-        const [selectedRole, setSelectedRole] = useState('DRIVER'); // Default to Driver on driver screen
-        const [loading, setLoading] = useState(false);
-        const [errorMsg, setErrorMsg] = useState('');
-
-        const [regName, setRegName] = useState('');
-        const [regEmail, setRegEmail] = useState('');
-        const [regPassword, setRegPassword] = useState('password123');
-        const [regPhone, setRegPhone] = useState('+855 88 123 456');
-        const [vehicleType, setVehicleType] = useState('Motorbike');
-        const [plateNumber, setPlateNumber] = useState('PP 1AB-8899');
-        const [restaurantName, setRestaurantName] = useState('');
-        const [cuisineType, setCuisineType] = useState('Khmer Cuisine');
-        const [storeAddress, setStoreAddress] = useState('Street 271, Phnom Penh');
-        const [deliveryAddress, setDeliveryAddress] = useState('Building 42, BKK1, Phnom Penh');
-
+    function DriverLoginModal({ currentUser, onClose, onSuccessLogin, showToast }) {
         const [loginEmail, setLoginEmail] = useState('');
         const [loginPassword, setLoginPassword] = useState('');
-
-        const handleRegister = async (e) => {
-            e.preventDefault();
-            setLoading(true);
-            setErrorMsg('');
-
-            const payload = {
-                name: regName.trim(),
-                email: regEmail.trim().toLowerCase(),
-                password: regPassword,
-                phone: regPhone.trim(),
-                role: selectedRole,
-                restaurantName: selectedRole === 'MERCHANT' ? (restaurantName.trim() || regName + ' Kitchen') : null,
-                cuisineType: selectedRole === 'MERCHANT' ? cuisineType : null,
-                address: selectedRole === 'MERCHANT' ? storeAddress : (selectedRole === 'CUSTOMER' ? deliveryAddress : null),
-                city: 'Phnom Penh',
-                vehicleType: selectedRole === 'DRIVER' ? vehicleType : null,
-                plateNumber: selectedRole === 'DRIVER' ? plateNumber : null
-            };
-
-            try {
-                const res = await fetch(`http://localhost:8080/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    onSuccessRegister({
-                        name: data.name,
-                        email: data.email,
-                        role: data.role,
-                        token: data.token,
-                        id: data.userId
-                    });
-                } else {
-                    const err = await res.json().catch(() => ({}));
-                    setErrorMsg(err.message || "Registration failed. Try a different email.");
-                }
-            } catch (err) {
-                // Fallback simulation
-                onSuccessRegister({
-                    name: payload.name,
-                    email: payload.email,
-                    role: payload.role,
-                    token: "jwt_token_" + Date.now()
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
+        const [loading, setLoading] = useState(false);
+        const [errorMsg, setErrorMsg] = useState('');
 
         const handleLogin = async (e) => {
             e.preventDefault();
             setLoading(true);
             setErrorMsg('');
+
             try {
                 const res = await fetch(`http://localhost:8080/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: loginEmail.trim().toLowerCase(), password: loginPassword })
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    onSuccessLogin({
-                        name: data.name,
-                        email: data.email,
-                        role: data.role,
-                        token: data.token,
-                        id: data.userId
-                    });
-                } else {
-                    const err = await res.json().catch(() => ({}));
-                    setErrorMsg(err.message || "Invalid credentials.");
+
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    setErrorMsg(data.message || "Invalid driver credentials. Please try again.");
+                    return;
                 }
-            } catch (err) {
+
+                if (data.role !== 'DRIVER') {
+                    setErrorMsg("This portal is for Driver accounts only. Please sign in with a registered driver email.");
+                    return;
+                }
+
                 onSuccessLogin({
-                    name: loginEmail.split('@')[0],
-                    email: loginEmail,
-                    role: "DRIVER",
-                    token: "jwt_token_demo"
+                    name: data.name,
+                    email: data.email,
+                    role: data.role,
+                    token: data.token,
+                    id: data.userId
                 });
+            } catch (err) {
+                console.error("Login error", err);
+                setErrorMsg("Network error connecting to backend.");
             } finally {
                 setLoading(false);
             }
@@ -577,256 +573,83 @@
 
         return (
             <div className="fixed inset-0 bg-ink-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-                <div className="bg-white rounded-3xl max-w-lg w-full p-6 border border-sage-200 shadow-2xl space-y-4 my-8 max-h-[90vh] overflow-y-auto">
+                <div className="bg-white rounded-3xl max-w-md w-full p-6 border border-sage-200 shadow-2xl space-y-4 my-8">
+                    {/* Header */}
                     <div className="flex justify-between items-center pb-3 border-b border-sage-200">
                         <div className="flex items-center gap-2.5">
                             <div className="w-9 h-9 rounded-2xl bg-forest-500 text-white flex items-center justify-center font-bold shadow-md">
-                                <i data-lucide="shield-check" className="w-5 h-5"></i>
+                                <i data-lucide="bike" className="w-5 h-5"></i>
                             </div>
                             <div>
-                                <h3 className="font-display text-lg font-bold text-ink-950">FoodEats Multi-Role Portal</h3>
-                                <p className="text-[11px] text-ink-500 font-medium">Sprint 1: Auth Engine & Onboarding (US-001, US-002)</p>
+                                <h3 className="font-display text-lg font-bold text-ink-950">Driver Dispatch Sign In</h3>
+                                <p className="text-[11px] text-ink-500 font-medium">Access your delivery route and active dispatch jobs</p>
                             </div>
                         </div>
                         <button onClick={onClose} className="w-8 h-8 rounded-full bg-sage-100 text-ink-600 hover:bg-sage-200 font-bold flex items-center justify-center">✕</button>
                     </div>
 
-                    <div className="grid grid-cols-2 p-1 bg-sage-100 rounded-2xl">
-                        <button
-                            type="button"
-                            onClick={() => { setMode('register'); setErrorMsg(''); }}
-                            className={`py-2 text-xs font-bold rounded-xl transition ${mode === 'register' ? 'bg-white text-forest-800 shadow-sm font-extrabold' : 'text-ink-600 hover:text-ink-900'}`}
-                        >
-                            ✨ Register New Account
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => { setMode('login'); setErrorMsg(''); }}
-                            className={`py-2 text-xs font-bold rounded-xl transition ${mode === 'login' ? 'bg-white text-forest-800 shadow-sm font-extrabold' : 'text-ink-600 hover:text-ink-900'}`}
-                        >
-                            🔑 Sign In
-                        </button>
+                    {/* Notice: Accounts created in MySQL only */}
+                    <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold flex items-start gap-2">
+                        <i data-lucide="info" className="w-4 h-4 text-amber-600 mt-0.5 shrink-0"></i>
+                        <span>Driver accounts cannot register online. They are provisioned directly in MySQL by the platform administrator.</span>
                     </div>
 
                     {errorMsg && (
                         <div className="p-3 rounded-2xl bg-rust-50 border border-rust-200 text-rust-800 text-xs font-semibold flex items-center gap-2">
-                            <i data-lucide="alert-circle" className="w-4 h-4 text-rust-600"></i>
+                            <i data-lucide="alert-circle" className="w-4 h-4 text-rust-600 shrink-0"></i>
                             <span>{errorMsg}</span>
                         </div>
                     )}
 
-                    {mode === 'register' && (
-                        <form onSubmit={handleRegister} className="space-y-4">
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <div className="space-y-3">
                             <div>
-                                <label className="block text-xs font-bold text-ink-800 mb-1.5">
-                                    Step 1: Choose Your Account Role (US-003)
-                                </label>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                    {[
-                                        { role: 'DRIVER', icon: 'bike', label: 'Driver', desc: 'Deliveries' },
-                                        { role: 'MERCHANT', icon: 'store', label: 'Merchant', desc: 'Store & Menu' },
-                                        { role: 'CUSTOMER', icon: 'shopping-bag', label: 'Customer', desc: 'Order Food' },
-                                        { role: 'ADMIN', icon: 'shield', label: 'Admin', desc: 'Platform' }
-                                    ].map(item => (
-                                        <button
-                                            key={item.role}
-                                            type="button"
-                                            onClick={() => setSelectedRole(item.role)}
-                                            className={`p-2.5 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-1 ${selectedRole === item.role ? 'bg-forest-500 text-white border-forest-600 shadow-md ring-2 ring-forest-400/30 font-extrabold' : 'bg-cream-50 text-ink-800 border-sage-200 hover:bg-sage-100'}`}
-                                        >
-                                            <i data-lucide={item.icon} className="w-4 h-4"></i>
-                                            <span className="text-xs font-bold leading-none">{item.label}</span>
-                                            <span className={`text-[9px] ${selectedRole === item.role ? 'text-mint-100' : 'text-ink-400'}`}>{item.desc}</span>
-                                        </button>
-                                    ))}
-                                </div>
+                                <label className="block text-xs font-bold text-ink-700 mb-1">Driver Email *</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={loginEmail}
+                                    onChange={e => setLoginEmail(e.target.value)}
+                                    placeholder="e.g. driver@example.com"
+                                    className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                />
                             </div>
-
-                            <div className="pt-2 border-t border-sage-100 space-y-3">
-                                <label className="block text-xs font-bold text-ink-800">
-                                    Step 2: Personal Details (US-001)
-                                </label>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                    <div>
-                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Full Name *</label>
-                                        <input
-                                            required
-                                            value={regName}
-                                            onChange={e => setRegName(e.target.value)}
-                                            placeholder="e.g. Dara Chan"
-                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Phone Number *</label>
-                                        <input
-                                            required
-                                            value={regPhone}
-                                            onChange={e => setRegPhone(e.target.value)}
-                                            placeholder="+855 88 123 456"
-                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                    <div>
-                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Email Address *</label>
-                                        <input
-                                            type="email"
-                                            required
-                                            value={regEmail}
-                                            onChange={e => setRegEmail(e.target.value)}
-                                            placeholder="driver@example.com"
-                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[11px] font-bold text-ink-600 mb-1">Password *</label>
-                                        <input
-                                            type="password"
-                                            required
-                                            value={regPassword}
-                                            onChange={e => setRegPassword(e.target.value)}
-                                            placeholder="••••••••"
-                                            className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
-                                        />
-                                    </div>
-                                </div>
+                            <div>
+                                <label className="block text-xs font-bold text-ink-700 mb-1">Password *</label>
+                                <input
+                                    type="password"
+                                    required
+                                    value={loginPassword}
+                                    onChange={e => setLoginPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
+                                />
                             </div>
+                        </div>
 
-                            {selectedRole === 'DRIVER' && (
-                                <div className="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200 space-y-2.5 animate-fadeIn">
-                                    <div className="flex items-center gap-2 text-amber-900 font-extrabold text-xs">
-                                        <i data-lucide="bike" className="w-4 h-4 text-amber-700"></i>
-                                        Driver Fleet Onboarding (US-002)
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-ink-700 mb-0.5">Vehicle Type</label>
-                                            <select
-                                                value={vehicleType}
-                                                onChange={e => setVehicleType(e.target.value)}
-                                                className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
-                                            >
-                                                <option value="Motorbike">🛵 Motorbike / Scooter</option>
-                                                <option value="Bicycle">🚲 Eco Bicycle</option>
-                                                <option value="Electric Scooter">⚡ Electric Scooter</option>
-                                                <option value="Car">🚗 Express Car</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-ink-700 mb-0.5">Plate Number / Hub</label>
-                                            <input
-                                                value={plateNumber}
-                                                onChange={e => setPlateNumber(e.target.value)}
-                                                placeholder="PP 1AB-8899"
-                                                className="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-2.5 rounded-2xl bg-forest-500 hover:bg-forest-600 font-extrabold text-xs text-white shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            <i data-lucide="log-in" className="w-4 h-4"></i>
+                            <span>{loading ? 'Authenticating...' : 'Sign In to Driver Dispatch'}</span>
+                        </button>
 
-                            {selectedRole === 'MERCHANT' && (
-                                <div className="p-3.5 bg-mint-50/70 rounded-2xl border border-forest-200 space-y-2.5 animate-fadeIn">
-                                    <div className="flex items-center gap-2 text-forest-900 font-extrabold text-xs">
-                                        <i data-lucide="store" className="w-4 h-4 text-forest-700"></i>
-                                        Merchant Storefront Setup (US-002)
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <input
-                                            required
-                                            value={restaurantName}
-                                            onChange={e => setRestaurantName(e.target.value)}
-                                            placeholder="Restaurant Name"
-                                            className="w-full bg-white border border-forest-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
-                                        />
-                                        <input
-                                            required
-                                            value={cuisineType}
-                                            onChange={e => setCuisineType(e.target.value)}
-                                            placeholder="Cuisine Type"
-                                            className="w-full bg-white border border-forest-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-900"
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="pt-2 flex items-center justify-end gap-2">
-                                <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-sage-100 hover:bg-sage-200 font-bold text-xs text-ink-700">
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="px-6 py-2 rounded-xl bg-forest-500 hover:bg-forest-600 font-extrabold text-xs text-white shadow-md transition flex items-center gap-1.5 disabled:opacity-50"
-                                >
-                                    {loading ? 'Creating Account...' : `Register as ${selectedRole}`}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-
-                    {mode === 'login' && (
-                        <form onSubmit={handleLogin} className="space-y-4">
-                            <div className="space-y-3">
-                                <div>
-                                    <label className="block text-xs font-bold text-ink-700 mb-1">Email Address *</label>
-                                    <input
-                                        type="email"
-                                        required
-                                        value={loginEmail}
-                                        onChange={e => setLoginEmail(e.target.value)}
-                                        placeholder="driver@example.com"
-                                        className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-ink-700 mb-1">Password *</label>
-                                    <input
-                                        type="password"
-                                        required
-                                        value={loginPassword}
-                                        onChange={e => setLoginPassword(e.target.value)}
-                                        placeholder="••••••••"
-                                        className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900 focus:bg-white"
-                                    />
-                                </div>
-                            </div>
-
+                        <div className="pt-3 border-t border-sage-100 space-y-2">
+                            <label className="block text-[11px] font-bold text-ink-500 uppercase tracking-wider">
+                                🛵 Registered Driver in MySQL:
+                            </label>
                             <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-2.5 rounded-2xl bg-forest-500 hover:bg-forest-600 font-extrabold text-xs text-white shadow-md transition disabled:opacity-50"
+                                type="button"
+                                onClick={() => { setLoginEmail('driver@example.com'); setLoginPassword('password123'); }}
+                                className="w-full p-2 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-left font-bold text-amber-900 flex justify-between items-center transition text-xs"
                             >
-                                {loading ? 'Authenticating...' : 'Sign In with JWT'}
+                                <span>🛵 Dara K. (Express Driver)</span>
+                                <span className="text-[10px] text-amber-700 font-normal">driver@example.com</span>
                             </button>
-
-                            <div className="pt-3 border-t border-sage-100 space-y-2">
-                                <label className="block text-[11px] font-bold text-ink-500 uppercase tracking-wider">
-                                    ⚡ Quick 1-Click Demo Accounts:
-                                </label>
-                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                    <button
-                                        type="button"
-                                        onClick={() => onSuccessLogin({ name: "Dara Driver", email: "driver@example.com", role: "DRIVER", token: "jwt_dara" })}
-                                        className="p-2 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-left font-bold text-amber-900"
-                                    >
-                                        🛵 Dara (Driver)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => onSuccessLogin({ name: "Bopha Merchant", email: "merchant@example.com", role: "MERCHANT", token: "jwt_bopha" })}
-                                        className="p-2 rounded-xl bg-mint-50 border border-mint-200 hover:bg-mint-100 text-left font-bold text-forest-900"
-                                    >
-                                        👨‍🍳 Bopha (Merchant)
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    )}
+                        </div>
+                    </form>
                 </div>
             </div>
         );

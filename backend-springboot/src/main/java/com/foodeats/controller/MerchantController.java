@@ -27,11 +27,13 @@ public class MerchantController {
     }
 
     @GetMapping
-    public List<Merchant> getAllMerchants(@RequestParam(required = false) String search) {
-        if (search != null && !search.trim().isEmpty()) {
-            return merchantRepository.findByNameContainingIgnoreCase(search);
-        }
-        return merchantRepository.findAll();
+    public List<Merchant> getAllMerchants(
+            @RequestParam(required = false) String search ,
+            @RequestParam(required = false) String cuisine ,
+            @RequestParam(required = false) Double minRating ,
+            @RequestParam(required = false) Double maxFee ) {
+        // filtering logic directly to mysql sp_filter_merchants
+        return merchantRepository.filterMerchants(search, cuisine , minRating , maxFee);
     }
 
     @GetMapping("/{id}")
@@ -48,9 +50,9 @@ public class MerchantController {
             String email = jwtUtil.extractEmail(token);
             Optional<User> userOpt = userRepository.findByEmail(email);
             if (userOpt.isPresent()) {
-                Optional<Merchant> merchantOpt = merchantRepository.findByOwnerId(userOpt.get().getId());
-                if (merchantOpt.isPresent()) {
-                    return ResponseEntity.ok(merchantOpt.get());
+                List<Merchant> merchantList = merchantRepository.findByOwnerId(userOpt.get().getId());
+                if (!merchantList.isEmpty()) {
+                    return ResponseEntity.ok(merchantList.get(0));
                 }
             }
         }
@@ -60,6 +62,20 @@ public class MerchantController {
             return ResponseEntity.ok(merchants.get(0));
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/my-stores")
+    public ResponseEntity<?> getMyStores(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.replace("Bearer ", "");
+            String email = jwtUtil.extractEmail(token);
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isPresent()) {
+                List<Merchant> merchantList = merchantRepository.findByOwnerId(userOpt.get().getId());
+                return ResponseEntity.ok(merchantList);
+            }
+        }
+        return ResponseEntity.status(401).body(Map.of("message", "Unauthorized. Please log in as a merchant."));
     }
 
     @PostMapping

@@ -1,6 +1,7 @@
 package com.foodeats.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,14 +12,15 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "merchant_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "owner"})
     private Merchant merchant;
 
-    @Column(nullable = false)
+    @Column(name = "category_name", nullable = false, length = 100)
     private String name;
 
+    @Column(name = "display_order")
     private Integer displayOrder = 0;
 
     public Category() {}
@@ -41,8 +43,12 @@ public class Category {
     public Merchant getMerchant() { return merchant; }
     public void setMerchant(Merchant merchant) { this.merchant = merchant; }
 
+    @JsonProperty("name")
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getCategoryName() { return name; }
+    public void setCategoryName(String categoryName) { this.name = categoryName; }
 
     public Integer getDisplayOrder() { return displayOrder; }
     public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }

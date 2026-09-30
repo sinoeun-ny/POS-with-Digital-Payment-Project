@@ -216,12 +216,26 @@
         const [showAuthModal, setShowAuthModal] = useState(false);
 
         // Auth state (Allows all roles)
-        const [currentUser, setCurrentUser] = useState({
-            name: "Bopha Merchant",
-            email: "merchant@example.com",
-            role: "MERCHANT",
-            token: "demo_jwt_token_merchant"
+        const [currentUser, setCurrentUser] = useState(() => {
+            const savedToken = localStorage.getItem('foodeats_auth_token');
+            const savedUser = localStorage.getItem('foodeats_auth_user');
+            if (savedUser) {
+                try {
+                    const parsed = JSON.parse(savedUser);
+                    return { ...parsed, token: savedToken || parsed.token || '' };
+                } catch (e) {}
+            }
+            return {
+                name: "Bopha Merchant",
+                email: "merchant@example.com",
+                role: "MERCHANT",
+                token: savedToken || "demo_jwt_token_merchant"
+            };
         });
+
+        // Orders state
+        const [orders, setOrders] = useState([]);
+        const [ordersLoading, setOrdersLoading] = useState(false);
 
         // Active Store
         const currentStore = stores.find(s => s.id === selectedStoreId) || stores[0];
@@ -231,6 +245,47 @@
             setTimeout(() => setToast(null), 3200);
         };
 
+        const fetchOrdersFromBackend = async () => {
+            try {
+                setOrdersLoading(true);
+                const token = localStorage.getItem('foodeats_auth_token') || currentUser.token;
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const res = await fetch(`${API_BASE}/api/orders?merchantId=${selectedStoreId}`, { headers });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        setOrders(data);
+                    }
+                }
+            } catch (err) {
+                console.log("Error loading kitchen orders", err);
+            } finally {
+                setOrdersLoading(false);
+            }
+        };
+
+        const handleUpdateOrderStatus = async (orderId, newStatus) => {
+            try {
+                const token = localStorage.getItem('foodeats_auth_token') || currentUser.token;
+                const res = await fetch(`${API_BASE}/api/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (res.ok) {
+                    showToast(`Order #${orderId} updated to ${newStatus}!`);
+                    fetchOrdersFromBackend();
+                } else {
+                    showToast("Failed to update status", "error");
+                }
+            } catch (e) {
+                showToast("Failed to update order status", "error");
+            }
+        };
+
         useEffect(() => {
             fetchStoresFromBackend();
             fetchCategoriesFromBackend(selectedStoreId);
@@ -238,8 +293,16 @@
         }, [selectedStoreId]);
 
         useEffect(() => {
+            if (activeTab === 'orders') {
+                fetchOrdersFromBackend();
+                const interval = setInterval(fetchOrdersFromBackend, 4000);
+                return () => clearInterval(interval);
+            }
+        }, [activeTab, selectedStoreId]);
+
+        useEffect(() => {
             if (window.lucide) window.lucide.createIcons();
-        }, [activeTab, stores, selectedStoreId, categories, menuItems, toast, showItemModal, showCategoryModal, showAuthModal]);
+        }, [activeTab, stores, selectedStoreId, categories, menuItems, orders, toast, showItemModal, showCategoryModal, showAuthModal]);
 
         const handleLogout = () => {
             localStorage.removeItem('foodeats_auth_token');
@@ -910,24 +973,148 @@
                         )}
 
                         {/* ======================================================== */}
-                        {/* TAB 4: ORDERS (Sprint 4 & 5 Integration Hook) */}
+                        {/* TAB 4: ORDERS (Live Kitchen Tickets) */}
                         {/* ======================================================== */}
                         {activeTab === 'orders' && (
                             <div className="space-y-4">
                                 <div className="p-4 bg-white rounded-3xl border border-sage-200 flex justify-between items-center shadow-sm">
                                     <div>
                                         <h3 className="font-display text-lg font-bold text-ink-950">Live Kitchen Tickets</h3>
-                                        <p className="text-xs text-ink-500">Orders automatically route here when customers checkout.</p>
+                                        <p className="text-xs text-ink-500">Orders placed from mobile phone and customer portal appear here in real time.</p>
                                     </div>
-                                    <span className="text-xs font-extrabold text-forest-700 bg-mint-100 px-3 py-1 rounded-full border border-mint-200">
-                                        🟢 Spring Boot Webhook Listening
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <button 
+                                            onClick={fetchOrdersFromBackend} 
+                                            disabled={ordersLoading}
+                                            className="px-3 py-1.5 bg-forest-50 hover:bg-forest-100 text-forest-700 text-xs font-bold rounded-xl border border-forest-200 transition flex items-center gap-1.5"
+                                        >
+                                            <i data-lucide="refresh-cw" className={`w-3.5 h-3.5 ${ordersLoading ? 'animate-spin' : ''}`}></i>
+                                            Refresh
+                                        </button>
+                                        <span className="text-xs font-extrabold text-forest-700 bg-mint-100 px-3 py-1 rounded-full border border-mint-200 flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-forest-500 animate-pulse"></span> Live Auto-Polling (4s)
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="text-center py-12 bg-white rounded-3xl border border-sage-200 shadow-sm p-6">
-                                    <i data-lucide="clock" className="w-10 h-10 text-forest-500 mx-auto mb-2"></i>
-                                    <h4 className="font-bold text-ink-950">Kitchen Queue is Ready!</h4>
-                                    <p className="text-xs text-ink-500 max-w-sm mx-auto mt-1">Orders placed from the Customer Portal in Sprint 3 will immediately appear here for live kitchen prep.</p>
-                                </div>
+
+                                {orders.length === 0 ? (
+                                    <div className="text-center py-12 bg-white rounded-3xl border border-sage-200 shadow-sm p-6">
+                                        <div className="w-12 h-12 bg-mint-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-forest-600">
+                                            <i data-lucide="inbox" className="w-6 h-6"></i>
+                                        </div>
+                                        <h4 className="font-bold text-ink-950">No incoming orders yet</h4>
+                                        <p className="text-xs text-ink-500 max-w-sm mx-auto mt-1">When an order is created on the mobile app or web customer portal, it will pop up here instantly.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {orders.map((ord) => {
+                                            const status = (ord.status || 'PENDING').toUpperCase();
+                                            const isPending = status === 'PENDING';
+                                            const isAccepted = status === 'ACCEPTED';
+                                            const isPreparing = status === 'PREPARING';
+                                            const isReady = status === 'READY_FOR_PICKUP';
+                                            const isDelivered = status === 'DELIVERED';
+
+                                            return (
+                                                <div key={ord.id} className="bg-white rounded-3xl border border-sage-200 shadow-sm p-5 space-y-4 hover:shadow-md transition">
+                                                    <div className="flex justify-between items-start border-b border-sage-100 pb-3">
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-display font-extrabold text-base text-ink-950">Order #{ord.id}</span>
+                                                                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-rust-50 text-rust-600 border border-rust-200">
+                                                                    {ord.paymentStatus || 'PAID'} • {ord.paymentMethod || 'KHQR'}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-[11px] text-ink-400 font-medium mt-0.5">
+                                                                {ord.createdAt ? new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                                                            </p>
+                                                        </div>
+                                                        <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full ${
+                                                            isPending ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                                            isAccepted ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                                            isPreparing ? 'bg-purple-100 text-purple-800 border border-purple-200' :
+                                                            isReady ? 'bg-mint-100 text-forest-700 border border-mint-200' :
+                                                            'bg-sage-100 text-ink-700'
+                                                        }`}>
+                                                            {status}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="text-xs space-y-1 bg-cream-50 p-3 rounded-2xl border border-sage-200/60">
+                                                        <div className="flex items-center gap-2 text-ink-800 font-bold">
+                                                            <i data-lucide="user" className="w-3.5 h-3.5 text-forest-600"></i>
+                                                            <span>{ord.customer ? ord.customer.name : (ord.customerName || 'Customer')}</span>
+                                                            {ord.customer && ord.customer.phone && (
+                                                                <span className="text-[10px] font-normal text-ink-500">({ord.customer.phone})</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-start gap-2 text-ink-600 text-[11px]">
+                                                            <i data-lucide="map-pin" className="w-3.5 h-3.5 text-rust-500 mt-0.5 flex-shrink-0"></i>
+                                                            <span className="truncate">{ord.deliveryAddress || 'Phnom Penh'}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-1.5">
+                                                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-ink-400">Order Items</p>
+                                                        <div className="space-y-1">
+                                                            {ord.items && ord.items.length > 0 ? (
+                                                                ord.items.map((item, idx) => (
+                                                                    <div key={idx} className="flex justify-between items-center text-xs font-semibold text-ink-900">
+                                                                        <span>{item.quantity}x {item.menuItem ? item.menuItem.name : 'Delicious Dish'}</span>
+                                                                        <span className="text-ink-600 font-medium">${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                                                                    </div>
+                                                                ))
+                                                            ) : (
+                                                                <div className="text-xs text-ink-600 font-medium">Standard Kitchen Order</div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex justify-between items-center pt-2 border-t border-sage-100 text-xs font-bold text-ink-950">
+                                                            <span>Total Due</span>
+                                                            <span className="text-sm font-black text-forest-700">${(ord.totalAmount || 0).toFixed(2)}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="pt-1 flex gap-2">
+                                                        {isPending && (
+                                                            <button 
+                                                                onClick={() => handleUpdateOrderStatus(ord.id, 'ACCEPTED')}
+                                                                className="flex-1 py-2 bg-forest-500 hover:bg-forest-600 text-white text-xs font-bold rounded-xl shadow transition"
+                                                            >
+                                                                ✓ Accept Order
+                                                            </button>
+                                                        )}
+                                                        {isAccepted && (
+                                                            <button 
+                                                                onClick={() => handleUpdateOrderStatus(ord.id, 'PREPARING')}
+                                                                className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow transition"
+                                                            >
+                                                                🍳 Start Cooking
+                                                            </button>
+                                                        )}
+                                                        {isPreparing && (
+                                                            <button 
+                                                                onClick={() => handleUpdateOrderStatus(ord.id, 'READY_FOR_PICKUP')}
+                                                                className="flex-1 py-2 bg-mint-500 hover:bg-mint-600 text-white text-xs font-bold rounded-xl shadow transition"
+                                                            >
+                                                                🔔 Ready for Driver
+                                                            </button>
+                                                        )}
+                                                        {isReady && (
+                                                            <div className="w-full py-2 bg-mint-50 text-forest-700 border border-mint-200 text-center text-xs font-extrabold rounded-xl">
+                                                                Awaiting Driver Dispatch
+                                                            </div>
+                                                        )}
+                                                        {isDelivered && (
+                                                            <div className="w-full py-2 bg-sage-50 text-ink-500 text-center text-xs font-bold rounded-xl">
+                                                                Delivered to Customer
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         )}
 

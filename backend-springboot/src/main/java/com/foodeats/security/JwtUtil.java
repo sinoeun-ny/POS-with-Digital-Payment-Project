@@ -14,7 +14,8 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private static final String SECRET_STRING = "FoodEatsSecure256BitSecretKeyForJwtTokenGenerationPhnomPenh2026!";
+    private final Key key = Keys.hmacShaKeyFor(SECRET_STRING.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     private final long expirationMs = 86400000; // 24 hours
 
     public String generateToken(String email, String role, Long userId) {

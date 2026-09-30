@@ -1,65 +1,37 @@
 package com.example.ui.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.HomeWork
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material.icons.filled.Store
-import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.remote.ApiClient
+import com.example.data.repository.FoodEatsRepository
 import com.example.security.UserRole
 import com.example.ui.auth.AuthViewModel
+import com.example.ui.theme.*
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     authViewModel: AuthViewModel,
@@ -67,451 +39,432 @@ fun ProfileScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToAddresses: () -> Unit,
     onNavigateToCountry: () -> Unit,
-    onNavigateToAdminRoleDivision: () -> Unit
+    onNavigateToAdminRoleDivision: () -> Unit ,
+    onNavigateToDriver: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val uiState by authViewModel.uiState.collectAsState()
     val session = uiState.activeSession
     val currentUser = uiState.currentUser
-    val jwtPayload = uiState.currentJwtPayload
 
-    var showTokenDetails by remember { mutableStateOf(false) }
+    var serverUrlInput by remember { mutableStateOf(ApiClient.getBaseUrl()) }
+    var connectionTestResult by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
+    var isTestingConnection by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = Color.White
+        containerColor = Cream50,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "My Profile & Settings",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 19.sp,
+                        color = Ink950
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header Bar
-            Row(
+            // User Header Card
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Notifications",
-                    tint = Color.Black
-                )
-                Text(
-                    text = "Profile",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-                Box(modifier = Modifier.size(24.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(CircleShape)
+                            .background(Forest500),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = (currentUser?.fullName?.take(1) ?: "S").uppercase(),
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = currentUser?.fullName ?: "Sokha Mean",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Ink950
+                        )
+                        Text(
+                            text = currentUser?.email ?: "customer@example.com",
+                            fontSize = 12.sp,
+                            color = Ink500
+                        )
+                        Surface(
+                            color = Mint100,
+                            shape = RoundedCornerShape(6.dp),
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Text(
+                                text = "ROLE: ${currentUser?.currentActiveRole?.removePrefix("ROLE_") ?: "CUSTOMER"}",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Forest800,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    if (session != null) {
+                        IconButton(onClick = { authViewModel.logout() }) {
+                            Icon(
+                                imageVector = Icons.Default.Logout,
+                                contentDescription = "Sign Out",
+                                tint = Rust500
+                            )
+                        }
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            // Backend Server & Database Connection Card (CRITICAL FOR PHYSICAL PHONE TESTING)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Storage,
+                                contentDescription = "Server",
+                                tint = Forest500
+                            )
+                            Text(
+                                text = "Spring Boot DB Connection",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Ink950
+                            )
+                        }
+                    }
 
-            if (session == null || currentUser == null) {
-                // Unauthenticated / Guest View matching Image 8
-                Text(
-                    text = "Join Now!",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Unlock Your Food & Merchant Journey With Us.",
-                    fontSize = 14.sp,
-                    color = Color(0xFF666666)
-                )
+                    Text(
+                        text = "Connect your physical phone to the Spring Boot REST API running on your computer. Make sure both devices are on the same Wi-Fi.",
+                        fontSize = 12.sp,
+                        color = Ink600,
+                        lineHeight = 16.sp
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = serverUrlInput,
+                        onValueChange = { serverUrlInput = it },
+                        label = { Text("Server Base URL") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Forest500,
+                            unfocusedBorderColor = Sage200
+                        )
+                    )
 
+                    // Preset buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                serverUrlInput = ApiClient.DEFAULT_USB_URL
+                                ApiClient.setBaseUrl(context, serverUrlInput)
+                                Toast.makeText(context, "Set to USB Cable (127.0.0.1)", Toast.LENGTH_SHORT).show()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Forest50),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(vertical = 6.dp)
+                        ) {
+                            Text("USB (127.0.0.1)", fontSize = 10.sp, color = Forest700, fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = {
+                                serverUrlInput = ApiClient.DEFAULT_PHONE_WIFI_URL
+                                ApiClient.setBaseUrl(context, serverUrlInput)
+                                Toast.makeText(context, "Set to Wi-Fi IP", Toast.LENGTH_SHORT).show()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Forest50),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1.2f),
+                            contentPadding = PaddingValues(vertical = 6.dp)
+                        ) {
+                            Text("Wi-Fi (192.168.112.150)", fontSize = 10.sp, color = Forest700, fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = {
+                                serverUrlInput = ApiClient.DEFAULT_EMULATOR_URL
+                                ApiClient.setBaseUrl(context, serverUrlInput)
+                                Toast.makeText(context, "Set to Emulator URL", Toast.LENGTH_SHORT).show()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Forest50),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(vertical = 6.dp)
+                        ) {
+                            Text("Emulator", fontSize = 10.sp, color = Forest700, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    // Action buttons: Save & Test
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                ApiClient.setBaseUrl(context, serverUrlInput)
+                                FoodEatsRepository.loadFromBackend()
+                                Toast.makeText(context, "Server URL Saved!", Toast.LENGTH_SHORT).show()
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Save URL", color = Ink950, fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = {
+                                isTestingConnection = true
+                                coroutineScope.launch {
+                                    ApiClient.setBaseUrl(context, serverUrlInput)
+                                    val result = ApiClient.testConnection()
+                                    connectionTestResult = result
+                                    isTestingConnection = false
+                                    if (result.first) {
+                                        FoodEatsRepository.loadFromBackend()
+                                    }
+                                }
+                            },
+                            enabled = !isTestingConnection,
+                            colors = ButtonDefaults.buttonColors(containerColor = Forest500),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1.2f)
+                        ) {
+                            if (isTestingConnection) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.CloudSync,
+                                    contentDescription = "Test",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Test DB Sync", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            }
+                        }
+                    }
+
+                    // Connection Result Badge
+                    connectionTestResult?.let { (success, message) ->
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = if (success) Mint100 else Cream200,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (success) Forest400 else Rust500.copy(alpha = 0.5f)
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (success) Icons.Default.CheckCircle else Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = if (success) Forest600 else Rust500,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = message,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (success) Forest800 else Rust900
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Quick Links: Address Book, RBAC Matrix, Country
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(8.dp)) {
+                    // Address Book
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(onClick = onNavigateToAddresses)
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.HomeWork,
+                                contentDescription = "Addresses",
+                                tint = Forest500
+                            )
+                            Column {
+                                Text(
+                                    text = "Saved Delivery Addresses",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Ink950
+                                )
+                                Text(
+                                    text = "Home (BKK1), Office (Vattanac)",
+                                    fontSize = 11.sp,
+                                    color = Ink500
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                            contentDescription = "Open",
+                            tint = Ink400,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+
+                    HorizontalDivider(color = Sage100, modifier = Modifier.padding(horizontal = 8.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { onNavigateToDriver() }
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("🛵 Courier Dispatch Mode (Sprint 5)", fontWeight = FontWeight.Bold, color = Forest700)
+                        Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(14.dp))
+                    }
+
+                    // RBAC Matrix
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(onClick = onNavigateToAdminRoleDivision)
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AdminPanelSettings,
+                                contentDescription = "RBAC",
+                                tint = Forest600
+                            )
+                            Column {
+                                Text(
+                                    text = "Admin & Role Division Matrix",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Ink950
+                                )
+                                Text(
+                                    text = "Customer, Merchant, Driver & Admin specifications",
+                                    fontSize = 11.sp,
+                                    color = Ink500
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                            contentDescription = "Open",
+                            tint = Ink400,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+            }
+
+            // Auth Switch buttons if Guest
+            if (session == null) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     OutlinedButton(
                         onClick = onNavigateToRegister,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(4.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Black)
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("REGISTER", fontWeight = FontWeight.Bold, color = Color.Black)
+                        Text("Register", color = Forest600, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
                         onClick = onNavigateToLogin,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(4.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Forest500),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("LOGIN", fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                }
-            } else {
-                // Logged In User Profile Banner
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFF8F8F8), RoundedCornerShape(12.dp))
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .background(Color.Black, RoundedCornerShape(26.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = currentUser.fullName.take(1).uppercase(),
-                            color = Color.White,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = currentUser.fullName,
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = currentUser.phone.ifEmpty { currentUser.email },
-                            fontSize = 13.sp,
-                            color = Color(0xFF666666)
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        // Active Role Badge
-                        val activeRole = UserRole.fromCode(session.activeRole)
-                        Box(
-                            modifier = Modifier
-                                .background(Color(0xFFFFECE5), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "ACTIVE: ${activeRole.displayName}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFE65100)
-                            )
-                        }
-                    }
-
-                    IconButton(onClick = { authViewModel.logout() }) {
-                        Icon(
-                            imageVector = Icons.Default.Logout,
-                            contentDescription = "Logout",
-                            tint = Color(0xFFD32F2F)
-                        )
+                        Text("Sign In", fontWeight = FontWeight.Bold)
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Membership & Benefits Card matching Reference Image 8
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(130.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE09852))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(verticalArrangement = Arrangement.Center) {
-                        Text(
-                            text = "ONLINE",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Food & Merchant Portal",
-                            fontSize = 12.sp,
-                            color = Color(0xFFFFF3E0)
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Free!",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text("Food Orders: 0", fontSize = 11.sp, color = Color.White)
-                        Text("Free Delivery Coupons: 3", fontSize = 11.sp, color = Color.White)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Action Grid Shortcuts matching Image 8: MY SHOP / ADDRESS BOOK
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // MY SHOP / MERCHANT HUB
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(80.dp)
-                        .background(Color(0xFFF9F9F9), RoundedCornerShape(8.dp))
-                        .clickable { onNavigateToAdminRoleDivision() }
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.Store,
-                            contentDescription = "My Shop",
-                            tint = Color.Black
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "MY SHOP",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
-                }
-
-                // ADDRESS BOOK (US-004)
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(80.dp)
-                        .background(Color(0xFFF9F9F9), RoundedCornerShape(8.dp))
-                        .clickable { onNavigateToAddresses() }
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.HomeWork,
-                            contentDescription = "Address Book",
-                            tint = Color.Black
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "ADDRESS BOOK",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ADMIN & ROLE DIVISION DEMO BUTTON (For Instructor Evaluation)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF111111), RoundedCornerShape(8.dp))
-                    .clickable { onNavigateToAdminRoleDivision() }
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.AdminPanelSettings,
-                            contentDescription = "RBAC Matrix",
-                            tint = Color(0xFFFFD54F)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "Admin vs User Role Division & RBAC",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Sprint 1 Instructor Demo & Web/Mobile Permission Spec",
-                                fontSize = 11.sp,
-                                color = Color(0xFFCCCCCC)
-                            )
-                        }
-                    }
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "Open",
-                        tint = Color.White
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Settings & Preferences Header matching Image 8
-            Text(
-                text = "Country and Language",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onNavigateToCountry() }
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "🇰🇭", fontSize = 20.sp)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "Cambodia - USD($)",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.Black
-                        )
-                        Text(text = "Country", fontSize = 12.sp, color = Color.Gray)
-                    }
-                }
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                    contentDescription = "Select",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-
-            HorizontalDivider(color = Color(0xFFEEEEEE))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Language,
-                        contentDescription = "Language",
-                        tint = Color.Black
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "English",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.Black
-                        )
-                        Text(text = "Language / ភាសា", fontSize = 12.sp, color = Color.Gray)
-                    }
-                }
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                    contentDescription = "Select",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Spring Boot JWT Token Inspector (Sprint 1 Verification)
-            if (session != null) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showTokenDetails = !showTokenDetails },
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Key,
-                                    contentDescription = "JWT Token",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Spring Boot JWT Token Engine",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black
-                                )
-                            }
-                            Text(
-                                text = if (showTokenDetails) "Hide" else "Inspect Token",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0066CC)
-                            )
-                        }
-
-                        if (showTokenDetails) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Raw JWT Token:",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF333333)
-                            )
-                            Text(
-                                text = session.jwtToken,
-                                fontSize = 10.sp,
-                                fontFamily = FontFamily.Monospace,
-                                color = Color(0xFF006600),
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis
-                            )
-
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Parsed Claims (Sub: ${jwtPayload?.sub}, Roles: ${jwtPayload?.roles})",
-                                fontSize = 11.sp,
-                                color = Color(0xFF555555)
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

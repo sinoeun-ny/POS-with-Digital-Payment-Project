@@ -1,5 +1,7 @@
 package com.foodeats.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,24 +13,35 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnoreProperties({"items", "hibernateLazyInitializer", "handler"})
     private Order order;
 
+    @Column(name = "payment_method", nullable = false, length = 50)
     private String paymentMethod = "KHQR";
-    private String transactionId;
+
+    @Column(name = "transaction_ref", nullable = false, length = 100)
+    private String transactionRef;
+
+    @Column(name = "amount", nullable = false)
     private Double amount;
+
+    @Column(name = "status", nullable = false, length = 30)
     private String status = "SUCCESS";
-    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "timestamp")
+    private LocalDateTime timestamp = LocalDateTime.now();
 
     public Payment() {}
 
-    public Payment(Order order, String paymentMethod, String transactionId, Double amount, String status) {
+    public Payment(Order order, String paymentMethod, String transactionRef, Double amount, String status) {
         this.order = order;
-        this.paymentMethod = paymentMethod;
-        this.transactionId = transactionId;
+        this.paymentMethod = paymentMethod != null ? paymentMethod : "KHQR";
+        this.transactionRef = transactionRef;
         this.amount = amount;
-        this.status = status;
+        this.status = status != null ? status : "SUCCESS";
+        this.timestamp = LocalDateTime.now();
     }
 
     public Long getId() { return id; }
@@ -40,8 +53,12 @@ public class Payment {
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 
-    public String getTransactionId() { return transactionId; }
-    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+    @JsonProperty("transactionRef")
+    public String getTransactionRef() { return transactionRef; }
+    public void setTransactionRef(String transactionRef) { this.transactionRef = transactionRef; }
+
+    public String getTransactionId() { return transactionRef; }
+    public void setTransactionId(String transactionId) { this.transactionRef = transactionId; }
 
     public Double getAmount() { return amount; }
     public void setAmount(Double amount) { this.amount = amount; }
@@ -49,6 +66,9 @@ public class Payment {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
+    public LocalDateTime getCreatedAt() { return timestamp; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.timestamp = createdAt; }
 }

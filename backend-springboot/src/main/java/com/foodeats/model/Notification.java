@@ -1,5 +1,6 @@
 package com.foodeats.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,13 +12,21 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password"})
     private User user;
 
+    @Column(name = "title", nullable = false, length = 150)
     private String title;
+
+    @Column(name = "message", nullable = false, columnDefinition = "TEXT")
     private String message;
+
+    @Column(name = "is_read")
     private Boolean isRead = false;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public Notification() {}
@@ -26,6 +35,8 @@ public class Notification {
         this.user = user;
         this.title = title;
         this.message = message;
+        this.isRead = false;
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() { return id; }

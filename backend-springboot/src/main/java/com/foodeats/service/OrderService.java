@@ -25,4 +25,8 @@ public interface OrderService {
     Order assignDriverToOrder(Long orderId, Long driverId);
     
     List<Order> getAvailableDeliveryJobs();
+    
+    List<Order> getOrdersByMerchantId(Long merchantId);
+    
+    List<Order> getAllOrders();
 }

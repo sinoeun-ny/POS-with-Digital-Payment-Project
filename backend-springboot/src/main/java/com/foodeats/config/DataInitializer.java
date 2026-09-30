@@ -6,6 +6,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -14,16 +16,24 @@ public class DataInitializer implements CommandLineRunner {
     private final CategoryRepository categoryRepository;
     private final MenuItemRepository menuItemRepository;
     private final ItemOptionRepository itemOptionRepository;
+    private final UserAddressRepository userAddressRepository;
+    private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(UserRepository userRepository, MerchantRepository merchantRepository,
                            CategoryRepository categoryRepository, MenuItemRepository menuItemRepository,
-                           ItemOptionRepository itemOptionRepository, PasswordEncoder passwordEncoder) {
+                           ItemOptionRepository itemOptionRepository, UserAddressRepository userAddressRepository,
+                           OrderRepository orderRepository, PaymentRepository paymentRepository,
+                           PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.merchantRepository = merchantRepository;
         this.categoryRepository = categoryRepository;
         this.menuItemRepository = menuItemRepository;
         this.itemOptionRepository = itemOptionRepository;
+        this.userAddressRepository = userAddressRepository;
+        this.orderRepository = orderRepository;
+        this.paymentRepository = paymentRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -38,7 +48,11 @@ public class DataInitializer implements CommandLineRunner {
             User driver = userRepository.save(new User("Dara Driver", "driver@example.com", encodedPassword, "+85588776655", UserRole.DRIVER));
             User admin = userRepository.save(new User("System Admin", "admin@example.com", encodedPassword, "+85511223344", UserRole.ADMIN));
 
-            // 2. Create Merchants with full profile setup (US-005)
+            // Seed User Addresses
+            userAddressRepository.save(new UserAddress(customer, "Home (BKK1)", "Building 42, St. 302, BKK1", 11.5510, 104.9220, true));
+            userAddressRepository.save(new UserAddress(customer, "Office (Toul Kork)", "Vattanac Tower Level 14, Monivong Blvd", 11.5720, 104.9190, false));
+
+            // 2. Create Merchants with full profile setup
             Merchant m1 = new Merchant(
                     merchantOwner,
                     "Zando Burger & Grill",
@@ -78,7 +92,7 @@ public class DataInitializer implements CommandLineRunner {
             m3.setOpeningHours("07:00 AM - 09:00 PM");
             m3 = merchantRepository.save(m3);
 
-            // 3. Create Categories (US-006)
+            // 3. Create Categories
             Category cat1 = categoryRepository.save(new Category(m1, "Signature Burgers", 1));
             Category cat2 = categoryRepository.save(new Category(m1, "Artisan Sides", 2));
             Category cat3 = categoryRepository.save(new Category(m1, "Craft Beverages", 3));
@@ -89,14 +103,13 @@ public class DataInitializer implements CommandLineRunner {
             Category cat6 = categoryRepository.save(new Category(m3, "Single Origin Coffee", 1));
             Category cat7 = categoryRepository.save(new Category(m3, "Fresh Bakery", 2));
 
-            // 4. Create Menu Items with US-007 (Image URLs, Availability, Prep Time, Tags)
+            // 4. Create Menu Items
             MenuItem item1 = new MenuItem(cat1, "Double Truffle Smash Burger", "Double black angus beef patties, aged white cheddar, sautéed portobello, and black truffle aioli on a toasted brioche bun.", 7.25, "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80", true);
             item1.setPrepTimeMinutes(15);
             item1.setDietaryTag("Chef Special");
             item1.setPopularScore(99);
             item1 = menuItemRepository.save(item1);
 
-            // 5. Create Item Customization Options (US-008)
             itemOptionRepository.save(new ItemOption(item1, "Patty Size", "Double 150g (Standard)", 0.00, true));
             itemOptionRepository.save(new ItemOption(item1, "Patty Size", "Triple Monster 225g", 2.25, true));
             itemOptionRepository.save(new ItemOption(item1, "Add-Ons", "Extra Aged Cheddar Slice", 0.75, true));
@@ -128,30 +141,46 @@ public class DataInitializer implements CommandLineRunner {
             item5 = menuItemRepository.save(item5);
             itemOptionRepository.save(new ItemOption(item5, "Portion Size", "8 Pieces", 0.00, true));
             itemOptionRepository.save(new ItemOption(item5, "Portion Size", "12 Pieces Party Size", 3.80, true));
-            itemOptionRepository.save(new ItemOption(item5, "Preparation", "Regular Wasabi", 0.00, true));
-            itemOptionRepository.save(new ItemOption(item5, "Preparation", "Extra Pickled Ginger & Wasabi", 0.50, true));
 
             MenuItem item6 = new MenuItem(cat5, "Signature Tonkotsu Black Ramen", "16-hour simmered pork bone broth, handcrafted springy noodles, slow-braised chashu pork, ajitsuke tamago egg, and black garlic oil.", 8.00, "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600&auto=format&fit=crop&q=80", true);
             item6.setPrepTimeMinutes(15);
             item6 = menuItemRepository.save(item6);
-            itemOptionRepository.save(new ItemOption(item6, "Noodle Firmness", "Soft", 0.00, true));
             itemOptionRepository.save(new ItemOption(item6, "Noodle Firmness", "Standard Medium", 0.00, true));
             itemOptionRepository.save(new ItemOption(item6, "Noodle Firmness", "Hard / Firm (Katame)", 0.00, true));
-            itemOptionRepository.save(new ItemOption(item6, "Extra Toppings", "Extra Braised Chashu (2 slices)", 2.00, true));
-            itemOptionRepository.save(new ItemOption(item6, "Extra Toppings", "Extra Ajitsuke Ramen Egg", 1.00, true));
 
             // Items for Khmer Coffee
             MenuItem item7 = new MenuItem(cat6, "Mondulkiri Drip Iced Latte", "Double shot Mondulkiri mountain espresso over creamy condensed milk and crushed ice.", 2.75, "https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=600&auto=format&fit=crop&q=80", true);
             item7 = menuItemRepository.save(item7);
             itemOptionRepository.save(new ItemOption(item7, "Sweetness Level", "100% Full Sweet", 0.00, true));
             itemOptionRepository.save(new ItemOption(item7, "Sweetness Level", "50% Less Sweet", 0.00, true));
-            itemOptionRepository.save(new ItemOption(item7, "Sweetness Level", "0% Unsweetened / Black", 0.00, true));
-            itemOptionRepository.save(new ItemOption(item7, "Milk Choice", "Fresh Milk", 0.00, true));
-            itemOptionRepository.save(new ItemOption(item7, "Milk Choice", "Oat Milk (+ $0.60)", 0.60, true));
 
             MenuItem item8 = new MenuItem(cat7, "French Almond Butter Croissant", "Twice-baked flaky butter pastry filled with rich almond frangipane cream and sliced toasted almonds.", 2.50, "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=600&auto=format&fit=crop&q=80", true);
             item8.setDietaryTag("Vegetarian");
             item8 = menuItemRepository.save(item8);
+
+            // Seed Initial Active Order
+            Order sampleOrder = new Order();
+            sampleOrder.setOrderNumber("ORD-1001");
+            sampleOrder.setCustomer(customer);
+            sampleOrder.setMerchant(m1);
+            sampleOrder.setMerchantName(m1.getName());
+            sampleOrder.setSubtotal(10.20);
+            sampleOrder.setDeliveryFee(1.50);
+            sampleOrder.setTotalAmount(11.70);
+            sampleOrder.setStatus(OrderStatus.ACCEPTED);
+            sampleOrder.setDeliveryAddress("Building 42, St. 302, BKK1, Phnom Penh");
+            sampleOrder.setPaymentStatus("PAID");
+            sampleOrder.setCreatedAt(LocalDateTime.now().minusMinutes(10));
+
+            OrderItem oi1 = new OrderItem(sampleOrder, item1, 1, item1.getPrice(), "Patty Size: Double 150g");
+            OrderItem oi2 = new OrderItem(sampleOrder, item3, 1, item3.getPrice(), "Standard");
+            sampleOrder.getItems().add(oi1);
+            sampleOrder.getItems().add(oi2);
+
+            Order savedOrder = orderRepository.save(sampleOrder);
+
+            Payment samplePayment = new Payment(savedOrder, "KHQR", "TXN-KHQR-98231", 11.70, "SUCCESS");
+            paymentRepository.save(samplePayment);
         }
     }
 }

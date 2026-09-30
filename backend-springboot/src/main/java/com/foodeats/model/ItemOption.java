@@ -16,15 +16,16 @@ public class ItemOption {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "category", "options"})
     private MenuItem menuItem;
 
-    @Column(nullable = false)
-    private String optionGroup = "Options"; // e.g., 'Size', 'Extra Toppings', 'Spice Level'
+    @Column(name = "option_group", nullable = false, length = 100)
+    private String optionGroup = "Options"; // e.g. 'Patty Size', 'Spice Heat Level', 'Add-Ons'
 
-    @Column(nullable = false)
-    private String optionName; // e.g., 'Regular', 'Large', 'Extra Cheese'
+    @Column(name = "option_name", nullable = false, length = 100)
+    private String optionName; // e.g. 'Double 150g', 'Mild Heat'
 
-    @Column(nullable = false)
+    @Column(name = "price_adjustment", nullable = false)
     private Double priceAdjustment = 0.00;
 
+    @Column(name = "is_available")
     private Boolean isAvailable = true;
 
     public ItemOption() {}
@@ -54,4 +55,8 @@ public class ItemOption {
 
     public Boolean getIsAvailable() { return isAvailable; }
     public void setIsAvailable(Boolean isAvailable) { this.isAvailable = isAvailable; }
+
+    public Long getMenuItemId() {
+        return menuItem != null ? menuItem.getId() : null;
+    }
 }
