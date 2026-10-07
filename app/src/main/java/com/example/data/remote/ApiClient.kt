@@ -19,12 +19,12 @@ object ApiClient {
     // Default to the user's computer Wi-Fi IP so the physical phone can reach Spring Boot on the LAN!
     // Emulator alternative is http://10.0.2.2:8080/
     const val DEFAULT_USB_URL = "http://127.0.0.1:8080/"
-    const val DEFAULT_PHONE_WIFI_URL = "http://192.168.112.150:8080/"
+    const val DEFAULT_PHONE_WIFI_URL = "http://192.168.1.28:8080/"
     const val DEFAULT_EMULATOR_URL = "http://10.0.2.2:8080/"
     private const val PREFS_NAME = "foodeats_network_prefs"
     private const val KEY_BASE_URL = "backend_base_url"
 
-    private var currentBaseUrl = DEFAULT_PHONE_WIFI_URL
+    private var currentBaseUrl = DEFAULT_USB_URL
     private var retrofit: Retrofit? = null
 
     private val moshi = Moshi.Builder()
@@ -42,7 +42,7 @@ object ApiClient {
 
     fun init(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        currentBaseUrl = prefs.getString(KEY_BASE_URL, DEFAULT_PHONE_WIFI_URL) ?: DEFAULT_PHONE_WIFI_URL
+        currentBaseUrl = prefs.getString(KEY_BASE_URL, DEFAULT_USB_URL) ?: DEFAULT_USB_URL
         rebuildRetrofit()
     }
 
@@ -91,6 +91,14 @@ object ApiClient {
 
     val driverApi: DriverApiService
         get() = getRetrofit().create(DriverApiService::class.java)
+
+    //connection
+    val DEFAULT_MODE = ConnectionMode.USB
+
+    //switch mode dynamically
+    fun applyConnectionMode(context: Context, mode: ConnectionMode){
+        setBaseUrl(context, mode.defaultUrl)
+    }
     suspend fun testConnection(): Pair<Boolean, String> {
         return try {
             val response = merchantApi.getMerchants()

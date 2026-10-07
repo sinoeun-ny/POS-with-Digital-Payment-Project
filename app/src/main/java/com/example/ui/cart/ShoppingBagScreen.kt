@@ -42,13 +42,27 @@ fun ShoppingBagScreen(
     val authToken = authState.activeSession?.jwtToken
     val customerName = authState.currentUser?.fullName ?: "Sinoeun Customer"
     var selectedPaymentMethod by remember { mutableStateOf("MOCK_KHQR") }
-    var selectedAddress by remember { mutableStateOf("Building 42, St. 302, BKK1, Phnom Penh") }
-    var isPlacingOrder by remember { mutableStateOf(false) }
+    var selectedAddressLabel by remember { mutableStateOf("Home (BKK1")}
+    var selectedAddress by remember { mutableStateOf( "Building 42, ST. 598 , BKK , Phnom Penh")}
+    var deliveryNotes by remember { mutableStateOf ( " ")}
+    var secondsRemaining by remember { mutableIntStateOf(120)} // wait 2 minutes for KHQR
+    var isPlacingOrder by remember { mutableStateOf(false)}
 
     val merchant = cart.firstOrNull()?.merchant
     val subtotal = cart.sumOf { it.totalPrice }
     val deliveryFee = merchant?.deliveryFee ?: 1.50
     val grandTotal = if (cart.isNotEmpty()) subtotal + deliveryFee else 0.0
+
+    //live 2 minute time effect for KHQR
+    LaunchedEffect(selectedPaymentMethod){
+        if(selectedPaymentMethod == "MOCK_KHQR"){
+            secondsRemaining = 120
+            while (secondsRemaining > 120){
+                kotlinx.coroutines.delay(1000L)
+                secondsRemaining--
+            }
+        }
+    }
 
     Scaffold(
         containerColor = Cream50,
@@ -119,7 +133,7 @@ fun ShoppingBagScreen(
                                 FoodEatsRepository.placeOrder(
                                     customerName = customerName ,
                                     deliveryAddress = selectedAddress,
-                                    paymentMethod = if (selectedPaymentMethod == "Mock_KHQR")
+                                    paymentMethod = if (selectedPaymentMethod == "MOCK_KHQR")
                                     "KHQR / Bakong" else if (selectedPaymentMethod == "CARD") "Credit Card"
                                     else "Cash on Delivery" ,
                                     authToken = authToken //the place the jwt token pass
@@ -280,10 +294,11 @@ fun ShoppingBagScreen(
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                    ) {
+                    )
+                    {
                         Column(
                             modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -298,16 +313,65 @@ fun ShoppingBagScreen(
                                     letterSpacing = 1.sp
                                 )
                                 Text(
-                                    text = "Home (BKK1)",
+                                    text = selectedAddressLabel,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Forest600
                                 )
                             }
+
+                            //Quick preset Address Chips
                             Row(
-                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                listOf(
+                                    Triple(
+                                        "Home",
+                                        "HOme (BKK1)",
+                                        "Building 42, St. 302, BKK1, Phnom Penh"
+                                    ),
+                                    Triple(
+                                        "Work",
+                                        "Office (Vattanac)",
+                                        "Level 18, Vattanac Tower, Monivong Blvd"
+                                    ),
+                                    Triple(
+                                        "Campus",
+                                        "Campus (RUPP)",
+                                        "Building E, RUPP Main Campus, Russian Blvd"
+                                    )
+                                ).forEach { (shortTag, fullTag, fullAddress) ->
+
+                                    val isChipSelected = selectedAddressLabel == fullTag
+                                    Surface(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable {
+                                                selectedAddressLabel = fullTag
+                                                selectedAddress = fullAddress
+                                            },
+                                        color = if (isChipSelected) Forest500 else Ink50,
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text(
+                                            text = shortTag,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isChipSelected) Color.White else Ink700,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(vertical = 8.dp)
+                                        )
+                                    }
+
+                                }
+                            }
+                            // Full Address Display
+                            Row (
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ){
                                 Icon(
                                     imageVector = Icons.Default.LocationOn,
                                     contentDescription = "Pin",
@@ -321,9 +385,17 @@ fun ShoppingBagScreen(
                                     fontWeight = FontWeight.Medium
                                 )
                             }
+
+                            //Special Delivery / Kitchen Instructions Field
+                            OutlinedTextField(
+                                value = deliveryNotes,
+                                onValueChange = { deliveryNotes = it},
+                                label = { Text( "Kitchen / Driver Notes (OPtional)", fontSize = 12.sp)}
+                            )
                         }
                     }
                 }
+
 
                 // Payment Method Selector (KHQR Bakong, Card, COD)
                 item {

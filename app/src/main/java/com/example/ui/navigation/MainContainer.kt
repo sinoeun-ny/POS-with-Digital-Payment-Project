@@ -30,6 +30,7 @@ import com.example.ui.profile.AddressBookScreen
 import com.example.ui.profile.ProfileScreen
 import com.example.ui.restaurant.RestaurantDetailScreen
 import com.example.ui.theme.*
+import com.example.ui.orders.OrderHistoryScreen
 
 enum class AppScreen {
     DISCOVER,
@@ -162,6 +163,7 @@ fun MainContainer(authViewModel: AuthViewModel) {
                     }
                 }
                 AppScreen.ORDERS -> OrderHistoryScreen(
+                    authViewModel = authViewModel,
                     onNavigateToDiscover = { currentScreen = AppScreen.DISCOVER }
                 )
                 AppScreen.CART -> ShoppingBagScreen(

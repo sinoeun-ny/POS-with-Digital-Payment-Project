@@ -477,21 +477,35 @@ object FoodEatsRepository {
             driver = "Dara K. Express (Auto-assigned)"
         )
 
-        // Try submitting to backend in background if token available
-        if (!authToken.isNullOrBlank()) {
-            scope.launch {
-                try {
-                    ApiClient.orderApi.placeOrder(
-                        token = "Bearer $authToken",
-                        request = CheckoutRequestDto(
-                            merchantId = merchant.id,
-                            deliveryAddress = deliveryAddress,
-                            paymentMethod = paymentMethod
-                        )
+        // Submit to backend asynchronously (works for both authenticated and guest checkout)
+        scope.launch {
+            try {
+                val authHeader = if (!authToken.isNullOrBlank()) "Bearer $authToken" else null
+                val requestItems = currentCart.map {
+                    com.example.data.remote.dto.CheckoutItemDto(
+                        menuItemId = it.dish.id,
+                        itemName = it.dish.name,
+                        price = it.dish.price,
+                        quantity = it.quantity,
+                        selectedOptions = it.selectedOptions.joinToString(", ") { opt -> opt.optionName }
                     )
-                } catch (e: Exception) {
-                    // Handled locally
                 }
+                val resp = ApiClient.orderApi.placeOrder(
+                    token = authHeader,
+                    request = CheckoutRequestDto(
+                        merchantId = merchant.id,
+                        deliveryAddress = deliveryAddress,
+                        paymentMethod = paymentMethod,
+                        items = requestItems
+                    )
+                )
+                if (resp.isSuccessful && resp.body() != null) {
+                    android.util.Log.d("FoodEatsRepo", "Successfully submitted order to backend ID=${resp.body()?.id}")
+                } else {
+                    android.util.Log.w("FoodEatsRepo", "Backend order submission response code=${resp.code()}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("FoodEatsRepo", "Failed to reach backend during order placement: ${e.message}")
             }
         }
 
@@ -516,6 +530,69 @@ object FoodEatsRepository {
         }
     }
 
+
+    // fetch live orders from spring boot REST API
+    fun fetchOrdersFromBackend(authToken: String?){
+        if(authToken.isNullOrBlank()) return
+
+        scope.launch{
+            try{
+                val response = ApiClient.orderApi.getOrders("Bearer $authToken")
+                if(response.isSuccessful && !response.body().isNullOrEmpty()){
+                    val dtoList = response.body()!!
+                    val mapped = dtoList.map { dto ->
+                        PlacedOrder(
+                            id = dto.id,
+                            customerName = dto.customerName ?: "Customer",
+                            merchantName = dto.merchantName ?: "Restaurant Kitchen" ,
+                            merchantId = dto.merchantId ?: 1L,
+                            itemsSummary = dto.itemsSummary ?: "Order Items",
+                            itemsCount = 1,
+                            subtotal = dto.totalAmount,
+                            deliveryFee = dto.deliveryFee,
+                            total = dto.totalAmount,
+                            status = dto.status,
+                            deliveryAddress = dto.deliveryAddress ?: "Phnom Penh",
+                            paymentStatus = dto.paymentStatus ?: "PAID" ,
+                            paymentMethod = dto.paymentMethod ?: "KHQR / Bakong" ,
+                            orderTime = dto.createdAt ?: "Just now",
+                            driver = "Assigning Driver ..."
+                        )
+                    }
+                    _orders.value = mapped
+                }
+            }catch(e: Exception){
+                //ignore network glitches during background polling
+            }
+        }
+    }
+
+    //cancel an order if still pending or placed
+    fun cancelOrder(orderId: Long, authToken: String?){
+        //Instant local update for smooth UI
+        val current = _orders.value.toMutableList()
+        val index = current.indexOfFirst{it.id == orderId}
+        if(index >= 0){
+
+        current[index] = current[index].copy(status = "CANCELLED")
+        _orders.value = current
+        }
+
+        // Notify spring boot
+        if(!authToken.isNullOrBlank()){
+
+        scope.launch{
+            try{
+                ApiClient.orderApi.updateOrderStatus(
+                    token = "Bearer $authToken",
+                    id = orderId,
+                    body = mapOf("status" to "CANCELLED")
+                )
+            }catch(e: Exception){
+                //it will handle locally
+            }
+        }}
+    }
 
     // Driver active delivery job state
     private val _activeDriverJob = MutableStateFlow<PlacedOrder?>(null)

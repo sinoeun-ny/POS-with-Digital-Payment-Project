@@ -1,7 +1,6 @@
 package com.example.ui.orders
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,13 +22,35 @@ import androidx.compose.ui.unit.sp
 import com.example.data.repository.FoodEatsRepository
 import com.example.data.repository.PlacedOrder
 import com.example.ui.theme.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import com.example.ui.auth.AuthViewModel
+import androidx.compose.runtime.*
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialogDefaults.containerColor
+import androidx.compose.material3.AlertDialogDefaults.shape
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderHistoryScreen(
+    authViewModel: AuthViewModel,
     onNavigateToDiscover: () -> Unit
 ) {
     val orders by FoodEatsRepository.orders.collectAsState()
+
+    //get the session for the JWT Token
+    val uiState by authViewModel.uiState.collectAsState()
+    val session = uiState.activeSession
+
+    var selectedOrderForReceipt by remember { mutableStateOf<PlacedOrder?>(null)}
+
+    LaunchedEffect(session?.jwtToken){
+        while(isActive){
+            FoodEatsRepository.fetchOrdersFromBackend(session?.jwtToken)
+            delay(4000) // polls every 4 secs for driver/status changes
+        }
+    }
 
     Scaffold(
         containerColor = Cream50,
@@ -110,12 +131,18 @@ fun OrderHistoryScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(orders) { order ->
-                    OrderTrackingCard(
-                        order = order,
-                        onSimulateStep = {
-                            FoodEatsRepository.advanceOrderStatus(order.id)
-                        }
-                    )
+                  OrderTrackingCard(
+                      order = order,
+                      onSimulateStep = {
+                          FoodEatsRepository.advanceOrderStatus(order.id)
+                      },
+                      onViewReceipt = {
+                          selectedOrderForReceipt = order
+                      },
+                      onCancelOrder = {
+                          FoodEatsRepository.cancelOrder(order.id, session?.jwtToken)
+                      }
+                  )
                 }
             }
         }
@@ -125,10 +152,15 @@ fun OrderHistoryScreen(
 @Composable
 fun OrderTrackingCard(
     order: PlacedOrder,
-    onSimulateStep: () -> Unit
+    onSimulateStep: () -> Unit,
+    onViewReceipt: () -> Unit = {},
+    onCancelOrder: () -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier
+            .fillMaxWidth()
+            .clickable{onViewReceipt()},
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -253,27 +285,22 @@ fun OrderTrackingCard(
             }
 
             // Interactive simulation button (to test live order tracker)
-            if (order.status != "DELIVERED") {
-                Button(
-                    onClick = onSimulateStep,
-                    colors = ButtonDefaults.buttonColors(containerColor = Ink50),
+            if (order.status == "PLACED" || order.status == "PENDING"){
+                OutlinedButton(
+                    onClick = onCancelOrder,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Rust500),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Rust500.copy(alpha = 0.5f)),
                     shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(vertical = 8.dp)
-                ) {
+                    modifier = Modifier.fillMaxWidth()
+                ){
                     Icon(
-                        imageVector = Icons.Default.FastForward,
-                        contentDescription = "Advance",
-                        tint = Forest600,
+                        imageVector = Icons.Default.Cancel,
+                        contentDescription = "Cancel",
+                        tint = Rust500,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Advance Delivery Stage (Demo)",
-                        color = Forest600,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
-                    )
+                    Text("Cancel Order", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
         }
@@ -359,4 +386,103 @@ fun OrderStatusStepper(currentStatus: String) {
             }
         }
     }
+}
+
+@Composable
+fun OrderReceiptDialog(
+    order: PlacedOrder,
+    onDismiss: () -> Unit
+){
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Forest500),
+                shape = RoundedCornerShape(10.dp)
+            ){
+                Text("Close Receipt")
+            }
+        },
+        title = {
+            Column {
+                Text(
+                    text = "Official Order Receipt",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp,
+                    color = Ink950
+                )
+                Text(
+                    text = "#ORD-${order.id} = ${order.merchantName}",
+                    fontSize = 12.sp,
+                    color = Ink500
+                )
+            }
+
+        },
+        text  = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ){
+                HorizontalDivider(color = Sage200)
+
+                Text(
+                    text = "Items Ordered:",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    color = Ink800
+                )
+
+                Text(
+                    text = order.itemsSummary,
+                    fontSize = 13.sp,
+                    color = Ink600,
+                    lineHeight = 18.sp
+                )
+
+                HorizontalDivider(color = Sage200)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    Text("Subtotal" ,
+                        fontSize = 12.sp,
+                        color = Ink600)
+                    Text("$${String.
+                        format(java.util.Locale.US,
+                            "%.2f", 
+                            order.subtotal
+                        )}", fontSize = 12.sp, color = Ink950)
+                }
+
+                HorizontalDivider(color = Sage200)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Text("Total Paid" ,
+                        fontWeight = FontWeight.Bold ,
+                        fontSize = 14.sp ,
+                        color = Ink950
+                        )
+                    Text(
+                        "$${String.format(
+                            java.util.Locale.US, 
+                            "%.2f", 
+                            order.total
+                            )}",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 16.sp,
+                        color = Forest600
+                    )
+                }
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color.White
+    )
 }

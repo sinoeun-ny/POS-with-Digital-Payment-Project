@@ -228,7 +228,7 @@ fun ProfileScreen(
                             modifier = Modifier.weight(1.2f),
                             contentPadding = PaddingValues(vertical = 6.dp)
                         ) {
-                            Text("Wi-Fi (192.168.112.150)", fontSize = 10.sp, color = Forest700, fontWeight = FontWeight.Bold)
+                            Text("Wi-Fi (192.168.1.28)", fontSize = 10.sp, color = Forest700, fontWeight = FontWeight.Bold)
                         }
 
                         Button(

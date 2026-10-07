@@ -58,6 +58,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setCustomer(customer);
         order.setMerchant(merchant);
+        order.setMerchantName(merchant.getName());
+        order.setOrderNumber("ORD-" + System.currentTimeMillis());
         order.setDeliveryFee(merchant.getDeliveryFee());
         order.setStatus(OrderStatus.PENDING);
         order.setDeliveryAddress(request.getDeliveryAddress() != null 
@@ -74,6 +76,28 @@ public class OrderServiceImpl implements OrderService {
                 order.getItems().add(oi);
             }
             cartItemRepository.deleteByCartId(cart.getId());
+        } else if (request.getItems() != null && !request.getItems().isEmpty()) {
+            for (CheckoutRequest.OrderItemDto itemDto : request.getItems()) {
+                MenuItem mi = null;
+                if (itemDto.getMenuItemId() != null) {
+                    mi = menuItemRepository.findById(itemDto.getMenuItemId()).orElse(null);
+                }
+                double price = (itemDto.getPrice() != null && itemDto.getPrice() > 0) 
+                        ? itemDto.getPrice() 
+                        : (mi != null ? mi.getPrice() : 5.0);
+                int qty = (itemDto.getQuantity() != null && itemDto.getQuantity() > 0) 
+                        ? itemDto.getQuantity() : 1;
+                subtotal += price * qty;
+                OrderItem oi = new OrderItem(order, mi, qty, price, itemDto.getSelectedOptions());
+                if (itemDto.getItemName() != null && !itemDto.getItemName().isBlank()) {
+                    oi.setMenuItemName(itemDto.getItemName());
+                } else if (mi != null) {
+                    oi.setMenuItemName(mi.getName());
+                } else {
+                    oi.setMenuItemName("Chef Special");
+                }
+                order.getItems().add(oi);
+            }
         } else {
             // Direct order fallback (from mobile app or web checkout):
             List<MenuItem> merchantMenu = menuItemRepository.findByMerchantId(merchant.getId());
@@ -116,9 +140,13 @@ public class OrderServiceImpl implements OrderService {
             case MERCHANT:
                 List<Merchant> merchants = merchantRepository.findByOwnerId(userId);
                 if (!merchants.isEmpty()) {
-                    return orderRepository.findByMerchantIdOrderByCreatedAtDesc(merchants.get(0).getId());
+                    List<Long> mIds = merchants.stream().map(Merchant::getId).toList();
+                    return orderRepository.findAll().stream()
+                            .filter(o -> o.getMerchant() != null && mIds.contains(o.getMerchant().getId()))
+                            .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                            .toList();
                 }
-                return List.of();
+                return orderRepository.findAll();
             case DRIVER:
                 return orderRepository.findByDriverIdOrderByCreatedAtDesc(userId);
             case ADMIN:

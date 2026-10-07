@@ -41,7 +41,7 @@ interface AuthApiService {
 interface OrderApiService {
     @POST("api/orders")
     suspend fun placeOrder(
-        @Header("Authorization") token: String,
+        @Header("Authorization") token: String?,
         @Body request: CheckoutRequestDto
     ): Response<OrderDto>
 
@@ -53,10 +53,17 @@ interface OrderApiService {
         @Header("Authorization") token: String,
         @Path("id") id: Long
     ): Response<OrderDto>
+
+    @PUT("api/orders/{id}/status")
+    suspend fun updateOrderStatus(
+        @Header("Authorization") token: String,
+        @Path("id") id: Long,
+        @Body body: Map<String, String>
+    ): Response<OrderDto>
 }
 
 interface DriverApiService {
-    //receive : get order accepte by kitchen waiting for pickup
+    //receive : get order accept by kitchen waiting for pickup
     @GET("api/driver/orders")
     suspend fun getAvailableDeliveryJobs(
         @Header("Authorization") token: String? = null
@@ -76,6 +83,5 @@ interface DriverApiService {
         @Path("id") id: Long,
         @Body body: Map<String, String>
     ): Response<OrderDto>
-
 
 }

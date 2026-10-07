@@ -90,10 +90,20 @@ data class CartItemRequestDto(
 )
 
 @JsonClass(generateAdapter = true)
+data class CheckoutItemDto(
+    @Json(name = "menuItemId") val menuItemId: Long? = null,
+    @Json(name = "itemName") val itemName: String? = null,
+    @Json(name = "price") val price: Double? = null,
+    @Json(name = "quantity") val quantity: Int = 1,
+    @Json(name = "selectedOptions") val selectedOptions: String? = null
+)
+
+@JsonClass(generateAdapter = true)
 data class CheckoutRequestDto(
     @Json(name = "merchantId") val merchantId: Long,
     @Json(name = "deliveryAddress") val deliveryAddress: String,
-    @Json(name = "paymentMethod") val paymentMethod: String = "MOCK_KHQR"
+    @Json(name = "paymentMethod") val paymentMethod: String = "MOCK_KHQR",
+    @Json(name = "items") val items: List<CheckoutItemDto>? = null
 )
 
 @JsonClass(generateAdapter = true)
