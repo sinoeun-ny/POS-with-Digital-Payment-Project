@@ -8,7 +8,10 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
+    Optional<User> findByPhone(String phone);
+    Optional<User> findByTelegramChatId(Long telegramChatId);
     Boolean existsByEmail(String email);
     Boolean existsByPhone(String phone);
     List<User> findByRole(UserRole role);
+    List<User> findByRoleAndTelegramChatIdIsNotNull(UserRole role);
 }

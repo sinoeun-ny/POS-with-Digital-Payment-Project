@@ -2,6 +2,7 @@ package com.example.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.data.local.entity.DriverProfileEntity
 import com.example.data.local.entity.SessionEntity
 import com.example.data.local.entity.UserAddressEntity
 import com.example.data.local.entity.UserEntity
@@ -72,7 +73,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
-    fun login(identifier: String, password: String) {
+    fun login(identifier: String, password: String, onResult: ((Boolean) -> Unit)? = null) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             when (val result = repository.login(identifier, password)) {
@@ -81,15 +82,21 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                         isLoading = false,
                         successMessage = "Logged in successfully!"
                     )
+                    onResult?.invoke(true)
                 }
                 is AuthResult.Error -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = result.message
                     )
+                    onResult?.invoke(false)
                 }
             }
         }
+    }
+
+    suspend fun getDriverProfile(identifier: String): DriverProfileEntity? {
+        return repository.getDriverProfileByIdentifier(identifier)
     }
 
     fun register(

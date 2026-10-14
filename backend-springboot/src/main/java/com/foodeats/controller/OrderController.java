@@ -16,10 +16,14 @@ import java.util.Map;
 public class OrderController {
 
     private final OrderService orderService;
+    private final com.foodeats.service.DriverLocationService driverLocationService;
     private final JwtUtil jwtUtil;
 
-    public OrderController(OrderService orderService, JwtUtil jwtUtil) {
+    public OrderController(OrderService orderService,
+                           com.foodeats.service.DriverLocationService driverLocationService,
+                           JwtUtil jwtUtil) {
         this.orderService = orderService;
+        this.driverLocationService = driverLocationService;
         this.jwtUtil = jwtUtil;
     }
 
@@ -102,6 +106,46 @@ public class OrderController {
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", "Invalid order status"));
+        }
+    }
+
+    @GetMapping("/{id}/tracking")
+    public ResponseEntity<?> getOrderTracking(@PathVariable Long id) {
+        try {
+            Order order = orderService.getOrderById(id);
+            Map<String, Object> tracking = new java.util.HashMap<>();
+            tracking.put("orderId", order.getId());
+            tracking.put("orderNumber", order.getOrderNumber());
+            tracking.put("status", order.getStatus());
+            tracking.put("merchantName", order.getMerchantName());
+            tracking.put("merchantAddress", order.getMerchant() != null ? order.getMerchant().getAddress() : "");
+            tracking.put("deliveryAddress", order.getDeliveryAddress());
+
+            if (order.getDriver() != null) {
+                tracking.put("driverAssigned", true);
+                tracking.put("driverId", order.getDriver().getId());
+                tracking.put("driverName", order.getDriver().getName());
+                tracking.put("driverPhone", order.getDriver().getPhone());
+                tracking.put("driverTelegramLinked", order.getDriver().getTelegramChatId() != null);
+
+                // Fetch real-time GPS coordinates
+                driverLocationService.getLocationByOrder(order.getId()).ifPresent(loc -> {
+                    tracking.put("driverLocation", Map.of(
+                            "latitude", loc.getLatitude(),
+                            "longitude", loc.getLongitude(),
+                            "heading", loc.getHeading(),
+                            "accuracy", loc.getAccuracy(),
+                            "isLive", loc.getIsLive(),
+                            "lastUpdated", loc.getFormattedTime() != null ? loc.getFormattedTime() : ""
+                    ));
+                });
+            } else {
+                tracking.put("driverAssigned", false);
+            }
+
+            return ResponseEntity.ok(tracking);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }

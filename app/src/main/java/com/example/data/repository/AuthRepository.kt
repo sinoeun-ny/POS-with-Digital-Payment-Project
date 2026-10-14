@@ -102,11 +102,23 @@ class AuthRepository(
                         UserEntity(
                             fullName = name,
                             email = lowerEmail,
-                            phone = "+85512345678",
+                            phone = if (lowerEmail.contains("driver")) "+85588776655" else "+85512345678",
                             passwordHash = "password123",
                             currentActiveRole = roleCode
                         )
                     )
+                    if (lowerEmail.contains("driver")) {
+                        driverProfileDao.insertDriverProfile(
+                            DriverProfileEntity(
+                                userId = newId,
+                                vehicleType = "Motorbike (Honda Dream 125)",
+                                licensePlate = "PP-1AB-9988",
+                                phone = "+85588776655",
+                                totalDeliveries = 142,
+                                rating = 4.9
+                            )
+                        )
+                    }
                     found = userDao.getUserById(newId)
                 }
             }
@@ -327,6 +339,26 @@ class AuthRepository(
 
     suspend fun deleteAddress(addressId: Long) {
         addressDao.deleteAddress(addressId)
+    }
+
+    suspend fun getDriverProfileByIdentifier(identifier: String): DriverProfileEntity? {
+        val clean = identifier.trim()
+        val fromDb = driverProfileDao.getDriverProfileByIdentifier(clean)
+        if (fromDb != null) return fromDb
+
+        if (clean.equals("driver@example.com", ignoreCase = true) || clean.contains("88776655") || clean.contains("driver", ignoreCase = true)) {
+            return DriverProfileEntity(
+                userId = 0,
+                vehicleType = "Motorbike (Honda Dream 125)",
+                licensePlate = "PP-1AB-9988",
+                phone = "+85588776655",
+                totalDeliveries = 142,
+                rating = 4.9,
+                isVerified = true,
+                isAvailable = true
+            )
+        }
+        return null
     }
 
     suspend fun logout() {

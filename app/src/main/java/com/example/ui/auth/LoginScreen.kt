@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,7 +53,8 @@ fun LoginScreen(
     viewModel: AuthViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    onNavigateToDeliveryLogin: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -187,6 +189,62 @@ fun LoginScreen(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                         )
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Dedicated Delivery Partner Login Banner
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigateToDeliveryLogin() },
+                color = com.example.ui.theme.Mint50,
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, com.example.ui.theme.Forest300)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(com.example.ui.theme.Forest500, RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.DirectionsBike,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = "Delivery Partner Portal",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = com.example.ui.theme.Forest900
+                            )
+                            Text(
+                                text = "Rider login with vehicle & license preview",
+                                fontSize = 11.sp,
+                                color = com.example.ui.theme.Forest700
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Rider Login →",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = com.example.ui.theme.Forest800
+                    )
                 }
             }
 

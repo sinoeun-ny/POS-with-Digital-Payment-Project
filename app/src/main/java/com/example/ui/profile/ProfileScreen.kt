@@ -40,7 +40,8 @@ fun ProfileScreen(
     onNavigateToAddresses: () -> Unit,
     onNavigateToCountry: () -> Unit,
     onNavigateToAdminRoleDivision: () -> Unit ,
-    onNavigateToDriver: () -> Unit = {}
+    onNavigateToDriver: () -> Unit = {},
+    onNavigateToDeliveryLogin: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -389,13 +390,22 @@ fun ProfileScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .clickable { onNavigateToDriver() }
+                            .clickable {
+                                if (currentUser?.currentActiveRole == "ROLE_DRIVER") {
+                                    onNavigateToDriver()
+                                } else {
+                                    onNavigateToDeliveryLogin()
+                                }
+                            }
                             .padding(12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("🛵 Courier Dispatch Mode (Sprint 5)", fontWeight = FontWeight.Bold, color = Forest700)
-                        Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Column {
+                            Text("🛵 Delivery Partner Portal & Dispatch", fontWeight = FontWeight.Bold, color = Forest700, fontSize = 14.sp)
+                            Text("Rider sign-in, vehicle telemetry & active jobs", fontSize = 11.sp, color = Ink500)
+                        }
+                        Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, tint = Ink400, modifier = Modifier.size(14.dp))
                     }
 
                     // RBAC Matrix

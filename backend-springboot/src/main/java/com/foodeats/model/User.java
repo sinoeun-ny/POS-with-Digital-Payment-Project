@@ -31,6 +31,9 @@ public class User {
     @Column(name = "profile_image_url", length = 500)
     private String profileImageUrl;
 
+    @Column(name = "telegram_chat_id")
+    private Long telegramChatId;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -77,6 +80,9 @@ public class User {
 
     public String getProfileImageUrl() { return profileImageUrl; }
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
+
+    public Long getTelegramChatId() { return telegramChatId; }
+    public void setTelegramChatId(Long telegramChatId) { this.telegramChatId = telegramChatId; }
 
     public Boolean getIsActive() { return isActive != null ? isActive : true; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }

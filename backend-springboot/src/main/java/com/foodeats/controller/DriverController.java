@@ -3,6 +3,8 @@ package com.foodeats.controller;
 import com.foodeats.model.*;
 import com.foodeats.repository.*;
 import com.foodeats.security.JwtUtil;
+import com.foodeats.service.DriverLocationService;
+import com.foodeats.service.TelegramDriverBotService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,16 +20,22 @@ public class DriverController {
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
     private final DeliveryRepository deliveryRepository;
+    private final DriverLocationService driverLocationService;
+    private final TelegramDriverBotService telegramBotService;
     private final JwtUtil jwtUtil;
 
     public DriverController(OrderRepository orderRepository, UserRepository userRepository,
                             NotificationRepository notificationRepository,
                             DeliveryRepository deliveryRepository,
+                            DriverLocationService driverLocationService,
+                            TelegramDriverBotService telegramBotService,
                             JwtUtil jwtUtil) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.notificationRepository = notificationRepository;
         this.deliveryRepository = deliveryRepository;
+        this.driverLocationService = driverLocationService;
+        this.telegramBotService = telegramBotService;
         this.jwtUtil = jwtUtil;
     }
 
@@ -99,5 +107,37 @@ public class DriverController {
             }
             return ResponseEntity.ok(saved);
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/location")
+    public ResponseEntity<?> getDriverLocation(@PathVariable Long id) {
+        return driverLocationService.getLocationByDriver(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/locations")
+    public ResponseEntity<?> getAllDriverLocations() {
+        return ResponseEntity.ok(driverLocationService.getAllActiveDriverLocations());
+    }
+
+    @PostMapping("/location/mock")
+    public ResponseEntity<?> mockDriverLocation(@RequestBody Map<String, Object> body) {
+        Long driverId = body.get("driverId") != null ? Long.valueOf(body.get("driverId").toString()) : 3L;
+        Long orderId = body.get("orderId") != null ? Long.valueOf(body.get("orderId").toString()) : null;
+        Double lat = body.get("latitude") != null ? Double.valueOf(body.get("latitude").toString()) : 11.5564;
+        Double lng = body.get("longitude") != null ? Double.valueOf(body.get("longitude").toString()) : 104.9282;
+        Integer heading = body.get("heading") != null ? Integer.valueOf(body.get("heading").toString()) : 90;
+        Double accuracy = body.get("accuracy") != null ? Double.valueOf(body.get("accuracy").toString()) : 3.0;
+        Boolean isLive = body.get("isLive") != null ? Boolean.valueOf(body.get("isLive").toString()) : true;
+
+        DriverLocationService.DriverLocationSnapshot snapshot = driverLocationService.updateLocation(
+                driverId, orderId, lat, lng, heading, accuracy, isLive
+        );
+
+        if (snapshot == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Driver not found"));
+        }
+        return ResponseEntity.ok(snapshot);
     }
 }
