@@ -24,7 +24,7 @@ object ApiClient {
     private const val PREFS_NAME = "foodeats_network_prefs"
     private const val KEY_BASE_URL = "backend_base_url"
 
-    private var currentBaseUrl = DEFAULT_USB_URL
+    private var currentBaseUrl = DEFAULT_EMULATOR_URL
     private var retrofit: Retrofit? = null
 
     private val moshi = Moshi.Builder()
@@ -42,7 +42,13 @@ object ApiClient {
 
     fun init(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        currentBaseUrl = prefs.getString(KEY_BASE_URL, DEFAULT_USB_URL) ?: DEFAULT_USB_URL
+        val saved = prefs.getString(KEY_BASE_URL, null)
+        if (saved == null || saved.contains("127.0.0.1") || saved.contains("192.168.")) {
+            currentBaseUrl = DEFAULT_EMULATOR_URL
+            prefs.edit().putString(KEY_BASE_URL, DEFAULT_EMULATOR_URL).apply()
+        } else {
+            currentBaseUrl = saved
+        }
         rebuildRetrofit()
     }
 
@@ -93,7 +99,7 @@ object ApiClient {
         get() = getRetrofit().create(DriverApiService::class.java)
 
     //connection
-    val DEFAULT_MODE = ConnectionMode.USB
+    val DEFAULT_MODE = ConnectionMode.EMULATOR
 
     //switch mode dynamically
     fun applyConnectionMode(context: Context, mode: ConnectionMode){

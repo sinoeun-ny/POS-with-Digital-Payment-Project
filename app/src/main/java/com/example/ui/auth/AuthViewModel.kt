@@ -12,6 +12,8 @@ import com.example.security.JwtTokenUtil
 import com.example.security.Permission
 import com.example.security.RbacPolicy
 import com.example.security.UserRole
+import com.example.data.repository.FoodEatsRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +38,8 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    private var userDataJob: Job? = null
+
     init {
         viewModelScope.launch {
             repository.activeSessionFlow.collectLatest { session ->
@@ -50,9 +54,12 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                         userPermissions = permissions
                     )
 
-                    // Fetch user and address
+                    // Fetch user and address with isolated coroutines
                     observeUserData(session.userId)
                 } else {
+                    userDataJob?.cancel()
+                    userDataJob = null
+                    FoodEatsRepository.clearUserData()
                     _uiState.value = AuthUiState()
                 }
             }
@@ -60,14 +67,17 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     }
 
     private fun observeUserData(userId: Long) {
-        viewModelScope.launch {
-            repository.getCurrentUserFlow(userId).collectLatest { user ->
-                _uiState.value = _uiState.value.copy(currentUser = user)
+        userDataJob?.cancel()
+        userDataJob = viewModelScope.launch {
+            launch {
+                repository.getCurrentUserFlow(userId).collectLatest { user ->
+                    _uiState.value = _uiState.value.copy(currentUser = user)
+                }
             }
-        }
-        viewModelScope.launch {
-            repository.getUserAddressesFlow(userId).collectLatest { addresses ->
-                _uiState.value = _uiState.value.copy(userAddresses = addresses)
+            launch {
+                repository.getUserAddressesFlow(userId).collectLatest { addresses ->
+                    _uiState.value = _uiState.value.copy(userAddresses = addresses)
+                }
             }
         }
     }
@@ -77,6 +87,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             when (val result = repository.login(identifier, password)) {
                 is AuthResult.Success -> {
+                    FoodEatsRepository.clearUserData()
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         successMessage = "Logged in successfully!"
@@ -119,6 +130,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 vehicleType = vehicleType
             )) {
                 is AuthResult.Success -> {
+                    FoodEatsRepository.clearUserData()
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         successMessage = "Account created & logged in!"
@@ -170,6 +182,10 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     }
 
     fun logout() {
+        userDataJob?.cancel()
+        userDataJob = null
+        FoodEatsRepository.clearUserData()
+        _uiState.value = AuthUiState()
         viewModelScope.launch {
             repository.logout()
         }

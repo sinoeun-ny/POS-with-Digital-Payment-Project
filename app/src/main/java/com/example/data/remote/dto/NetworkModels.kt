@@ -73,13 +73,23 @@ data class RegisterRequestDto(
 )
 
 @JsonClass(generateAdapter = true)
+data class UserAddressDto(
+    @Json(name = "id") val id: Long? = null,
+    @Json(name = "label") val label: String? = "Home",
+    @Json(name = "streetAddress") val streetAddress: String? = null,
+    @Json(name = "city") val city: String? = "Phnom Penh",
+    @Json(name = "isDefault") val isDefault: Boolean? = true
+)
+
+@JsonClass(generateAdapter = true)
 data class AuthResponseDto(
     @Json(name = "token") val token: String,
     @Json(name = "id") val id: Long,
     @Json(name = "name") val name: String,
     @Json(name = "email") val email: String,
     @Json(name = "role") val role: String,
-    @Json(name = "merchantId") val merchantId: Long? = null
+    @Json(name = "merchantId") val merchantId: Long? = null,
+    @Json(name = "addresses") val addresses: List<UserAddressDto>? = null
 )
 
 @JsonClass(generateAdapter = true)

@@ -259,27 +259,7 @@ object FoodEatsRepository {
     private val _cart = MutableStateFlow<List<CartItem>>(emptyList())
     val cart: StateFlow<List<CartItem>> = _cart.asStateFlow()
 
-    private val _orders = MutableStateFlow<List<PlacedOrder>>(
-        listOf(
-            PlacedOrder(
-                id = 101,
-                customerName = "Sokha Mean",
-                merchantName = "Zando Burger & Grill",
-                merchantId = 1,
-                itemsSummary = "1x Double Truffle Smash Burger, 1x Parmesan Truffle French Fries",
-                itemsCount = 2,
-                subtotal = 10.20,
-                deliveryFee = 1.50,
-                total = 11.70,
-                status = "OUT_FOR_DELIVERY",
-                deliveryAddress = "Building 42, St. 302, BKK1, Phnom Penh",
-                paymentStatus = "PAID_KHQR",
-                paymentMethod = "KHQR / Bakong",
-                orderTime = "15 mins ago",
-                driver = "Dara K. Express (+855 88 776 655)"
-            )
-        )
-    )
+    private val _orders = MutableStateFlow<List<PlacedOrder>>(emptyList())
     val orders: StateFlow<List<PlacedOrder>> = _orders.asStateFlow()
 
     private val _serverStatus = MutableStateFlow("Ready")
@@ -361,6 +341,11 @@ object FoodEatsRepository {
         }
     }
 
+    fun clearUserData() {
+        _orders.value = emptyList()
+        _cart.value = emptyList()
+        _activeDriverJob.value = null
+    }
     private fun findSeedMenu(merchantId: Long): List<DishItem> {
         return SEED_RESTAURANTS.find { it.id == merchantId }?.menu ?: SEED_RESTAURANTS[0].menu
     }
@@ -532,19 +517,22 @@ object FoodEatsRepository {
 
 
     // fetch live orders from spring boot REST API
-    fun fetchOrdersFromBackend(authToken: String?){
-        if(authToken.isNullOrBlank()) return
+    fun fetchOrdersFromBackend(authToken: String?) {
+        if (authToken.isNullOrBlank()) {
+            _orders.value = emptyList()
+            return
+        }
 
-        scope.launch{
-            try{
+        scope.launch {
+            try {
                 val response = ApiClient.orderApi.getOrders("Bearer $authToken")
-                if(response.isSuccessful && !response.body().isNullOrEmpty()){
-                    val dtoList = response.body()!!
+                if (response.isSuccessful) {
+                    val dtoList = response.body() ?: emptyList()
                     val mapped = dtoList.map { dto ->
                         PlacedOrder(
                             id = dto.id,
                             customerName = dto.customerName ?: "Customer",
-                            merchantName = dto.merchantName ?: "Restaurant Kitchen" ,
+                            merchantName = dto.merchantName ?: "Restaurant Kitchen",
                             merchantId = dto.merchantId ?: 1L,
                             itemsSummary = dto.itemsSummary ?: "Order Items",
                             itemsCount = 1,
@@ -553,19 +541,20 @@ object FoodEatsRepository {
                             total = dto.totalAmount,
                             status = dto.status,
                             deliveryAddress = dto.deliveryAddress ?: "Phnom Penh",
-                            paymentStatus = dto.paymentStatus ?: "PAID" ,
-                            paymentMethod = dto.paymentMethod ?: "KHQR / Bakong" ,
+                            paymentStatus = dto.paymentStatus ?: "PAID",
+                            paymentMethod = dto.paymentMethod ?: "KHQR / Bakong",
                             orderTime = dto.createdAt ?: "Just now",
                             driver = "Assigning Driver ..."
                         )
                     }
                     _orders.value = mapped
                 }
-            }catch(e: Exception){
-                //ignore network glitches during background polling
+            } catch (e: Exception) {
+                // ignore network glitches during background polling
             }
         }
     }
+
 
     //cancel an order if still pending or placed
     fun cancelOrder(orderId: Long, authToken: String?){

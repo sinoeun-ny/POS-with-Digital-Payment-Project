@@ -40,13 +40,21 @@ fun ShoppingBagScreen(
     val cart by FoodEatsRepository.cart.collectAsState()
     val authState by authViewModel?.uiState?.collectAsState() ?: remember {mutableStateOf(AuthUiState())}
     val authToken = authState.activeSession?.jwtToken
-    val customerName = authState.currentUser?.fullName ?: "Sinoeun Customer"
+    val customerName = authState.currentUser?.fullName ?: "Customer"
+    val defaultAddress = authState.userAddresses.firstOrNull { it.isDefault } ?: authState.userAddresses.firstOrNull()
     var selectedPaymentMethod by remember { mutableStateOf("MOCK_KHQR") }
-    var selectedAddressLabel by remember { mutableStateOf("Home (BKK1")}
-    var selectedAddress by remember { mutableStateOf( "Building 42, ST. 598 , BKK , Phnom Penh")}
-    var deliveryNotes by remember { mutableStateOf ( " ")}
-    var secondsRemaining by remember { mutableIntStateOf(120)} // wait 2 minutes for KHQR
-    var isPlacingOrder by remember { mutableStateOf(false)}
+    var selectedAddressLabel by remember { mutableStateOf(defaultAddress?.label ?: "Home") }
+    var selectedAddress by remember { mutableStateOf(if (defaultAddress != null) "${defaultAddress.streetAddress}, ${defaultAddress.city}" else "Phnom Penh, Cambodia") }
+
+    LaunchedEffect(defaultAddress) {
+        if (defaultAddress != null) {
+            selectedAddressLabel = defaultAddress.label
+            selectedAddress = "${defaultAddress.streetAddress}, ${defaultAddress.city}"
+        }
+    }
+    var deliveryNotes by remember { mutableStateOf("") }
+    var secondsRemaining by remember { mutableIntStateOf(120) } // wait 2 minutes for KHQR
+    var isPlacingOrder by remember { mutableStateOf(false) }
 
     val merchant = cart.firstOrNull()?.merchant
     val subtotal = cart.sumOf { it.totalPrice }
@@ -54,10 +62,10 @@ fun ShoppingBagScreen(
     val grandTotal = if (cart.isNotEmpty()) subtotal + deliveryFee else 0.0
 
     //live 2 minute time effect for KHQR
-    LaunchedEffect(selectedPaymentMethod){
-        if(selectedPaymentMethod == "MOCK_KHQR"){
+    LaunchedEffect(selectedPaymentMethod) {
+        if (selectedPaymentMethod == "MOCK_KHQR") {
             secondsRemaining = 120
-            while (secondsRemaining > 120){
+            while (secondsRemaining > 0) {
                 kotlinx.coroutines.delay(1000L)
                 secondsRemaining--
             }

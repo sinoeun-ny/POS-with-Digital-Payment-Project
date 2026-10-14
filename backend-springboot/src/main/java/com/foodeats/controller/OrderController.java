@@ -17,23 +17,34 @@ public class OrderController {
 
     private final OrderService orderService;
     private final JwtUtil jwtUtil;
+    private final com.foodeats.repository.UserRepository userRepository;
 
-    public OrderController(OrderService orderService, JwtUtil jwtUtil) {
+    public OrderController(OrderService orderService, JwtUtil jwtUtil, com.foodeats.repository.UserRepository userRepository) {
         this.orderService = orderService;
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     private User getAuthenticatedUser(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
         String token = authHeader.substring(7);
         Long userId = jwtUtil.extractUserId(token);
+        if (userId != null) {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null) return user;
+        }
+        String email = jwtUtil.extractEmail(token);
+        if (email != null) {
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) return user;
+        }
         if (userId == null) return null;
         String roleStr = jwtUtil.extractRole(token);
         User user = new User();
         user.setId(userId);
         if (roleStr != null) {
             try {
-                user.setRole(com.foodeats.model.UserRole.valueOf(roleStr));
+                user.setRole(com.foodeats.model.UserRole.valueOf(roleStr.replace("ROLE_", "")));
             } catch (Exception ignored) {}
         }
         return user;
@@ -44,7 +55,12 @@ public class OrderController {
                                         @RequestBody CheckoutRequest request) {
         try {
             User customer = getAuthenticatedUser(authHeader);
-            Long customerId = (customer != null && customer.getId() != null) ? customer.getId() : 4L;
+            Long customerId = (customer != null && customer.getId() != null) ? customer.getId() : null;
+            if (customerId == null) {
+                customerId = userRepository.findByEmail("customer@example.com")
+                    .map(User::getId)
+                    .orElse(1L);
+            }
 
             Order order = orderService.placeOrder(customerId, request);
             return ResponseEntity.ok(order);
@@ -70,15 +86,20 @@ public class OrderController {
         }
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.ok(orderService.getAllOrders());
+            return ResponseEntity.ok(List.of());
         }
 
         User user = getAuthenticatedUser(authHeader);
-        if (user == null || user.getRole() == com.foodeats.model.UserRole.ADMIN || user.getRole() == com.foodeats.model.UserRole.MERCHANT) {
+        if (user == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        if (user.getRole() == com.foodeats.model.UserRole.ADMIN) {
             return ResponseEntity.ok(orderService.getAllOrders());
         }
 
-        List<Order> orders = orderService.getOrdersByUser(user.getId(), user.getRole().name());
+        String roleName = user.getRole() != null ? user.getRole().name() : "CUSTOMER";
+        List<Order> orders = orderService.getOrdersByUser(user.getId(), roleName);
         return ResponseEntity.ok(orders);
     }
 

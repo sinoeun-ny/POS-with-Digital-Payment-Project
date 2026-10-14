@@ -152,4 +152,24 @@ proc_label: BEGIN
     SET p_message = CONCAT('Order #', p_order_id, ' cancelled. Refund of $', v_total_amount, ' queued. Reason: ', COALESCE(p_reason, 'Customer Request'));
 END proc_label$$
 
+-- -----------------------------------------------------------------------------
+-- 4. PROCEDURE: sp_filter_merchants
+-- Purpose: Dynamic filter for merchants by keyword, cuisine, rating, and fee
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS sp_filter_merchants$$
+
+CREATE PROCEDURE sp_filter_merchants(
+    IN p_search VARCHAR(100),
+    IN p_cuisine VARCHAR(100),
+    IN p_min_rating DOUBLE,
+    IN p_max_fee DOUBLE
+)
+BEGIN
+    SELECT * FROM merchants
+    WHERE (p_search IS NULL OR p_search = '' OR store_name LIKE CONCAT('%', p_search, '%') OR cuisine_type LIKE CONCAT('%', p_search, '%') OR description LIKE CONCAT('%', p_search, '%'))
+      AND (p_cuisine IS NULL OR p_cuisine = '' OR cuisine_type = p_cuisine)
+      AND (p_min_rating IS NULL OR rating >= p_min_rating)
+      AND (p_max_fee IS NULL OR delivery_fee <= p_max_fee);
+END$$
+
 DELIMITER ;

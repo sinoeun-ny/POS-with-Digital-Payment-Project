@@ -50,24 +50,40 @@ class AuthRepository(
                 )
                 if (remoteRes.isSuccessful && remoteRes.body() != null) {
                     val authBody = remoteRes.body()!!
-                    var localUser = userDao.getUserByEmail(authBody.email)
-                    if (localUser == null) {
-                        val newId = userDao.insertUser(
-                            UserEntity(
-                                id = authBody.id,
-                                fullName = authBody.name,
-                                phone = "+85512345678",
-                                email = authBody.email,
-                                passwordHash = password,
-                                currentActiveRole = authBody.role
+                    val roleCode = if (authBody.role.startsWith("ROLE_")) authBody.role else "ROLE_${authBody.role}"
+                    val existing = userDao.getUserByEmail(authBody.email)
+                    val userIdToUse = existing?.id ?: authBody.id
+                    val userToSave = UserEntity(
+                        id = userIdToUse,
+                        fullName = authBody.name,
+                        phone = existing?.phone ?: "+85512345678",
+                        email = authBody.email,
+                        passwordHash = password,
+                        currentActiveRole = roleCode
+                    )
+                    userDao.insertUser(userToSave)
+
+                    val roleEntity = userDao.getRoleByName(roleCode)
+                    if (roleEntity != null) {
+                        userDao.insertUserRole(UserRoleEntity(userId = userIdToUse, roleId = roleEntity.id))
+                    }
+
+                    authBody.addresses?.forEach { addr ->
+                        addressDao.insertAddress(
+                            UserAddressEntity(
+                                userId = userIdToUse,
+                                label = addr.label ?: "Home",
+                                streetAddress = addr.streetAddress ?: "Phnom Penh",
+                                city = addr.city ?: "Phnom Penh",
+                                isDefault = addr.isDefault ?: true
                             )
                         )
-                        localUser = userDao.getUserById(newId)
                     }
+
                     val session = SessionEntity(
-                        userId = localUser?.id ?: authBody.id,
+                        userId = userIdToUse,
                         jwtToken = authBody.token,
-                        activeRole = authBody.role
+                        activeRole = roleCode
                     )
                     sessionDao.saveSession(session)
                     return AuthResult.Success(session)

@@ -94,39 +94,48 @@ fun ProfileScreen(
                         modifier = Modifier
                             .size(54.dp)
                             .clip(CircleShape)
-                            .background(Forest500),
+                            .background(if (session != null) Forest500 else Sage200),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = (currentUser?.fullName?.take(1) ?: "S").uppercase(),
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        if (session != null) {
+                            Text(
+                                text = (currentUser?.fullName?.take(1) ?: "U").uppercase(),
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.PersonOutline,
+                                contentDescription = "Guest",
+                                tint = Ink600,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = currentUser?.fullName ?: "Sokha Mean",
+                            text = if (session != null) (currentUser?.fullName ?: "Signed In User") else "Guest User",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
                             color = Ink950
                         )
                         Text(
-                            text = currentUser?.email ?: "customer@example.com",
+                            text = if (session != null) (currentUser?.email ?: "") else "Not signed in. Please sign in or register.",
                             fontSize = 12.sp,
                             color = Ink500
                         )
                         Surface(
-                            color = Mint100,
+                            color = if (session != null) Mint100 else Cream200,
                             shape = RoundedCornerShape(6.dp),
                             modifier = Modifier.padding(top = 4.dp)
                         ) {
                             Text(
-                                text = "ROLE: ${currentUser?.currentActiveRole?.removePrefix("ROLE_") ?: "CUSTOMER"}",
+                                text = if (session != null) "ROLE: ${currentUser?.currentActiveRole?.removePrefix("ROLE_") ?: "CUSTOMER"}" else "GUEST",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Forest800,
+                                color = if (session != null) Forest800 else Rust900,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -170,7 +179,7 @@ fun ProfileScreen(
                                 tint = Forest500
                             )
                             Text(
-                                text = "Spring Boot DB Connection",
+                                text = "Local Laptop & MySQL Connection",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Ink950
@@ -179,7 +188,7 @@ fun ProfileScreen(
                     }
 
                     Text(
-                        text = "Connect your physical phone to the Spring Boot REST API running on your computer. Make sure both devices are on the same Wi-Fi.",
+                        text = "The emulator connects directly to Spring Boot & MySQL running locally on this laptop via Android's internal loopback (10.0.2.2:8080). Zero external devices or Wi-Fi needed.",
                         fontSize = 12.sp,
                         color = Ink600,
                         lineHeight = 16.sp
@@ -188,63 +197,26 @@ fun ProfileScreen(
                     OutlinedTextField(
                         value = serverUrlInput,
                         onValueChange = { serverUrlInput = it },
-                        label = { Text("Server Base URL") },
+                        label = { Text("Backend URL (Host Laptop)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
+                        trailingIcon = {
+                            if (serverUrlInput != ApiClient.DEFAULT_EMULATOR_URL) {
+                                TextButton(onClick = {
+                                    serverUrlInput = ApiClient.DEFAULT_EMULATOR_URL
+                                    ApiClient.setBaseUrl(context, serverUrlInput)
+                                    Toast.makeText(context, "Reset to Emulator URL", Toast.LENGTH_SHORT).show()
+                                }) {
+                                    Text("Reset", fontSize = 11.sp, color = Forest600, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Forest500,
                             unfocusedBorderColor = Sage200
                         )
                     )
-
-                    // Preset buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                serverUrlInput = ApiClient.DEFAULT_USB_URL
-                                ApiClient.setBaseUrl(context, serverUrlInput)
-                                Toast.makeText(context, "Set to USB Cable (127.0.0.1)", Toast.LENGTH_SHORT).show()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Forest50),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(vertical = 6.dp)
-                        ) {
-                            Text("USB (127.0.0.1)", fontSize = 10.sp, color = Forest700, fontWeight = FontWeight.Bold)
-                        }
-
-                        Button(
-                            onClick = {
-                                serverUrlInput = ApiClient.DEFAULT_PHONE_WIFI_URL
-                                ApiClient.setBaseUrl(context, serverUrlInput)
-                                Toast.makeText(context, "Set to Wi-Fi IP", Toast.LENGTH_SHORT).show()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Forest50),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1.2f),
-                            contentPadding = PaddingValues(vertical = 6.dp)
-                        ) {
-                            Text("Wi-Fi (192.168.1.28)", fontSize = 10.sp, color = Forest700, fontWeight = FontWeight.Bold)
-                        }
-
-                        Button(
-                            onClick = {
-                                serverUrlInput = ApiClient.DEFAULT_EMULATOR_URL
-                                ApiClient.setBaseUrl(context, serverUrlInput)
-                                Toast.makeText(context, "Set to Emulator URL", Toast.LENGTH_SHORT).show()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Forest50),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(vertical = 6.dp)
-                        ) {
-                            Text("Emulator", fontSize = 10.sp, color = Forest700, fontWeight = FontWeight.Bold)
-                        }
-                    }
 
                     // Action buttons: Save & Test
                     Row(
@@ -255,7 +227,7 @@ fun ProfileScreen(
                             onClick = {
                                 ApiClient.setBaseUrl(context, serverUrlInput)
                                 FoodEatsRepository.loadFromBackend()
-                                Toast.makeText(context, "Server URL Saved!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "URL Saved!", Toast.LENGTH_SHORT).show()
                             },
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1f)
@@ -279,7 +251,7 @@ fun ProfileScreen(
                             enabled = !isTestingConnection,
                             colors = ButtonDefaults.buttonColors(containerColor = Forest500),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1.2f)
+                            modifier = Modifier.weight(1.4f)
                         ) {
                             if (isTestingConnection) {
                                 CircularProgressIndicator(
@@ -369,7 +341,7 @@ fun ProfileScreen(
                                     color = Ink950
                                 )
                                 Text(
-                                    text = "Home (BKK1), Office (Vattanac)",
+                                    text = if (session != null) "${uiState.userAddresses.size} saved address(es)" else "Sign in to view saved addresses",
                                     fontSize = 11.sp,
                                     color = Ink500
                                 )

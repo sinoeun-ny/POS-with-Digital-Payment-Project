@@ -45,10 +45,15 @@ fun OrderHistoryScreen(
 
     var selectedOrderForReceipt by remember { mutableStateOf<PlacedOrder?>(null)}
 
-    LaunchedEffect(session?.jwtToken){
-        while(isActive){
+    LaunchedEffect(session?.jwtToken) {
+        if (session?.jwtToken.isNullOrBlank()) {
+            FoodEatsRepository.clearUserData()
+        } else {
             FoodEatsRepository.fetchOrdersFromBackend(session?.jwtToken)
-            delay(4000) // polls every 4 secs for driver/status changes
+            while (isActive) {
+                delay(4000) // polls every 4 secs for driver/status changes
+                FoodEatsRepository.fetchOrdersFromBackend(session?.jwtToken)
+            }
         }
     }
 
@@ -146,6 +151,12 @@ fun OrderHistoryScreen(
                 }
             }
         }
+    }
+    selectedOrderForReceipt?.let{ order ->
+        OrderReceiptDialog(
+            order = order,
+            onDismiss = { selectedOrderForReceipt = null }
+        )
     }
 }
 
@@ -392,7 +403,7 @@ fun OrderStatusStepper(currentStatus: String) {
 fun OrderReceiptDialog(
     order: PlacedOrder,
     onDismiss: () -> Unit
-){
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -400,7 +411,7 @@ fun OrderReceiptDialog(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(containerColor = Forest500),
                 shape = RoundedCornerShape(10.dp)
-            ){
+            ) {
                 Text("Close Receipt")
             }
         },
@@ -420,11 +431,11 @@ fun OrderReceiptDialog(
             }
 
         },
-        text  = {
+        text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
-            ){
+            ) {
                 HorizontalDivider(color = Sage200)
 
                 Text(
@@ -446,15 +457,21 @@ fun OrderReceiptDialog(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
-                ){
-                    Text("Subtotal" ,
+                ) {
+                    Text(
+                        "Subtotal",
                         fontSize = 12.sp,
-                        color = Ink600)
-                    Text("$${String.
-                        format(java.util.Locale.US,
-                            "%.2f", 
-                            order.subtotal
-                        )}", fontSize = 12.sp, color = Ink950)
+                        color = Ink600
+                    )
+                    Text(
+                        "$${
+                            String.format(
+                                java.util.Locale.US,
+                                "%.2f",
+                                order.subtotal
+                            )
+                        }", fontSize = 12.sp, color = Ink950
+                    )
                 }
 
                 HorizontalDivider(color = Sage200)
@@ -463,18 +480,21 @@ fun OrderReceiptDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
-                ){
-                    Text("Total Paid" ,
-                        fontWeight = FontWeight.Bold ,
-                        fontSize = 14.sp ,
-                        color = Ink950
-                        )
+                ) {
                     Text(
-                        "$${String.format(
-                            java.util.Locale.US, 
-                            "%.2f", 
-                            order.total
-                            )}",
+                        "Total Paid",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Ink950
+                    )
+                    Text(
+                        "$${
+                            String.format(
+                                java.util.Locale.US,
+                                "%.2f",
+                                order.total
+                            )
+                        }",
                         fontWeight = FontWeight.Black,
                         fontSize = 16.sp,
                         color = Forest600
@@ -485,4 +505,12 @@ fun OrderReceiptDialog(
         shape = RoundedCornerShape(16.dp),
         containerColor = Color.White
     )
+
+
+
+
 }
+
+
+
+
