@@ -1,0 +1,26 @@
+package com.foodeats.dto.telegram;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
+import java.util.List;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class InlineKeyboardMarkup {
+
+    @JsonProperty("inline_keyboard")
+    private List<List<InlineKeyboardButton>> inlineKeyboard = new ArrayList<>();
+
+    public InlineKeyboardMarkup() {}
+
+    public InlineKeyboardMarkup(List<List<InlineKeyboardButton>> inlineKeyboard) {
+        this.inlineKeyboard = inlineKeyboard != null ? inlineKeyboard : new ArrayList<>();
+    }
+
+    public List<List<InlineKeyboardButton>> getInlineKeyboard() { return inlineKeyboard; }
+    public void setInlineKeyboard(List<List<InlineKeyboardButton>> inlineKeyboard) { this.inlineKeyboard = inlineKeyboard; }
+
+    public void addRow(List<InlineKeyboardButton> row) {
+        this.inlineKeyboard.add(row);
+    }
+}

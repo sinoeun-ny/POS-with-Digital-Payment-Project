@@ -1,0 +1,44 @@
+package com.foodeats.dto.telegram;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class InlineKeyboardButton {
+
+    @JsonProperty("text")
+    private String text;
+
+    @JsonProperty("url")
+    private String url;
+
+    @JsonProperty("callback_data")
+    private String callbackData;
+
+    public InlineKeyboardButton() {}
+
+    public InlineKeyboardButton(String text, String url, String callbackData) {
+        this.text = text;
+        this.url = url;
+        this.callbackData = callbackData;
+    }
+
+    public static InlineKeyboardButton urlButton(String text, String url) {
+        return new InlineKeyboardButton(text, url, null);
+    }
+
+    public static InlineKeyboardButton callbackButton(String text, String callbackData) {
+        return new InlineKeyboardButton(text, null, callbackData);
+    }
+
+    public String getText() { return text; }
+    public void setText(String text) { this.text = text; }
+
+    public String getUrl() { return url; }
+    public void setUrl(String url) { this.url = url; }
+
+    public String getCallbackData() { return callbackData; }
+    public void setCallbackData(String callbackData) { this.callbackData = callbackData; }
+}

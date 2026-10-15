@@ -94,6 +94,9 @@ interface DriverProfileDao {
     @Query("SELECT * FROM driver_profiles WHERE userId = :userId LIMIT 1")
     suspend fun getDriverByUserId(userId: Long): DriverProfileEntity?
 
+    @Query("SELECT dp.* FROM driver_profiles dp INNER JOIN users u ON dp.userId = u.id WHERE LOWER(u.email) = LOWER(:identifier) OR u.phone = :identifier LIMIT 1")
+    suspend fun getDriverProfileByIdentifier(identifier: String): DriverProfileEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDriverProfile(driver: DriverProfileEntity): Long
 }

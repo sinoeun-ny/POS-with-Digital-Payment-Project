@@ -23,7 +23,8 @@ import com.example.ui.auth.LoginScreen
 import com.example.ui.auth.RegisterScreen
 import com.example.ui.cart.ShoppingBagScreen
 import com.example.ui.country.CountrySelectionScreen
-import com.example.ui.driver.DriverDashboardScreen
+import com.example.ui.delivery.DeliveryLoginScreen
+import com.example.ui.delivery.DriverDashboardScreen
 import com.example.ui.home.HomeScreen
 import com.example.ui.orders.OrderHistoryScreen
 import com.example.ui.profile.AddressBookScreen
@@ -43,8 +44,8 @@ enum class AppScreen {
     ADDRESS_BOOK,
     COUNTRY_SELECTION,
     ADMIN_ROLE_DIVISION ,
-
-    DRIVER_DASHBOARD
+    DRIVER_DASHBOARD,
+    DELIVERY_LOGIN
 }
 
 @Composable
@@ -179,13 +180,22 @@ fun MainContainer(authViewModel: AuthViewModel) {
                     onNavigateToAddresses = { currentScreen = AppScreen.ADDRESS_BOOK },
                     onNavigateToCountry = { currentScreen = AppScreen.COUNTRY_SELECTION },
                     onNavigateToAdminRoleDivision = { currentScreen = AppScreen.ADMIN_ROLE_DIVISION },
-                    onNavigateToDriver = { currentScreen = AppScreen.DRIVER_DASHBOARD }
+                    onNavigateToDriver = { currentScreen = AppScreen.DRIVER_DASHBOARD },
+                    onNavigateToDeliveryLogin = { currentScreen = AppScreen.DELIVERY_LOGIN }
                 )
                 AppScreen.LOGIN -> LoginScreen(
                     viewModel = authViewModel,
                     onNavigateBack = { currentScreen = AppScreen.PROFILE },
                     onNavigateToRegister = { currentScreen = AppScreen.REGISTER },
-                    onLoginSuccess = { currentScreen = AppScreen.PROFILE }
+                    onLoginSuccess = { currentScreen = AppScreen.PROFILE },
+                    onNavigateToDeliveryLogin = { currentScreen = AppScreen.DELIVERY_LOGIN }
+                )
+                AppScreen.DELIVERY_LOGIN -> DeliveryLoginScreen(
+                    viewModel = authViewModel,
+                    onNavigateBack = { currentScreen = AppScreen.PROFILE },
+                    onNavigateToRegisterDriver = { currentScreen = AppScreen.REGISTER },
+                    onNavigateToStandardLogin = { currentScreen = AppScreen.LOGIN },
+                    onLoginSuccess = { currentScreen = AppScreen.DRIVER_DASHBOARD }
                 )
                 AppScreen.REGISTER -> RegisterScreen(
                     viewModel = authViewModel,

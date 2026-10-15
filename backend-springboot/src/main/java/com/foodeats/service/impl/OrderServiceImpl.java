@@ -22,6 +22,8 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
     private final NotificationRepository notificationRepository;
+    private final DeliveryRepository deliveryRepository;
+    private final com.foodeats.service.TelegramDriverBotService telegramBotService;
 
     public OrderServiceImpl(OrderRepository orderRepository,
                            CartRepository cartRepository,
@@ -30,7 +32,9 @@ public class OrderServiceImpl implements OrderService {
                            MerchantRepository merchantRepository,
                            UserRepository userRepository,
                            PaymentRepository paymentRepository,
-                           NotificationRepository notificationRepository) {
+                           NotificationRepository notificationRepository,
+                           DeliveryRepository deliveryRepository,
+                           com.foodeats.service.TelegramDriverBotService telegramBotService) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
@@ -39,6 +43,8 @@ public class OrderServiceImpl implements OrderService {
         this.userRepository = userRepository;
         this.paymentRepository = paymentRepository;
         this.notificationRepository = notificationRepository;
+        this.deliveryRepository = deliveryRepository;
+        this.telegramBotService = telegramBotService;
     }
 
     @Override
@@ -172,6 +178,22 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(newStatus);
         Order updated = orderRepository.save(order);
 
+        // Update delivery tracking record if completed
+        if (newStatus == OrderStatus.DELIVERED) {
+            deliveryRepository.findByOrderId(order.getId()).ifPresent(del -> {
+                del.setStatus("DELIVERED");
+                del.setDeliveredTime(LocalDateTime.now());
+                deliveryRepository.save(del);
+            });
+        }
+
+        // Broadcast to drivers when order is accepted/ready for courier pickup
+        if (newStatus == OrderStatus.ACCEPTED || newStatus == OrderStatus.READY_FOR_PICKUP) {
+            try {
+                telegramBotService.broadcastOrderAlert(updated);
+            } catch (Exception ignored) {}
+        }
+
         notificationRepository.save(new Notification(
             order.getCustomer(), 
             "Order #" + order.getId() + " Status", 
@@ -195,6 +217,11 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.OUT_FOR_DELIVERY);
         Order updated = orderRepository.save(order);
 
+        // Record Delivery entity for delivery lifecycle tracking
+        Delivery delivery = new Delivery(updated, driver, "OUT_FOR_DELIVERY");
+        delivery.setPickupTime(LocalDateTime.now());
+        deliveryRepository.save(delivery);
+
         notificationRepository.save(new Notification(
             order.getCustomer(), 
             "Driver Assigned!", 
@@ -207,7 +234,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     public List<Order> getAvailableDeliveryJobs() {
-        return orderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.ACCEPTED);
+        return orderRepository.findByStatusInOrderByCreatedAtDesc(
+            List.of(OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY_FOR_PICKUP)
+        );
     }
 
     @Override

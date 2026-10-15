@@ -1,4 +1,4 @@
-package com.example.ui.driver
+package com.example.ui.delivery
 
 import android.content.Intent
 import android.net.Uri
@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.DirectionsBike
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -94,15 +96,42 @@ fun DriverDashboardScreen(
                 // ==========================================
                 // 1. RECEIVE TAB: Available Jobs Board
                 // ==========================================
-                if (availableJobs.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No orders waiting for pickup right now.\nCheck back in a few seconds!", color = Ink500, fontSize = 13.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    item {
+                        TelegramBotIntegrationCard(
+                            onLaunchTelegram = {
+                                try {
+                                    val botUrl = "https://t.me/xoradelivery_bot?start=driver_3"
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(botUrl))
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    // Telegram app or browser
+                                }
+                            }
+                        )
                     }
-                } else {
-                    LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+
+                    if (availableJobs.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "No orders waiting for pickup right now.\nCheck back in a few seconds or monitor Telegram alerts!",
+                                    color = Ink500,
+                                    fontSize = 13.sp,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
                         items(availableJobs) { job ->
                             AvailableJobCard(
                                 order = job,
@@ -163,7 +192,7 @@ fun DriverDashboardScreen(
 
 @Composable
 fun DriverHeaderCard() {
-    Surface(color = Color.White, shadowElevation = -1.dp){
+    Surface(color = Color.White, shadowElevation = (-1).dp){
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -171,10 +200,12 @@ fun DriverHeaderCard() {
         ){
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(modifier = Modifier.size(38.dp).clip(CircleShape).background(Forest500), contentAlignment = Alignment.Center){
-                    Icon(Icons.Default.DirectionsBike,
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.DirectionsBike,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(20.dp))
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
                 Column {
                     Text("K'noeun Express" ,
@@ -341,3 +372,53 @@ fun ActiveDeliveryCard(
     }
 }
 
+@Composable
+fun TelegramBotIntegrationCard(onLaunchTelegram: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F7FF)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB9DCFE))
+    ) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("🤖", fontSize = 16.sp)
+                    Text("Telegram Dispatch (@xoradelivery_bot)", fontWeight = FontWeight.Black, fontSize = 13.sp, color = Color(0xFF006699))
+                }
+                Surface(
+                    color = Color(0xFFE1F0FF),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        "LIVE GPS READY",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0077B6),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+            Text(
+                "Link your Telegram account to receive instant order dispatches, turn-by-turn Google Maps links, and stream your live GPS location to customers.",
+                fontSize = 11.sp,
+                color = Ink700,
+                lineHeight = 15.sp
+            )
+            Button(
+                onClick = onLaunchTelegram,
+                modifier = Modifier.fillMaxWidth().height(38.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0088CC))
+            ) {
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Open Telegram Dispatch Console", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
+            }
+        }
+    }
+}

@@ -802,6 +802,113 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "7. Telegram Bot Driver Dispatch & Live Tracking",
+			"item": [
+				{
+					"name": "7.1 Telegram Bot Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/telegram/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "telegram", "status"]
+						}
+					}
+				},
+				{
+					"name": "7.2 Register Driver Telegram Chat ID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"driverId\": 3,\n    \"chatId\": 987654321\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/telegram/register-driver",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "telegram", "register-driver"]
+						}
+					}
+				},
+				{
+					"name": "7.3 Dispatch Order Alert to Driver",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/telegram/dispatch/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "telegram", "dispatch", "1"]
+						}
+					}
+				},
+				{
+					"name": "7.4 Telegram Webhook - Accept Order (Callback)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"update_id\": 1001,\n    \"callback_query\": {\n        \"id\": \"cbq_test_123\",\n        \"from\": {\n            \"id\": 987654321,\n            \"first_name\": \"Dara\",\n            \"username\": \"dara_driver\"\n        },\n        \"message\": {\n            \"message_id\": 555,\n            \"chat\": {\n                \"id\": 987654321,\n                \"type\": \"private\"\n            },\n            \"text\": \"Order Alert\"\n        },\n        \"data\": \"accept_1\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/telegram/webhook",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "telegram", "webhook"]
+						}
+					}
+				},
+				{
+					"name": "7.5 Telegram Webhook - Stream Live GPS (Location)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"update_id\": 1002,\n    \"edited_message\": {\n        \"message_id\": 556,\n        \"chat\": {\n            \"id\": 987654321,\n            \"type\": \"private\"\n        },\n        \"date\": 1710000000,\n        \"location\": {\n            \"latitude\": 11.5564,\n            \"longitude\": 104.9282,\n            \"heading\": 85,\n            \"horizontal_accuracy\": 3.5,\n            \"live_period\": 3600\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/telegram/webhook",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "telegram", "webhook"]
+						}
+					}
+				},
+				{
+					"name": "7.6 Get Driver Live GPS Location",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/driver/3/location",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "driver", "3", "location"]
+						}
+					}
+				},
+				{
+					"name": "7.7 Customer Live Order Tracking",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/orders/1/tracking",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "orders", "1", "tracking"]
+						}
+					}
+				}
+			]
 		}
 	]
 }

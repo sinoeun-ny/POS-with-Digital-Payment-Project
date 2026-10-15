@@ -20,4 +20,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status);
 
     List<Order> findByStatusInOrderByCreatedAtDesc(List<OrderStatus> statuses);
+
+    @Query("SELECT o FROM Order o WHERE o.driver.id = :driverId AND o.status IN :statuses ORDER BY o.createdAt DESC")
+    List<Order> findByDriverIdAndStatusInOrderByCreatedAtDesc(@Param("driverId") Long driverId, @Param("statuses") List<OrderStatus> statuses);
 }
