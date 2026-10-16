@@ -28,12 +28,15 @@ public class MerchantController {
 
     @GetMapping
     public List<Merchant> getAllMerchants(
-            @RequestParam(required = false) String search ,
-            @RequestParam(required = false) String cuisine ,
-            @RequestParam(required = false) Double minRating ,
-            @RequestParam(required = false) Double maxFee ) {
-        // filtering logic directly to mysql sp_filter_merchants
-        return merchantRepository.filterMerchants(search, cuisine , minRating , maxFee);
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String cuisine,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) Double maxFee) {
+        try {
+            return merchantRepository.filterMerchants(search, cuisine, minRating, maxFee);
+        } catch (Exception e) {
+            return merchantRepository.findAll();
+        }
     }
 
     @GetMapping("/{id}")

@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class WebPageController {
 
-    @GetMapping({"/", "/index"})
+    @GetMapping({"/", "/index", "/customer", "/main/customer"})
     public String customerPortal() {
         return "forward:/index.html";
     }
