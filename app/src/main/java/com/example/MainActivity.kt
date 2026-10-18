@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
 
         val db = AppDatabase.getInstance(applicationContext)
         com.example.data.remote.ApiClient.init(applicationContext)
-        com.example.data.repository.FoodEatsRepository.loadFromBackend()
+        com.example.data.repository.FoodEatsRepository.loadFromBackend(search = null , cuisine = null)
 
         val authRepository = AuthRepository(
             userDao = db.userDao(),

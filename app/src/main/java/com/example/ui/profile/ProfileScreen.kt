@@ -227,7 +227,7 @@ fun ProfileScreen(
                         OutlinedButton(
                             onClick = {
                                 ApiClient.setBaseUrl(context, serverUrlInput)
-                                FoodEatsRepository.loadFromBackend()
+                                FoodEatsRepository.loadFromBackend(search = null , cuisine = null )
                                 Toast.makeText(context, "URL Saved!", Toast.LENGTH_SHORT).show()
                             },
                             shape = RoundedCornerShape(12.dp),
@@ -245,7 +245,7 @@ fun ProfileScreen(
                                     connectionTestResult = result
                                     isTestingConnection = false
                                     if (result.first) {
-                                        FoodEatsRepository.loadFromBackend()
+                                        FoodEatsRepository.loadFromBackend(search = null , cuisine = null)
                                     }
                                 }
                             },
