@@ -113,23 +113,28 @@ public class OrderController {
         try {
             Order order = orderService.getOrderById(id);
             return ResponseEntity.ok(order);
-        } catch (IllegalArgumentException e) {
+        }
+        catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, 
+    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id,
                                                @RequestBody Map<String, String> body) {
         try {
             String newStatusStr = body.get("status");
-            Order updated = orderService.updateOrderStatus(id, 
-                com.foodeats.model.OrderStatus.valueOf(newStatusStr.toUpperCase()));
+            Order updated = orderService.updateOrderStatus(id,
+                    com.foodeats.model.OrderStatus.valueOf(newStatusStr.toUpperCase()));
             return ResponseEntity.ok(updated);
+        } catch (IllegalStateException e) {
+            // Returns HTTP 400 with the reason message
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", "Invalid order status"));
         }
     }
+
 
     @GetMapping("/{id}/tracking")
     public ResponseEntity<?> getOrderTracking(@PathVariable Long id) {

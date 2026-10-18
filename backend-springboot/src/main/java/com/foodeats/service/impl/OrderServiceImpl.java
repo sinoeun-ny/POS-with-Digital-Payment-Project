@@ -23,6 +23,7 @@ public class OrderServiceImpl implements OrderService {
     private final PaymentRepository paymentRepository;
     private final NotificationRepository notificationRepository;
     private final DeliveryRepository deliveryRepository;
+    private final SettlementRepository settlementRepository;
     private final com.foodeats.service.TelegramDriverBotService telegramBotService;
 
     public OrderServiceImpl(OrderRepository orderRepository,
@@ -34,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
                            PaymentRepository paymentRepository,
                            NotificationRepository notificationRepository,
                            DeliveryRepository deliveryRepository,
+                            SettlementRepository settlementRepository,
                            com.foodeats.service.TelegramDriverBotService telegramBotService) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
@@ -44,6 +46,7 @@ public class OrderServiceImpl implements OrderService {
         this.paymentRepository = paymentRepository;
         this.notificationRepository = notificationRepository;
         this.deliveryRepository = deliveryRepository;
+        this.settlementRepository = settlementRepository;
         this.telegramBotService = telegramBotService;
     }
 
@@ -162,9 +165,10 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    // View order
     @Override
     @Transactional(readOnly = true)
-    public Order getOrderById(Long orderId) {
+    public Order getOrderById(Long orderId){
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
     }
@@ -174,11 +178,41 @@ public class OrderServiceImpl implements OrderService {
     public Order updateOrderStatus(Long orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
-        
+
+        // 1. Business Logic Guard for Cancellation
+        if (newStatus == OrderStatus.CANCELLED) {
+            if (order.getStatus() == OrderStatus.PREPARING ||
+                    order.getStatus() == OrderStatus.READY_FOR_PICKUP ||
+                    order.getStatus() == OrderStatus.OUT_FOR_DELIVERY ||
+                    order.getStatus() == OrderStatus.DELIVERED) {
+                throw new IllegalStateException("Cannot cancel order: Kitchen has already started preparing or food is out for delivery.");
+            }
+
+            if (order.getStatus() == OrderStatus.CANCELLED) {
+                throw new IllegalStateException("Order is already cancelled.");
+            }
+
+            // Reverse financial settlement if cancelled
+            settlementRepository.findByOrderId(order.getId()).ifPresent(settlement -> {
+                settlement.setStatus("CANCELLED");
+                settlement.setMerchantPayout(0.00);
+                settlement.setDriverPayout(0.00);
+                settlement.setPlatformFee(0.00);
+                settlementRepository.save(settlement);
+            });
+
+            // Cancel courier delivery assignment
+            deliveryRepository.findByOrderId(order.getId()).ifPresent(del -> {
+                del.setStatus("CANCELLED");
+                deliveryRepository.save(del);
+            });
+        }
+
+        // 2. Save the updated status to database
         order.setStatus(newStatus);
         Order updated = orderRepository.save(order);
 
-        // Update delivery tracking record if completed
+        // 3. Mark delivery completed if delivered
         if (newStatus == OrderStatus.DELIVERED) {
             deliveryRepository.findByOrderId(order.getId()).ifPresent(del -> {
                 del.setStatus("DELIVERED");
@@ -187,7 +221,7 @@ public class OrderServiceImpl implements OrderService {
             });
         }
 
-        // Broadcast to drivers when order is accepted/ready for courier pickup
+        // 4. Broadcast to drivers when order is accepted/ready
         if (newStatus == OrderStatus.ACCEPTED || newStatus == OrderStatus.READY_FOR_PICKUP) {
             try {
                 telegramBotService.broadcastOrderAlert(updated);
@@ -195,9 +229,9 @@ public class OrderServiceImpl implements OrderService {
         }
 
         notificationRepository.save(new Notification(
-            order.getCustomer(), 
-            "Order #" + order.getId() + " Status", 
-            "Your order status is now " + newStatus.name()
+                order.getCustomer(),
+                "Order #" + order.getId() + " Status",
+                "Your order status is now " + newStatus.name()
         ));
 
         return updated;
