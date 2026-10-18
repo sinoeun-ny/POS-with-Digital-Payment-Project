@@ -5,11 +5,16 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface MerchantApiService {
+
     @GET("api/merchants")
-    suspend fun getMerchants(@Query("search") search: String? = null): Response<List<MerchantDto>>
+    suspend fun getMerchants(
+        @Query("search") search: String? = null,
+        @Query("cuisine") cuisine: String? = null
+    ): Response<List<MerchantDto>>
 
     @GET("api/merchants/{id}")
     suspend fun getMerchantById(@Path("id") id: Long): Response<MerchantDto>
+
 }
 
 interface MenuApiService {

@@ -268,11 +268,11 @@ object FoodEatsRepository {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    fun loadFromBackend() {
+    fun loadFromBackend(search: String? , cuisine: String?) {
         scope.launch {
             _isLoading.value = true
             try {
-                val res = ApiClient.merchantApi.getMerchants()
+                val res = ApiClient.merchantApi.getMerchants(search = search , cuisine = cuisine)
                 if (res.isSuccessful && !res.body().isNullOrEmpty()) {
                     val dtoList = res.body()!!
                     val mapped = dtoList.map { dto ->

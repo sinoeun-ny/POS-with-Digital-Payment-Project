@@ -43,6 +43,13 @@ fun HomeScreen(
 
     val categories = listOf("ALL", "Burgers", "Japanese", "Coffee & Bakery", "Khmer", "Desserts")
 
+    LaunchedEffect(searchQuery , selectedCategory){
+        kotlinx.coroutines.delay(400L) // wait 400ms while user is typing
+        val cuisineParam  = if (selectedCategory == "ALL") null else selectedCategory
+        val searchParam = if(searchQuery.isBlank()) null else searchQuery.trim()
+        FoodEatsRepository.loadFromBackend(search = searchParam, cuisine = cuisineParam )
+    }
+
     val filteredRestaurants = remember(restaurants, selectedCategory, searchQuery) {
         restaurants.filter { r ->
             val matchCategory = selectedCategory == "ALL" ||
@@ -343,7 +350,7 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold,
                         color = Ink950
                     )
-                    IconButton(onClick = { FoodEatsRepository.loadFromBackend() }) {
+                    IconButton(onClick = { FoodEatsRepository.loadFromBackend(search = null , cuisine = null) }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh",
