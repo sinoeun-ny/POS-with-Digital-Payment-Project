@@ -155,7 +155,7 @@ public class OrderServiceImpl implements OrderService {
                             .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                             .toList();
                 }
-                return orderRepository.findAll();
+                return List.of();
             case DRIVER:
                 return orderRepository.findByDriverIdOrderByCreatedAtDesc(userId);
             case ADMIN:

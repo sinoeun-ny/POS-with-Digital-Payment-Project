@@ -132,13 +132,13 @@ fun AdminRoleDivisionScreen(
 
             // SECTION 1: Interactive Live Role Switcher Test Bench
             Text(
-                text = "1. Live Role Switcher (Sprint 1 Testing)",
+                text = "1. Active Role Switcher",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
             Text(
-                text = "Tap a role below to simulate changing JWT claims in real-time:",
+                text = "Switch role context to inspect permissions across Customer, Merchant, Driver, and Admin:",
                 fontSize = 13.sp,
                 color = Color(0xFF666666)
             )
@@ -325,3 +325,4 @@ fun AdminRoleDivisionScreen(
         }
     }
 }
+

@@ -1,5 +1,6 @@
 package com.example.ui.cart
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,6 +39,7 @@ fun ShoppingBagScreen(
     onOrderPlaced: () -> Unit = {},
     authViewModel: AuthViewModel? = null
 ) {
+    val context = LocalContext.current
     val cart by FoodEatsRepository.cart.collectAsState()
     val authState by authViewModel?.uiState?.collectAsState() ?: remember {mutableStateOf(AuthUiState())}
     val authToken = authState.activeSession?.jwtToken
@@ -55,11 +58,21 @@ fun ShoppingBagScreen(
     var deliveryNotes by remember { mutableStateOf("") }
     var secondsRemaining by remember { mutableIntStateOf(120) } // wait 2 minutes for KHQR
     var isPlacingOrder by remember { mutableStateOf(false) }
+    var promoCodeInput by remember { mutableStateOf("") }
+    val appliedVoucher by FoodEatsRepository.appliedVoucher.collectAsState()
 
     val merchant = cart.firstOrNull()?.merchant
     val subtotal = cart.sumOf { it.totalPrice }
-    val deliveryFee = merchant?.deliveryFee ?: 1.50
-    val grandTotal = if (cart.isNotEmpty()) subtotal + deliveryFee else 0.0
+    val baseDeliveryFee = merchant?.deliveryFee ?: 1.50
+    val deliveryFee = if (appliedVoucher?.isFreeDelivery == true) 0.0 else baseDeliveryFee
+    val discount = when {
+        appliedVoucher == null -> 0.0
+        appliedVoucher!!.isFreeDelivery -> 0.0
+        appliedVoucher!!.discountPercent > 0.0 -> subtotal * appliedVoucher!!.discountPercent
+        appliedVoucher!!.discountAmount > 0.0 -> appliedVoucher!!.discountAmount.coerceAtMost(subtotal)
+        else -> 0.0
+    }
+    val grandTotal = if (cart.isNotEmpty()) (subtotal - discount + deliveryFee).coerceAtLeast(0.0) else 0.0
 
     //live 2 minute time effect for KHQR
     LaunchedEffect(selectedPaymentMethod) {
@@ -336,7 +349,7 @@ fun ShoppingBagScreen(
                                 listOf(
                                     Triple(
                                         "Home",
-                                        "HOme (BKK1)",
+                                        "Home (BKK1)",
                                         "Building 42, St. 302, BKK1, Phnom Penh"
                                     ),
                                     Triple(
@@ -376,10 +389,10 @@ fun ShoppingBagScreen(
                                 }
                             }
                             // Full Address Display
-                            Row (
+                            Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ){
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.LocationOn,
                                     contentDescription = "Pin",
@@ -394,11 +407,13 @@ fun ShoppingBagScreen(
                                 )
                             }
 
-                            //Special Delivery / Kitchen Instructions Field
+                            // Special Delivery / Kitchen Instructions Field
                             OutlinedTextField(
                                 value = deliveryNotes,
-                                onValueChange = { deliveryNotes = it},
-                                label = { Text( "Kitchen / Driver Notes (OPtional)", fontSize = 12.sp)}
+                                onValueChange = { deliveryNotes = it },
+                                label = { Text("Kitchen / Courier Delivery Notes (Optional)", fontSize = 12.sp) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp)
                             )
                         }
                     }
@@ -519,6 +534,98 @@ fun ShoppingBagScreen(
                     }
                 }
 
+                // Promo Code / Voucher Card
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(Icons.Default.CardGiftcard, contentDescription = null, tint = Forest600, modifier = Modifier.size(18.dp))
+                                Text("VOUCHER & PROMO CODE", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = Ink400, letterSpacing = 1.sp)
+                            }
+
+                            if (appliedVoucher != null) {
+                                Surface(
+                                    color = Mint100,
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(10.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = "✓ ${appliedVoucher!!.code} Applied",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = Forest800
+                                            )
+                                            Text(
+                                                text = appliedVoucher!!.title,
+                                                fontSize = 11.sp,
+                                                color = Forest700
+                                            )
+                                        }
+                                        IconButton(
+                                            onClick = {
+                                                FoodEatsRepository.removeAppliedVoucher()
+                                                Toast.makeText(context, "Voucher removed", Toast.LENGTH_SHORT).show()
+                                            },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(Icons.Default.Close, contentDescription = "Remove", tint = Forest800, modifier = Modifier.size(16.dp))
+                                        }
+                                    }
+                                }
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    OutlinedTextField(
+                                        value = promoCodeInput,
+                                        onValueChange = { promoCodeInput = it.uppercase() },
+                                        placeholder = { Text("e.g. FOODEATS20", fontSize = 12.sp) },
+                                        singleLine = true,
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+                                    Button(
+                                        onClick = {
+                                            if (promoCodeInput.isBlank()) {
+                                                Toast.makeText(context, "Please enter a voucher code", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                val result = FoodEatsRepository.applyVoucherCode(promoCodeInput, subtotal)
+                                                Toast.makeText(context, result.second, Toast.LENGTH_SHORT).show()
+                                                if (result.first) promoCodeInput = ""
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Forest500),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Text("Apply", fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Cost Breakdown
                 item {
                     Card(
@@ -545,12 +652,28 @@ fun ShoppingBagScreen(
                                 Text(text = "Subtotal", fontSize = 13.sp, color = Ink700)
                                 Text(text = "$${String.format(java.util.Locale.US, "%.2f", subtotal)}", fontSize = 13.sp, color = Ink950, fontWeight = FontWeight.SemiBold)
                             }
+                            if (discount > 0.0) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = "Promo Discount (${appliedVoucher?.code})", fontSize = 13.sp, color = Forest700, fontWeight = FontWeight.SemiBold)
+                                    Text(text = "-$${String.format(java.util.Locale.US, "%.2f", discount)}", fontSize = 13.sp, color = Forest700, fontWeight = FontWeight.Bold)
+                                }
+                            }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(text = "Delivery Fee", fontSize = 13.sp, color = Ink700)
-                                Text(text = "$${String.format(java.util.Locale.US, "%.2f", deliveryFee)}", fontSize = 13.sp, color = Forest600, fontWeight = FontWeight.SemiBold)
+                                if (appliedVoucher?.isFreeDelivery == true) {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Text(text = "$${String.format(java.util.Locale.US, "%.2f", baseDeliveryFee)}", fontSize = 12.sp, color = Ink400, textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough)
+                                        Text(text = "FREE", fontSize = 13.sp, color = Forest600, fontWeight = FontWeight.Bold)
+                                    }
+                                } else {
+                                    Text(text = "$${String.format(java.util.Locale.US, "%.2f", deliveryFee)}", fontSize = 13.sp, color = Forest600, fontWeight = FontWeight.SemiBold)
+                                }
                             }
                             HorizontalDivider(color = Sage100, modifier = Modifier.padding(vertical = 4.dp))
                             Row(

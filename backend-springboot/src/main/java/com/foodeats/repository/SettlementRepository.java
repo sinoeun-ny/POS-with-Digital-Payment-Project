@@ -20,5 +20,10 @@ public interface SettlementRepository extends JpaRepository<Settlement, Long> {
 
     List<Settlement> findByStatus(String status);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query(value = "CALL sp_process_daily_settlement(:merchantId)", nativeQuery = true)
+    void callProcessDailySettlement(@Param("merchantId") Long merchantId);
+
 
 }

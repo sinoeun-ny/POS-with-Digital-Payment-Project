@@ -1,6 +1,10 @@
 package com.example.ui.orders
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,13 +13,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,11 +28,7 @@ import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import com.example.ui.auth.AuthViewModel
-import androidx.compose.runtime.*
-import androidx.compose.foundation.clickable
-import androidx.compose.material3.AlertDialogDefaults.containerColor
-import androidx.compose.material3.AlertDialogDefaults.shape
-
+import androidx.compose.foundation.BorderStroke
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +36,7 @@ fun OrderHistoryScreen(
     authViewModel: AuthViewModel,
     onNavigateToDiscover: () -> Unit
 ) {
+    val context = LocalContext.current
     val orders by FoodEatsRepository.orders.collectAsState()
 
     //get the session for the JWT Token
@@ -44,6 +44,7 @@ fun OrderHistoryScreen(
     val session = uiState.activeSession
 
     var selectedOrderForReceipt by remember { mutableStateOf<PlacedOrder?>(null)}
+    var selectedOrderForRating by remember { mutableStateOf<PlacedOrder?>(null)}
 
     LaunchedEffect(session?.jwtToken) {
         if (session?.jwtToken.isNullOrBlank()) {
@@ -146,6 +147,22 @@ fun OrderHistoryScreen(
                       },
                       onCancelOrder = {
                           FoodEatsRepository.cancelOrder(order.id, session?.jwtToken)
+                      },
+                      onReorder = {
+                          val merchant = FoodEatsRepository.restaurants.value.find { it.id == order.merchantId }
+                              ?: FoodEatsRepository.restaurants.value.find { it.name.equals(order.merchantName, ignoreCase = true) }
+                              ?: FoodEatsRepository.restaurants.value.firstOrNull()
+
+                          if (merchant != null && merchant.menu.isNotEmpty()) {
+                              FoodEatsRepository.addToCart(merchant.menu.first(), merchant)
+                              Toast.makeText(context, "Added items from ${merchant.name} back to bag!", Toast.LENGTH_SHORT).show()
+                              onNavigateToDiscover()
+                          } else {
+                              Toast.makeText(context, "Merchant menu is currently unavailable.", Toast.LENGTH_SHORT).show()
+                          }
+                      },
+                      onRateOrder = {
+                          selectedOrderForRating = order
                       }
                   )
                 }
@@ -158,6 +175,68 @@ fun OrderHistoryScreen(
             onDismiss = { selectedOrderForReceipt = null }
         )
     }
+
+    selectedOrderForRating?.let { order ->
+        var ratingStars by remember { mutableIntStateOf(5) }
+        var reviewFeedback by remember { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { selectedOrderForRating = null },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.Star, contentDescription = null, tint = RatingGold)
+                    Text("Rate Your Meal & Service", fontWeight = FontWeight.Bold, fontSize = 17.sp, color = Ink950)
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Order #${order.id} from ${order.merchantName}", fontSize = 12.sp, color = Ink600, fontWeight = FontWeight.SemiBold)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        (1..5).forEach { star ->
+                            IconButton(onClick = { ratingStars = star }) {
+                                Icon(
+                                    imageVector = if (star <= ratingStars) Icons.Default.Star else Icons.Default.StarBorder,
+                                    contentDescription = "$star stars",
+                                    tint = if (star <= ratingStars) RatingGold else Ink300,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = reviewFeedback,
+                        onValueChange = { reviewFeedback = it },
+                        label = { Text("Write comments for the kitchen (optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        Toast.makeText(context, "Thank you! Rating of $ratingStars stars submitted for ${order.merchantName}.", Toast.LENGTH_LONG).show()
+                        selectedOrderForRating = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Forest500),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Submit Review", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { selectedOrderForRating = null }) {
+                    Text("Cancel", color = Ink600)
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -165,8 +244,11 @@ fun OrderTrackingCard(
     order: PlacedOrder,
     onSimulateStep: () -> Unit,
     onViewReceipt: () -> Unit = {},
-    onCancelOrder: () -> Unit = {}
+    onCancelOrder: () -> Unit = {},
+    onReorder: () -> Unit = {},
+    onRateOrder: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     Card(
         modifier =
             Modifier
@@ -244,16 +326,53 @@ fun OrderTrackingCard(
 
             HorizontalDivider(color = Sage100)
 
-            // 4-Step Visual State Machine Progress Bar
-            Text(
-                text = "DELIVERY PROGRESS",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Ink400,
-                letterSpacing = 1.sp
-            )
-
-            OrderStatusStepper(currentStatus = order.status)
+            // Red Cancelled Banner VS Active Delivery Progress Stepper
+            if (order.status == "CANCELLED") {
+                Surface(
+                    color = Rust500.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Rust500.copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Cancel,
+                            contentDescription = null,
+                            tint = Rust500,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Column {
+                            Text(
+                                text = "Order Cancelled & Refunded",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = Rust500
+                            )
+                            Text(
+                                text = "This order was cancelled before cooking started. Any settlement holds have been released.",
+                                fontSize = 11.sp,
+                                color = Ink600,
+                                lineHeight = 15.sp
+                            )
+                        }
+                    }
+                }
+            } else {
+                // DELIVERY PROGRESS header goes ABOVE the stepper
+                Text(
+                    text = "DELIVERY PROGRESS",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Ink400,
+                    letterSpacing = 1.sp
+                )
+                // 4-step visual state machine stepper
+                OrderStatusStepper(currentStatus = order.status)
+            }
 
             HorizontalDivider(color = Sage100)
 
@@ -295,8 +414,86 @@ fun OrderTrackingCard(
                 }
             }
 
-            // Interactive simulation button (to test live order tracker)
-            if (order.status == "PLACED" || order.status == "PENDING"){
+            // Action when out for Delivery : Call driver or chat on Telegram
+            if(order.status == "OUT_FOR_DELIVERY"){
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ){
+                    // Call Phone Button
+                    Button(
+                        onClick= {
+                            val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("Tel:+85516590293"))
+                            context.startActivity(dialIntent)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Forest500),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f)
+                    ){
+                        Icon(
+                            Icons.Default.Phone,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier =  Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            "Call Driver" ,
+                            fontWeight = FontWeight.Bold ,
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    //Telegram chat with courier button
+                    Button(
+                        onClick = {
+                            val telegramIntent = Intent(Intent.ACTION_VIEW,
+                                Uri.parse("https://t.me/xoradelivery_bot")
+                                )
+                            context.startActivity(telegramIntent)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Ink900),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f)
+                    ){
+                        Icon(Icons.Default.Send, contentDescription = null, tint = Mint300, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Telegram Courier", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    }
+                }
+            }
+
+            if (order.status == "DELIVERED") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onReorder,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Forest600),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Forest500),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null, tint = Forest600, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Reorder", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                    Button(
+                        onClick = onRateOrder,
+                        colors = ButtonDefaults.buttonColors(containerColor = Forest500),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Star, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Rate Order", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                }
+            }
+
+            // Active order cancellation before kitchen prep starts
+            if (order.status == "PLACED" || order.status == "PENDING") {
                 OutlinedButton(
                     onClick = onCancelOrder,
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Rust500),

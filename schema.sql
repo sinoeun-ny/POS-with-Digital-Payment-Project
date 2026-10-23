@@ -274,25 +274,29 @@ INSERT INTO users (id, full_name, email, phone, password_hash, role, profile_ima
     (1, 'System Admin', 'admin@example.com', '+85511223344', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa', 'ADMIN', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300', TRUE),
     (2, 'Bopha Merchant', 'merchant@example.com', '+85598765432', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa', 'MERCHANT', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300', TRUE),
     (3, 'Dara Driver', 'driver@example.com', '+85588776655', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa', 'DRIVER', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300', TRUE),
-    (4, 'Sokha Customer', 'customer@example.com', '+85512345678', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa', 'CUSTOMER', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300', TRUE);
+    (4, 'Sokha Customer', 'customer@example.com', '+85512345678', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa', 'CUSTOMER', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300', TRUE),
+    (5, 'Kenji Sakura', 'sakura@example.com', '+85523777666', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa', 'MERCHANT', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=300', TRUE),
+    (6, 'Sophea Khmer', 'khmer@example.com', '+85523555444', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa', 'MERCHANT', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300', TRUE);
 
 -- Assign User Roles
 INSERT INTO user_roles (user_id, role_id) VALUES
     (1, 4), -- System Admin -> ROLE_ADMIN
     (2, 2), -- Bopha Merchant -> ROLE_MERCHANT
     (3, 3), -- Dara Driver -> ROLE_DRIVER
-    (4, 1); -- Sokha Customer -> ROLE_CUSTOMER
+    (4, 1), -- Sokha Customer -> ROLE_CUSTOMER
+    (5, 2), -- Kenji Sakura -> ROLE_MERCHANT
+    (6, 2); -- Sophea Khmer -> ROLE_MERCHANT
 
 -- Seed User Addresses
 INSERT INTO user_addresses (id, user_id, label, street_address, city, is_default) VALUES
     (1, 4, 'Home (BKK1)', 'Building 42, St. 302, BKK1', 'Phnom Penh', TRUE),
     (2, 4, 'Office (Toul Kork)', 'Vattanac Tower Level 14, Monivong Blvd', 'Phnom Penh', FALSE);
 
--- Seed Merchants
+-- Seed Merchants with Isolated Ownership
 INSERT INTO merchants (id, owner_user_id, store_name, description, store_logo_url, store_banner_url, address, city, phone, cuisine_type, opening_hours, rating, delivery_fee, delivery_time_mins, is_open, status) VALUES
     (1, 2, 'Zando Burger & Grill', 'Juicy artisan smash burgers, crispy truffle fries, and premium thick milkshakes crafted daily.', 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=1200&auto=format&fit=crop&q=80', 'Street 271, Sangkat Phsar Doeum Thkov', 'Phnom Penh', '+855 23 888 999', 'Gourmet American', '10:00 AM - 10:30 PM', 4.80, 1.50, 20, TRUE, 'Active'),
-    (2, 2, 'Sakura Sushi & Ramen Bar', 'Authentic Japanese tonkotsu ramen bowls, torched salmon aburi rolls, and fresh seasonal sashimi.', 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=1200&auto=format&fit=crop&q=80', 'Monivong Blvd, Boeung Keng Kang 1', 'Phnom Penh', '+855 23 777 666', 'Japanese Artisan', '11:00 AM - 11:00 PM', 4.90, 2.00, 30, TRUE, 'Active'),
-    (3, 2, 'Khmer Coffee & Patisserie', 'Traditional slow-drip Mondulkiri iced coffee, French butter croissants, and fresh coconut pandan waffles.', 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&auto=format&fit=crop&q=80', 'Norodom Blvd, Daun Penh', 'Phnom Penh', '+855 23 555 444', 'Café & Bakery', '07:00 AM - 09:00 PM', 4.90, 1.00, 15, TRUE, 'Active');
+    (2, 5, 'Sakura Sushi & Ramen Bar', 'Authentic Japanese tonkotsu ramen bowls, torched salmon aburi rolls, and fresh seasonal sashimi.', 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=1200&auto=format&fit=crop&q=80', 'Monivong Blvd, Boeung Keng Kang 1', 'Phnom Penh', '+855 23 777 666', 'Japanese Artisan', '11:00 AM - 11:00 PM', 4.90, 2.00, 30, TRUE, 'Active'),
+    (3, 6, 'Khmer Coffee & Patisserie', 'Traditional slow-drip Mondulkiri iced coffee, French butter croissants, and fresh coconut pandan waffles.', 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&auto=format&fit=crop&q=80', 'Norodom Blvd, Daun Penh', 'Phnom Penh', '+855 23 555 444', 'Café & Bakery', '07:00 AM - 09:00 PM', 4.90, 1.00, 15, TRUE, 'Active');
 
 -- Seed Categories
 INSERT INTO categories (id, merchant_id, category_name, display_order) VALUES

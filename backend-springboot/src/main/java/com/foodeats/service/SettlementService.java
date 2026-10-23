@@ -17,5 +17,9 @@ public interface SettlementService {
 
     List<Settlement> getSettlementsByMerchant(Long merchantId);
 
+    List<Settlement> getAllSettlements();
+
     Map<String, Object> getMerchantFinancialSummary(Long merchantId);
+
+    Map<String, Object> processDailyPayout(Long merchantId) ;
 }

@@ -6,10 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -27,23 +30,24 @@ import com.example.ui.delivery.DeliveryLoginScreen
 import com.example.ui.delivery.DriverDashboardScreen
 import com.example.ui.home.HomeScreen
 import com.example.ui.orders.OrderHistoryScreen
+import com.example.ui.payment.PaymentHistoryScreen
 import com.example.ui.profile.AddressBookScreen
 import com.example.ui.profile.ProfileScreen
 import com.example.ui.restaurant.RestaurantDetailScreen
 import com.example.ui.theme.*
-import com.example.ui.orders.OrderHistoryScreen
 
 enum class AppScreen {
     DISCOVER,
     RESTAURANT_DETAIL,
     ORDERS,
     CART,
+    PAYMENTS,
     PROFILE,
     LOGIN,
     REGISTER,
     ADDRESS_BOOK,
     COUNTRY_SELECTION,
-    ADMIN_ROLE_DIVISION ,
+    ADMIN_ROLE_DIVISION,
     DRIVER_DASHBOARD,
     DELIVERY_LOGIN
 }
@@ -59,17 +63,18 @@ fun MainContainer(authViewModel: AuthViewModel) {
     val cartCount = cart.sumOf { it.quantity }
     val activeOrdersCount = orders.count { it.status != "DELIVERED" }
 
+    // Bottom Navigation Screens: Discover, Orders, Payments, Profile
     val bottomNavScreens = listOf(
         AppScreen.DISCOVER to Triple("Discover", Icons.Default.Explore, 0),
-        AppScreen.ORDERS to Triple("Orders", Icons.Default.ReceiptLong, activeOrdersCount),
-        AppScreen.CART to Triple("Cart", Icons.Default.ShoppingCart, cartCount),
+        AppScreen.ORDERS to Triple("Orders", Icons.AutoMirrored.Filled.ReceiptLong, activeOrdersCount),
+        AppScreen.PAYMENTS to Triple("Payments", Icons.Default.Payment, 0),
         AppScreen.PROFILE to Triple("Profile", Icons.Default.Person, 0)
     )
 
     val showBottomBar = currentScreen in listOf(
         AppScreen.DISCOVER,
         AppScreen.ORDERS,
-        AppScreen.CART,
+        AppScreen.PAYMENTS,
         AppScreen.PROFILE
     )
 
@@ -95,7 +100,7 @@ fun MainContainer(authViewModel: AuthViewModel) {
                                         BadgedBox(
                                             badge = {
                                                 Badge(
-                                                    containerColor = if (screen == AppScreen.CART) Forest500 else Rust500,
+                                                    containerColor = Rust500,
                                                     contentColor = Color.White
                                                 ) {
                                                     Text(badgeNumber.toString())
@@ -167,28 +172,28 @@ fun MainContainer(authViewModel: AuthViewModel) {
                     authViewModel = authViewModel,
                     onNavigateToDiscover = { currentScreen = AppScreen.DISCOVER }
                 )
+                AppScreen.PAYMENTS -> PaymentHistoryScreen(
+                    authViewModel = authViewModel,
+                    onNavigateToDiscover = { currentScreen = AppScreen.DISCOVER }
+                )
                 AppScreen.CART -> ShoppingBagScreen(
                     onNavigateBack = { currentScreen = AppScreen.DISCOVER },
                     onStartShopping = { currentScreen = AppScreen.DISCOVER },
                     onOrderPlaced = { currentScreen = AppScreen.ORDERS },
-                    authViewModel = authViewModel // pass auth view model here
+                    authViewModel = authViewModel
                 )
                 AppScreen.PROFILE -> ProfileScreen(
                     authViewModel = authViewModel,
                     onNavigateToLogin = { currentScreen = AppScreen.LOGIN },
                     onNavigateToRegister = { currentScreen = AppScreen.REGISTER },
                     onNavigateToAddresses = { currentScreen = AppScreen.ADDRESS_BOOK },
-                    onNavigateToCountry = { currentScreen = AppScreen.COUNTRY_SELECTION },
-                    onNavigateToAdminRoleDivision = { currentScreen = AppScreen.ADMIN_ROLE_DIVISION },
-                    onNavigateToDriver = { currentScreen = AppScreen.DRIVER_DASHBOARD },
-                    onNavigateToDeliveryLogin = { currentScreen = AppScreen.DELIVERY_LOGIN }
+                    onNavigateToCountry = { currentScreen = AppScreen.COUNTRY_SELECTION }
                 )
                 AppScreen.LOGIN -> LoginScreen(
                     viewModel = authViewModel,
                     onNavigateBack = { currentScreen = AppScreen.PROFILE },
                     onNavigateToRegister = { currentScreen = AppScreen.REGISTER },
-                    onLoginSuccess = { currentScreen = AppScreen.PROFILE },
-                    onNavigateToDeliveryLogin = { currentScreen = AppScreen.DELIVERY_LOGIN }
+                    onLoginSuccess = { currentScreen = AppScreen.PROFILE }
                 )
                 AppScreen.DELIVERY_LOGIN -> DeliveryLoginScreen(
                     viewModel = authViewModel,
@@ -215,9 +220,44 @@ fun MainContainer(authViewModel: AuthViewModel) {
                     onNavigateBack = { currentScreen = AppScreen.PROFILE }
                 )
                 AppScreen.DRIVER_DASHBOARD -> DriverDashboardScreen(
-                    onNavigateBack = {currentScreen = AppScreen.PROFILE},
+                    onNavigateBack = { currentScreen = AppScreen.PROFILE },
                     authViewModel = authViewModel
                 )
+            }
+
+            // Small Floating Cart Icon with Badge (appears as soon as any item is in the cart)
+            if (showBottomBar && currentScreen != AppScreen.CART && cartCount > 0) {
+                FloatingActionButton(
+                    onClick = { currentScreen = AppScreen.CART },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 16.dp),
+                    containerColor = Forest500,
+                    contentColor = Color.White,
+                    shape = CircleShape
+                ) {
+                    BadgedBox(
+                        badge = {
+                            Badge(
+                                containerColor = Rust500,
+                                contentColor = Color.White
+                            ) {
+                                Text(
+                                    text = cartCount.toString(),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Cart",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
             }
         }
     }

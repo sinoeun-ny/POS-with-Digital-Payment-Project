@@ -38,17 +38,15 @@ public class SettlementServiceImpl implements SettlementService {
 
         double subtotal = order.getSubtotal() != null ? order.getSubtotal() :
                 (order.getTotalAmount() - (order.getDeliveryFee() != null ? order.getDeliveryFee() : 1.50));
-        double deliveryFee = order.getDeliveryFee() != null ? order.getDeliveryFee() : 1.50 ;
+        double deliveryFee = order.getDeliveryFee() != null ? order.getDeliveryFee() : 1.50;
 
-        Settlement settlement = new Settlement (
-
+        Settlement settlement = new Settlement(
                 order,
                 order.getMerchant(),
                 order.getDriver(),
                 subtotal,
                 deliveryFee,
                 0.15 // 15% commission
-
         );
 
         return settlementRepository.save(settlement);
@@ -82,13 +80,18 @@ public class SettlementServiceImpl implements SettlementService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Settlement> getSettlementsByMerchant(Long merchantId){
+    public List<Settlement> getSettlementsByMerchant(Long merchantId) {
         return settlementRepository.findByMerchantIdOrderByCreatedAtDesc(merchantId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<Settlement> getAllSettlements() {
+        return settlementRepository.findAll();
+    }
 
     @Override
-    @Transactional (readOnly = true)
+    @Transactional(readOnly = true)
     public Map<String, Object> getMerchantFinancialSummary(Long merchantId) {
         List<Settlement> settlements = settlementRepository.findByMerchantIdOrderByCreatedAtDesc(merchantId);
 
@@ -113,7 +116,7 @@ public class SettlementServiceImpl implements SettlementService {
         }
 
         Map<String, Object> summary = new HashMap<>();
-        summary.put("merchantId" , merchantId) ;
+        summary.put("merchantId", merchantId);
         summary.put("totalGrossSales", Math.round(totalGrossSales * 100.0) / 100.0);
         summary.put("commissionRate", "15%");
         summary.put("totalPlatformCommission", Math.round(totalPlatformCommission * 100.0) / 100.0);
@@ -127,4 +130,18 @@ public class SettlementServiceImpl implements SettlementService {
         return summary;
     }
 
+    @Override
+    @Transactional
+    public Map<String, Object> processDailyPayout(Long merchantId){
+        // exceute the atomic mysql soted procedure
+        settlementRepository.callProcessDailySettlement(merchantId);
+
+        Map<String, Object> response = new HashMap<>() ;
+        response.put("status", "SUCCESS");
+        response.put("message", merchantId != null
+                ? "Daily settlement payout processed for Merchant ID: " + merchantId
+                : "Platform-wide daily settlement payout processed for all merchant.");
+        response.put("processedAt", LocalDateTime.now().toString());
+        return response;
+    }
 }

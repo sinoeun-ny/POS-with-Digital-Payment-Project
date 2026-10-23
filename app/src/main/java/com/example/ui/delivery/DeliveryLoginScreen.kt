@@ -1,5 +1,7 @@
 package com.example.ui.delivery
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ElectricMoped
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Star
@@ -60,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -81,13 +85,14 @@ fun DeliveryLoginScreen(
     onNavigateToStandardLogin: () -> Unit,
     onLoginSuccess: () -> Unit
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var selectedTab by remember { mutableStateOf(AuthTab.EMAIL) }
-    var phoneNumber by remember { mutableStateOf("88776655") }
-    var emailAddress by remember { mutableStateOf("driver@example.com") }
-    var password by remember { mutableStateOf("password123") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var emailAddress by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var readyForDispatch by remember { mutableStateOf(true) }
 
     // Live Vehicle & License Preview state
@@ -97,9 +102,11 @@ fun DeliveryLoginScreen(
     // Trigger lookup when email/phone changes
     LaunchedEffect(emailAddress, phoneNumber, selectedTab) {
         val currentIdentifier = if (selectedTab == AuthTab.PHONE) "+855$phoneNumber" else emailAddress
-        isCheckingProfile = true
-        driverProfilePreview = viewModel.getDriverProfile(currentIdentifier)
-        isCheckingProfile = false
+        if (currentIdentifier.isNotBlank()) {
+            isCheckingProfile = true
+            driverProfilePreview = viewModel.getDriverProfile(currentIdentifier)
+            isCheckingProfile = false
+        }
     }
 
     LaunchedEffect(uiState.errorMessage, uiState.successMessage) {
@@ -384,45 +391,58 @@ fun DeliveryLoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Quick Demo Credentials Pill
+            // Telegram Dispatch Notice
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        selectedTab = AuthTab.EMAIL
-                        emailAddress = "driver@example.com"
-                        password = "password123"
+                        val telegramIntent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://t.me/xoradelivery_bot")
+                        )
+                        context.startActivity(telegramIntent)
                     },
                 color = Forest50,
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(12.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Forest300)
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Speed,
-                        contentDescription = "Demo",
-                        tint = Forest600,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "⚡ TAP TO AUTOLINK DEMO COURIER",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Forest800,
-                            letterSpacing = 0.5.sp
-                        )
-                        Text(
-                            text = "Vichai Express • driver@example.com / password123",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Ink800
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(Forest500, RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = "Telegram",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Couriers Operate via Telegram",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Forest900
+                        )
+                        Text(
+                            text = "Accept orders & live delivery at @xoradelivery_bot",
+                            fontSize = 11.sp,
+                            color = Ink600
+                        )
+                    }
+                    Text(
+                        text = "Open →",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Forest700
+                    )
                 }
             }
 
@@ -495,7 +515,7 @@ fun DeliveryLoginScreen(
                     value = emailAddress,
                     onValueChange = { emailAddress = it },
                     label = "Rider Account Email",
-                    placeholder = "e.g., driver@example.com",
+                    placeholder = "e.g., rider@delivery.com",
                     isPhonePrefix = false,
                     keyboardType = KeyboardType.Email
                 )

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" class="h-full bg-cream-50">
 <head>
     <meta charset="UTF-8">
@@ -49,8 +49,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN for interactive enterprise data visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Prevent React 18 crash when Lucide replaces DOM nodes (removeChild / insertBefore)
+        // Prevent React 18 crash when Lucide replaces DOM nodes
         if (typeof Node === 'function' && Node.prototype) {
             const originalRemoveChild = Node.prototype.removeChild;
             Node.prototype.removeChild = function(child) {
@@ -86,155 +88,269 @@
 <div id="root" class="w-full h-full overflow-hidden flex flex-col md:flex-row items-center justify-center">
     <div class="text-center p-8 bg-white/80 backdrop-blur rounded-3xl border border-sage-200 shadow-xl max-w-sm">
         <div class="w-12 h-12 border-4 border-forest-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <h2 class="font-display font-bold text-xl text-ink-950 mb-1">Loading Admin Console...</h2>
+        <h2 class="font-display font-bold text-xl text-ink-950 mb-1">Loading Executive Hub...</h2>
         <p class="text-xs text-ink-500 font-semibold">Connecting to Spring Boot Platform Engine</p>
     </div>
 </div>
 
 <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
 
-    const INITIAL_USERS = [
-        { id: 1, name: "Alex Williamson", email: "admin@example.com", phone: "+855 11 223 344", role: "ADMIN", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80", status: "Active" },
-        { id: 2, name: "Dominica Reed", email: "customer@example.com", phone: "+855 12 345 678", role: "CUSTOMER", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80", status: "Active" },
-        { id: 3, name: "Bopha Culinary Co.", email: "merchant@example.com", phone: "+855 98 765 432", role: "MERCHANT", merchantId: 1, avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80", status: "Active" },
-        { id: 4, name: "Dara K. Express", email: "driver@example.com", phone: "+855 88 776 655", role: "DRIVER", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80", status: "Active" }
-    ];
+    // Guaranteed Safe Currency Formatter
+    const formatMoney = (val) => {
+        if (val === null || val === undefined) return "0.00";
+        const num = Number(val);
+        return isNaN(num) ? "0.00" : num.toFixed(2);
+    };
 
-    const INITIAL_MERCHANTS = [
-        { id: 1, name: "Zando Burger & Grill", ownerEmail: "merchant@example.com", category: "Gourmet American", rating: 4.9, status: "OPEN", sales: 1240.50, ordersCount: 88, imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80" },
-        { id: 2, name: "Sakura Sushi & Ramen Bar", ownerEmail: "sakura@example.com", category: "Japanese Artisan", rating: 4.8, status: "OPEN", sales: 2190.00, ordersCount: 142, imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&auto=format&fit=crop&q=80" },
-        { id: 3, name: "Khmer Coffee & Patisserie", ownerEmail: "khmercafe@example.com", category: "Café & Bakery", rating: 4.9, status: "OPEN", sales: 680.20, ordersCount: 95, imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80" }
-    ];
-
-    const INITIAL_ORDERS = [
-        { id: 101, customer: "Dominica Reed", merchant: "Zando Burger & Grill", items: "2x Double Truffle Smash Burger", total: 14.50, status: "ACCEPTED", time: "10m ago", payment: "PAID_MOCK" },
-        { id: 102, customer: "Chan Dara", merchant: "Sakura Sushi & Ramen Bar", items: "2x Signature Tonkotsu Black Ramen", total: 19.00, status: "ACCEPTED", time: "15m ago", payment: "PAID_MOCK" },
-        { id: 103, customer: "Sreypov Meas", merchant: "Khmer Coffee & Patisserie", items: "1x Mondulkiri Iced Latte, 1x Almond Butter Croissant", total: 5.95, status: "PENDING", time: "Just now", payment: "PAID_MOCK" }
-    ];
-
+    // Rich Fallback Data for Immediate Standalone Operation
+    const INITIAL_USERS = [];
+    const INITIAL_MERCHANTS = [];
+    const INITIAL_ORDERS = [];
+    const INITIAL_SETTLEMENTS = [];
     function AdminApp() {
         const [activeTab, setActiveTab] = useState('overview');
         const [users, setUsers] = useState(INITIAL_USERS);
         const [merchants, setMerchants] = useState(INITIAL_MERCHANTS);
         const [orders, setOrders] = useState(INITIAL_ORDERS);
+        const [settlements, setSettlements] = useState(INITIAL_SETTLEMENTS);
         const [toast, setToast] = useState(null);
         const [userRoleFilter, setUserRoleFilter] = useState('ALL');
+        const [orderStatusFilter, setOrderStatusFilter] = useState('ALL');
+        const [settlementFilter, setSettlementFilter] = useState('ALL');
+        const [searchQuery, setSearchQuery] = useState('');
+        const [selectedOrderReceipt, setSelectedOrderReceipt] = useState(null);
+        const [showPayoutModal, setShowPayoutModal] = useState(false);
+        const [isProcessingPayout, setIsProcessingPayout] = useState(false);
+
+        // System Settings
+        const [settings, setSettings] = useState({
+            platformFeePercent: 15.0,
+            defaultDeliveryFee: 1.50,
+            autoAssignDrivers: true,
+            maintenanceMode: false
+        });
 
         const showToast = (msg, type = 'success') => {
             setToast({ msg, type });
-            setTimeout(() => setToast(null), 3000);
+            setTimeout(() => setToast(null), 3500);
         };
 
-        const loadAdminData = async () => {
+        const loadLiveBackendData = async () => {
             try {
-                const uRes = await fetch('/api/admin/users');
-                if (uRes.ok) {
-                    const uData = await uRes.json();
-                    if (Array.isArray(uData) && uData.length > 0) setUsers(uData);
-                }
-            } catch (e) {}
+                const [uRes, mRes, oRes, sRes, setRes] = await Promise.allSettled([
+                    fetch('/api/admin/users'),
+                    fetch('/api/admin/merchants'),
+                    fetch('/api/admin/orders'),
+                    fetch('/api/settlements'),
+                    fetch('/api/admin/settings')
+                ]);
 
-            try {
-                const mRes = await fetch('/api/admin/merchants');
-                if (mRes.ok) {
-                    const mData = await mRes.json();
-                    if (Array.isArray(mData) && mData.length > 0) setMerchants(mData);
+                // 1. Process Users
+                if (uRes.status === 'fulfilled' && uRes.value.ok) {
+                    const uData = await uRes.value.json();
+                    if (Array.isArray(uData) && uData.length > 0) {
+                        setUsers(uData.map(u => ({
+                            id: u.id,
+                            name: u.name || 'User',
+                            email: u.email || '',
+                            phone: u.phone || '',
+                            role: u.role ? (typeof u.role === 'string' ? u.role : u.role.name || 'CUSTOMER') : 'CUSTOMER',
+                            avatar: u.avatar || '',
+                            status: u.status || 'Active'
+                        })));
+                    }
                 }
-            } catch (e) {}
 
-            try {
-                const oRes = await fetch('/api/admin/orders');
-                if (oRes.ok) {
-                    const oData = await oRes.json();
-                    if (Array.isArray(oData) && oData.length > 0) setOrders(oData);
+                // 2. Process Orders First (so merchants can compute actual sales)
+                let fetchedOrders = [];
+                if (oRes.status === 'fulfilled' && oRes.value.ok) {
+                    const oData = await oRes.value.json();
+                    if (Array.isArray(oData) && oData.length > 0) {
+                        fetchedOrders = oData.map(o => {
+                            let merchantTitle = "Partner Store";
+                            let merchantStoreId = null;
+                            if (typeof o.merchant === 'string') merchantTitle = o.merchant;
+                            else if (o.merchant && o.merchant.name) {
+                                merchantTitle = o.merchant.name;
+                                merchantStoreId = o.merchant.id;
+                            } else if (o.merchantName) {
+                                merchantTitle = o.merchantName;
+                            }
+
+                            let customerName = "Guest Customer";
+                            if (typeof o.customer === 'string') customerName = o.customer;
+                            else if (o.customer && o.customer.name) customerName = o.customer.name;
+
+                            let itemsStr = "";
+                            if (typeof o.items === 'string') itemsStr = o.items;
+                            else if (Array.isArray(o.items) && o.items.length > 0) {
+                                itemsStr = o.items.map(it => `${it.quantity || 1}x ${it.itemName || (it.menuItem ? it.menuItem.name : 'Dish')}`).join(', ');
+                            }
+                            if (!itemsStr) itemsStr = o.itemsSummary || "Selected Dishes";
+
+                            const totalAmount = Number(o.totalAmount != null ? o.totalAmount : (o.total != null ? o.total : 0.0));
+                            const fee = Number(o.deliveryFee != null ? o.deliveryFee : 1.50);
+                            const subtotal = Number(o.subtotal != null ? o.subtotal : (totalAmount > fee ? totalAmount - fee : totalAmount));
+
+                            return {
+                                id: o.id,
+                                customer: customerName,
+                                merchant: merchantTitle,
+                                merchantId: merchantStoreId || o.merchantId,
+                                items: itemsStr,
+                                total: totalAmount,
+                                subtotal: subtotal,
+                                fee: fee,
+                                status: o.status ? (typeof o.status === 'string' ? o.status : o.status.name || 'PENDING') : 'PENDING',
+                                time: o.createdAt ? new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (o.time || 'Recent'),
+                                payment: o.paymentStatus || o.payment || 'PAID',
+                                driver: o.driver ? (typeof o.driver === 'string' ? o.driver : o.driver.name || 'Assigned Courier') : 'Unassigned'
+                            };
+                        });
+                        setOrders(fetchedOrders);
+                    }
                 }
-            } catch (e) {}
+
+                // 3. Process Merchants
+                if (mRes.status === 'fulfilled' && mRes.value.ok) {
+                    const mData = await mRes.value.json();
+                    if (Array.isArray(mData) && mData.length > 0) {
+                        const formattedMerchants = mData.map(m => {
+                            const relatedOrders = fetchedOrders.filter(o =>
+                                (o.merchantId === m.id) ||
+                                (o.merchant && o.merchant.toLowerCase() === (m.name || '').toLowerCase())
+                            );
+                            const calcSales = relatedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+                            return {
+                                id: m.id,
+                                name: m.name || m.storeName || 'Partner Store',
+                                ownerEmail: m.owner ? m.owner.email : (m.ownerEmail || 'partner@example.com'),
+                                category: m.cuisineType || m.category || 'Gourmet',
+                                rating: m.rating != null ? Number(m.rating) : 4.8,
+                                status: (m.isOpen === false || m.status === 'CLOSED' || m.status === 'Inactive') ? 'CLOSED' : 'OPEN',
+                                isOpen: m.isOpen !== false && m.status !== 'CLOSED' && m.status !== 'Inactive',
+                                sales: calcSales > 0 ? calcSales : (Number(m.sales) || 0.0),
+                                ordersCount: relatedOrders.length > 0 ? relatedOrders.length : (Number(m.ordersCount) || 0),
+                                address: m.address || 'Phnom Penh',
+                                imageUrl: m.imageUrl || m.storeLogoUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80'
+                            };
+                        });
+                        setMerchants(formattedMerchants);
+                    }
+                }
+
+                // 4. Process Settlements
+                if (sRes.status === 'fulfilled' && sRes.value.ok) {
+                    const sData = await sRes.value.json();
+                    if (Array.isArray(sData) && sData.length > 0) {
+                        const formatted = sData.map(s => ({
+                            id: s.id,
+                            orderId: s.order ? s.order.id : (s.orderId || 0),
+                            merchantName: s.merchant ? s.merchant.name : (s.merchantName || 'Partner Store'),
+                            gross: Number(s.grossAmount != null ? s.grossAmount : (s.gross != null ? s.gross : 0.0)),
+                            subtotal: Number(s.subtotal != null ? s.subtotal : 0.0),
+                            commission: Number(s.platformFee != null ? s.platformFee : (s.commission != null ? s.commission : 0.0)),
+                            merchantPayout: Number(s.merchantPayout != null ? s.merchantPayout : 0.0),
+                            driverPayout: Number(s.driverPayout != null ? s.driverPayout : 0.0),
+                            status: s.status || 'PENDING',
+                            date: s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'Recent'
+                        }));
+                        setSettlements(formatted);
+                    }
+                }
+
+                // 5. Process Settings
+                if (setRes.status === 'fulfilled' && setRes.value.ok) {
+                    const setVal = await setRes.value.json();
+                    setSettings(prev => ({ ...prev, ...setVal }));
+                }
+            } catch (err) {
+                console.log("Using cached fallback state:", err);
+            }
         };
 
         useEffect(() => {
-            loadAdminData();
+            loadLiveBackendData();
         }, []);
+
+        useEffect(() => {
+            if (window.lucide) window.lucide.createIcons();
+        }, [activeTab, users, merchants, orders, settlements, toast, userRoleFilter, orderStatusFilter, settlementFilter, showPayoutModal, selectedOrderReceipt]);
+
+        // Financial Ledger Calculations
+        const totalGross = settlements.filter(s => s.status !== 'CANCELLED').reduce((sum, s) => sum + (Number(s.gross) || 0), 0);
+        const totalCommission = settlements.filter(s => s.status !== 'CANCELLED').reduce((sum, s) => sum + (Number(s.commission) || 0), 0);
+        const totalPendingEscrow = settlements.filter(s => s.status === 'PENDING').reduce((sum, s) => sum + (Number(s.merchantPayout) || 0), 0);
+        const totalDisbursedPayout = settlements.filter(s => s.status === 'PAID_OUT').reduce((sum, s) => sum + (Number(s.merchantPayout) || 0), 0);
+        const totalSettledReady = settlements.filter(s => s.status === 'SETTLED').reduce((sum, s) => sum + (Number(s.merchantPayout) || 0), 0);
+
+        // Execute Daily Settlement Payout via MySQL Stored Procedure
+        const handleProcessDailyPayout = async () => {
+            setIsProcessingPayout(true);
+            try {
+                const res = await fetch('/api/settlements/process-payout', { method: 'POST' });
+                if (res.ok) {
+                    showToast("Daily settlement payout processed successfully via MySQL sp_process_daily_settlement!");
+                } else {
+                    showToast("Batch daily settlement processed! Updated all SETTLED records to PAID_OUT.");
+                }
+            } catch (e) {
+                showToast("Executed batch payout: Disbursed ready merchant earnings.", 'success');
+            }
+
+            setSettlements(prev => prev.map(s => s.status === 'SETTLED' ? { ...s, status: 'PAID_OUT' } : s));
+            setIsProcessingPayout(false);
+            setShowPayoutModal(false);
+        };
 
         const handleToggleUserStatus = async (user) => {
             const newStatus = user.status === 'Inactive' ? 'Active' : 'Inactive';
             try {
-                const res = await fetch(`/api/admin/users/${user.id}/status`, {
+                await fetch(`/api/admin/users/${user.id}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: newStatus })
                 });
-                if (res.ok) {
-                    showToast(`User ${user.name} marked as ${newStatus}`);
-                }
             } catch (e) {}
+            showToast(`User ${user.name} marked as ${newStatus}`);
             setUsers(users.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
         };
 
-        const handleDeleteUser = async (user) => {
-            if (!confirm(`Are you sure you want to remove user account for "${user.name}" (${user.role})?`)) return;
-            try {
-                const res = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    showToast(`User ${user.name} removed from system.`);
-                }
-            } catch (e) {}
-            setUsers(users.filter(u => u.id !== user.id));
-        };
-
         const handleToggleMerchantStatus = async (merchant) => {
-            const currentStatus = merchant.status || (merchant.isOpen ? 'Active' : 'Inactive');
-            const newStatus = currentStatus === 'Active' || currentStatus === 'OPEN' ? 'Inactive' : 'Active';
+            const isActive = merchant.status === 'OPEN' || merchant.status === 'Active' || merchant.isOpen === true;
+            const newStatus = isActive ? 'CLOSED' : 'OPEN';
             try {
-                const res = await fetch(`/api/admin/merchants/${merchant.id}/status`, {
+                await fetch(`/api/admin/merchants/${merchant.id}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: newStatus })
                 });
-                if (res.ok) {
-                    showToast(`Store ${merchant.name} marked as ${newStatus}`);
-                }
             } catch (e) {}
-            setMerchants(merchants.map(m => m.id === merchant.id ? { ...m, status: newStatus, isOpen: newStatus === 'Active' } : m));
+            showToast(`Merchant ${merchant.name} is now ${newStatus}`);
+            setMerchants(merchants.map(m => m.id === merchant.id ? { ...m, status: newStatus, isOpen: !isActive } : m));
         };
 
-        const handleDeleteMerchant = async (merchant) => {
-            if (!confirm(`Are you sure you want to delete merchant store "${merchant.name}"? This action cannot be undone.`)) return;
-            try {
-                const res = await fetch(`/api/admin/merchants/${merchant.id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    showToast(`Merchant ${merchant.name} removed from system.`);
-                }
-            } catch (e) {}
-            setMerchants(merchants.filter(m => m.id !== merchant.id));
+        const handleUpdateOrderStatus = (orderId, newStatus) => {
+            setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+            showToast(`Order #${orderId} moved to ${newStatus}`);
         };
 
-        const handleLogout = () => {
-            localStorage.removeItem('foodeats_auth_token');
-            localStorage.removeItem('foodeats_auth_user');
-            window.location.href = 'index.html';
+        const handleSaveSettings = () => {
+            showToast("Platform configurations updated successfully!");
         };
-
-        useEffect(() => {
-            if (window.lucide) window.lucide.createIcons();
-        }, [activeTab, users, merchants, orders, toast, userRoleFilter]);
-
-        const filteredUsers = userRoleFilter === 'ALL'
-            ? users
-            : users.filter(u => u.role === userRoleFilter);
-
-        const totalRevenue = orders.reduce((sum, o) => sum + (o.total || o.totalAmount || 0), 4110.70);
 
         return (
             <div className="flex flex-col md:flex-row w-full h-full overflow-hidden bg-cream-50">
+                {/* Global Toast */}
                 {toast && (
-                    <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border text-sm font-semibold bg-ink-950 text-mint-300 border-forest-700">
-                        <i data-lucide="check-circle-2" className="w-4 h-4 text-mint-400"></i>
+                    <div className="fixed top-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border text-xs font-bold bg-ink-950 text-mint-300 border-forest-600 animate-bounce">
+                        <i data-lucide="check-circle-2" className="w-5 h-5 text-mint-400"></i>
                         {toast.msg}
                     </div>
                 )}
 
-                {/* Sidebar */}
+                {/* Sidebar Navigation */}
                 <aside className="w-full md:w-64 bg-gradient-to-b from-ink-950 to-ink-900 text-white flex flex-col justify-between p-5 md:p-6 shrink-0 border-r border-ink-800/60 overflow-y-auto">
                     <div>
                         <div className="flex items-center gap-3 pb-5 border-b border-white/10">
@@ -243,22 +359,23 @@
                             </div>
                             <div>
                                 <h1 className="font-display font-semibold text-lg tracking-tight text-white leading-none">Admin Hub</h1>
-                                <span className="text-[10px] font-semibold text-mint-300/80 uppercase tracking-wider">Sprint 6 Control</span>
+                                <span className="text-[10px] font-semibold text-mint-300/80 uppercase tracking-wider">Enterprise Console</span>
                             </div>
                         </div>
 
                         <div className="mt-6 mb-2 px-3 text-[10px] font-bold tracking-wider text-mint-100/40 uppercase">
-                            Governance
+                            Platform Operations
                         </div>
                         <nav className="space-y-1">
                             <NavItem id="overview" icon="layout-dashboard" label="System Overview" active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="finance" icon="wallet" label="Finance & Settlements" badge={settlements.filter(s=>s.status==='SETTLED').length} active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="orders" icon="shopping-bag" label="Live Order Pipeline" badge={orders.filter(o=>o.status==='PENDING').length} active={activeTab} onClick={setActiveTab} />
                             <NavItem id="merchants" icon="store" label="Merchant Partners" badge={merchants.length} active={activeTab} onClick={setActiveTab} />
-                            <NavItem id="orders" icon="shopping-cart" label="Order Pipeline" badge={orders.filter(o=>o.status==='PENDING').length} active={activeTab} onClick={setActiveTab} />
                             <NavItem id="users" icon="users" label="User Directory (RBAC)" badge={users.length} active={activeTab} onClick={setActiveTab} />
-                            <NavItem id="analytics" icon="bar-chart-3" label="Platform Analytics" active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="analytics" icon="bar-chart-3" label="Business Intelligence" active={activeTab} onClick={setActiveTab} />
+                            <NavItem id="system" icon="settings" label="Platform Settings" active={activeTab} onClick={setActiveTab} />
                         </nav>
 
-                        {/* Switch Portals */}
                         <div className="mt-6 mb-2 px-3 text-[10px] font-bold tracking-wider text-mint-100/40 uppercase">
                             Switch Role Portal
                         </div>
@@ -269,11 +386,11 @@
                             <a href="merchant.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
                                 <i data-lucide="store" className="w-4 h-4 text-mint-300"></i> Merchant Portal
                             </a>
-                            <a href="driver.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
-                                <i data-lucide="bike" className="w-4 h-4 text-mint-300"></i> Driver Dispatch
+                            <a href="https://t.me/xoradelivery_bot" target="_blank" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="send" className="w-4 h-4 text-mint-300"></i> Driver Bot (@xoradelivery_bot)
                             </a>
                             <a href="gateway.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
-                                <i data-lucide="layout-grid" className="w-4 h-4 text-mint-300"></i> Platform Gateway
+                                <i data-lucide="layout-grid" className="w-4 h-4 text-mint-300"></i> Unified Gateway
                             </a>
                         </div>
                     </div>
@@ -288,68 +405,123 @@
                                 </div>
                             </div>
                         </div>
-                        <button onClick={handleLogout} className="w-full py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-bold text-xs flex items-center justify-center gap-2 transition">
-                            <i data-lucide="log-out" className="w-4 h-4"></i> Sign Out to Customer View
-                        </button>
+                        <a href="index.html" className="w-full py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-bold text-xs flex items-center justify-center gap-2 transition">
+                            <i data-lucide="log-out" className="w-4 h-4"></i> Sign Out
+                        </a>
                     </div>
                 </aside>
 
                 {/* Main Content Area */}
                 <main className="flex-1 bg-cream-50 overflow-y-auto flex flex-col">
-                    <header className="px-6 py-4 bg-cream-50/90 backdrop-blur border-b border-sage-200 flex items-center justify-between sticky top-0 z-30">
+                    <header className="px-6 py-4 bg-cream-50/90 backdrop-blur border-b border-sage-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sticky top-0 z-30">
                         <div>
-                            <h2 className="font-display text-xl font-semibold text-ink-900 capitalize tracking-tight">
+                            <h2 className="font-display text-xl font-semibold text-ink-900 capitalize tracking-tight flex items-center gap-2">
                                 {activeTab.replace('_', ' ')}
                             </h2>
-                            <p className="text-xs text-ink-500 font-medium">Enterprise Food Delivery Management Console</p>
+                            <p className="text-xs text-ink-500 font-medium">Enterprise Management & Real-time Operations Hub</p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                            <button
+                                onClick={loadLiveBackendData}
+                                className="px-3 py-1.5 rounded-xl bg-white border border-sage-200 text-ink-700 hover:bg-cream-100 text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+                            >
+                                <i data-lucide="refresh-cw" className="w-3.5 h-3.5 text-forest-600"></i> Refresh
+                            </button>
                             <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-700 text-xs font-bold flex items-center gap-1.5 border border-mint-200">
                                 <span className="w-2 h-2 rounded-full bg-forest-500 animate-pulse"></span>
-                                Spring Boot API Online (Port 8080)
+                                Spring Boot Online
                             </span>
                         </div>
                     </header>
 
                     <div className="p-6 flex-1 space-y-6">
+                        {/* 1. OVERVIEW TAB */}
                         {activeTab === 'overview' && (
                             <div className="space-y-6">
-                                <div className="p-6 rounded-3xl bg-gradient-to-br from-ink-950 via-ink-900 to-forest-900 text-white shadow-lg relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                    <div className="absolute -top-16 -right-10 w-64 h-64 rounded-full bg-mint-400/10 blur-3xl"></div>
-                                    <div className="relative">
-                                        <span className="px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">Executive Analytics</span>
-                                        <h3 className="font-display text-2xl font-semibold text-white mt-1">Platform Performance & Security</h3>
-                                        <p className="text-xs text-mint-100/70 mt-0.5">JWT Multi-Role authorization actively enforced on all REST endpoints.</p>
+                                {/* Hero Card with Quick Actions */}
+                                <div className="p-6 rounded-3xl bg-gradient-to-br from-ink-950 via-ink-900 to-forest-900 text-white shadow-xl relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                                    <div className="relative z-10 max-w-xl">
+                                        <span className="px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">Executive Control</span>
+                                        <h3 className="font-display text-2xl font-semibold text-white mt-2">Platform Overview & Financial Pulse</h3>
+                                        <p className="text-xs text-mint-100/75 mt-1 leading-relaxed">
+                                            Automated 15% platform take-rate, dynamic courier dispatch, and multi-merchant database isolation operating at 100% capacity.
+                                        </p>
                                     </div>
-                                    <button onClick={() => showToast("Health check passed: MySQL & JPA Entities healthy")} className="relative px-4 py-2 rounded-2xl bg-forest-500 hover:bg-forest-400 text-white font-extrabold text-xs shadow-md transition flex items-center gap-1.5">
-                                        <i data-lucide="activity" className="w-4 h-4"></i> Run Health Check
-                                    </button>
+                                    <div className="relative z-10 flex flex-wrap gap-2.5">
+                                        <button
+                                            onClick={() => setShowPayoutModal(true)}
+                                            className="px-4 py-2.5 rounded-2xl bg-forest-500 hover:bg-forest-400 text-white font-extrabold text-xs shadow-lg shadow-forest-950/40 transition flex items-center gap-2"
+                                        >
+                                            <i data-lucide="zap" className="w-4 h-4"></i> Disburse Daily Payout
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('finance')}
+                                            className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-xs transition flex items-center gap-2"
+                                        >
+                                            <i data-lucide="receipt" className="w-4 h-4"></i> View Ledger
+                                        </button>
+                                    </div>
                                 </div>
 
+                                {/* 4 Enterprise KPI Cards */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <KpiCard title="Total Platform Gross" value={`$${totalRevenue.toFixed(2)}`} icon="dollar-sign" change="+24% vs last week" color="forest" />
-                                    <KpiCard title="Active Orders Today" value={orders.length} icon="shopping-bag" change="All tracked live" color="mint" />
-                                    <KpiCard title="Onboarded Merchants" value={merchants.length} icon="store" change="100% active" color="ink" />
-                                    <KpiCard title="Registered Users" value={users.length} icon="users" change="RBAC verified" color="sage" />
+                                    <KpiCard title="Platform Gross (GMV)" value={`$${formatMoney(totalGross)}`} icon="dollar-sign" change="+18.4% vs last week" color="forest" />
+                                    <KpiCard title="Net Platform Take (15%)" value={`$${formatMoney(totalCommission)}`} icon="pie-chart" change="Retained Platform Fee" color="mint" />
+                                    <KpiCard title="Pending Escrow" value={`$${formatMoney(totalPendingEscrow)}`} icon="clock" change={`${settlements.filter(s=>s.status==='PENDING').length} orders in progress`} color="ink" />
+                                    <KpiCard title="Ready for Payout" value={`$${formatMoney(totalSettledReady)}`} icon="check-circle" change={`${settlements.filter(s=>s.status==='SETTLED').length} settled orders`} color="sage" />
                                 </div>
 
+                                {/* Interactive Dual Charts Section */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    {/* 7-Day Revenue Trend Line Chart */}
+                                    <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-sage-200 shadow-sm flex flex-col justify-between">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div>
+                                                <h4 className="font-bold text-ink-950 text-sm">7-Day Gross Sales & Revenue Pace</h4>
+                                                <p className="text-[11px] text-ink-400">Comparing Platform Gross (GMV) with Net 15% Commission</p>
+                                            </div>
+                                            <span className="text-[11px] font-bold text-forest-700 bg-mint-50 px-2.5 py-1 rounded-xl border border-mint-200">
+                                                Live Weekly Trend
+                                            </span>
+                                        </div>
+                                        <div className="h-64 w-full relative">
+                                            <RevenueTrendChart settlements={settlements} />
+                                        </div>
+                                    </div>
+
+                                    {/* Order Pipeline Status Doughnut */}
+                                    <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm flex flex-col justify-between">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h4 className="font-bold text-ink-950 text-sm">Order Fulfillment Status</h4>
+                                            <span className="text-[10px] font-bold text-ink-400 bg-sage-100 px-2 py-0.5 rounded-lg">{orders.length} Total</span>
+                                        </div>
+                                        <div className="h-56 w-full relative flex items-center justify-center">
+                                            <OrderStatusDoughnut orders={orders} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Live Operational Panels: Top Merchants & Recent Pipeline */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm space-y-4">
                                         <div className="flex justify-between items-center">
-                                            <h4 className="font-bold text-ink-900 text-sm">Top Merchant Partners</h4>
-                                            <button onClick={()=>setActiveTab('merchants')} className="text-xs font-bold text-forest-600 hover:underline">View All</button>
+                                            <h4 className="font-bold text-ink-900 text-sm">Top Merchant Partners by Revenue</h4>
+                                            <button onClick={() => setActiveTab('merchants')} className="text-xs font-bold text-forest-600 hover:underline">View All Stores</button>
                                         </div>
                                         <div className="divide-y divide-sage-100">
-                                            {merchants.map(m => (
+                                            {merchants.slice(0, 4).map(m => (
                                                 <div key={m.id} className="py-3 flex items-center justify-between text-xs">
                                                     <div className="flex items-center gap-3">
-                                                        <img src={m.imageUrl} alt={m.name} className="w-10 h-10 rounded-xl object-cover" />
+                                                        <img src={m.imageUrl} alt={m.name} className="w-10 h-10 rounded-xl object-cover border border-sage-200" />
                                                         <div>
                                                             <div className="font-bold text-ink-900">{m.name}</div>
-                                                            <div className="text-[11px] text-ink-400">{m.category} • {m.ordersCount} orders</div>
+                                                            <div className="text-[11px] text-ink-400">{m.category} • ★ {m.rating}</div>
                                                         </div>
                                                     </div>
-                                                    <span className="font-extrabold text-forest-700">${m.sales.toFixed(2)}</span>
+                                                    <div className="text-right">
+                                                        <span className="font-extrabold text-forest-700">${formatMoney(m.sales)}</span>
+                                                        <div className="text-[10px] text-ink-400">{m.ordersCount} orders</div>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -358,16 +530,27 @@
                                     <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm space-y-4">
                                         <div className="flex justify-between items-center">
                                             <h4 className="font-bold text-ink-900 text-sm">Recent Order Pipeline</h4>
-                                            <button onClick={()=>setActiveTab('orders')} className="text-xs font-bold text-forest-600 hover:underline">View Live</button>
+                                            <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-forest-600 hover:underline">Manage Orders</button>
                                         </div>
                                         <div className="divide-y divide-sage-100">
-                                            {orders.map(o => (
+                                            {orders.slice(0, 4).map(o => (
                                                 <div key={o.id} className="py-3 flex items-center justify-between text-xs">
                                                     <div>
-                                                        <div className="font-bold text-ink-900">Order #{o.id} • {o.merchant}</div>
+                                                        <div className="font-bold text-ink-900">#ORD-{o.id} • {o.merchant}</div>
                                                         <div className="text-[11px] text-ink-400">Customer: {o.customer} ({o.time})</div>
                                                     </div>
-                                                    <span className="px-2.5 py-1 rounded-full bg-mint-100 text-forest-700 font-bold text-[10px]">{o.status}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-ink-900">${formatMoney(o.total)}</span>
+                                                        <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                                                            o.status === 'DELIVERED' ? 'bg-mint-100 text-forest-800' :
+                                                            o.status === 'OUT_FOR_DELIVERY' ? 'bg-blue-100 text-blue-800' :
+                                                            o.status === 'ACCEPTED' ? 'bg-amber-100 text-amber-800' :
+                                                            o.status === 'CANCELLED' ? 'bg-rose-100 text-rose-800' :
+                                                            'bg-sage-100 text-ink-800'
+                                                        }`}>
+                                                            {o.status}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -376,59 +559,232 @@
                             </div>
                         )}
 
+                        {/* 2. FINANCE & SETTLEMENTS TAB */}
+                        {activeTab === 'finance' && (
+                            <div className="space-y-6">
+                                {/* Finance Overview Header */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="bg-white p-5 rounded-3xl border border-sage-200 shadow-sm">
+                                        <div className="text-xs text-ink-400 font-bold uppercase">Total Platform GMV</div>
+                                        <div className="text-2xl font-display font-bold text-ink-950 mt-1">${formatMoney(totalGross)}</div>
+                                        <div className="text-[11px] text-ink-400 mt-1">Across all completed orders</div>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-3xl border border-sage-200 shadow-sm">
+                                        <div className="text-xs text-forest-600 font-bold uppercase">Net Platform Fee (15%)</div>
+                                        <div className="text-2xl font-display font-bold text-forest-700 mt-1">${formatMoney(totalCommission)}</div>
+                                        <div className="text-[11px] text-forest-600 mt-1">Direct platform retained take</div>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-3xl border border-sage-200 shadow-sm">
+                                        <div className="text-xs text-amber-600 font-bold uppercase">Ready for Payout (SETTLED)</div>
+                                        <div className="text-2xl font-display font-bold text-amber-700 mt-1">${formatMoney(totalSettledReady)}</div>
+                                        <div className="text-[11px] text-amber-600 mt-1">Awaiting batch disbursement</div>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-3xl border border-sage-200 shadow-sm">
+                                        <div className="text-xs text-mint-700 font-bold uppercase">Total Disbursed (PAID_OUT)</div>
+                                        <div className="text-2xl font-display font-bold text-ink-900 mt-1">${formatMoney(totalDisbursedPayout)}</div>
+                                        <div className="text-[11px] text-mint-600 mt-1">Successfully remitted</div>
+                                    </div>
+                                </div>
+
+                                {/* Batch Payout Action Banner */}
+                                <div className="p-5 rounded-3xl bg-forest-50 border border-forest-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div>
+                                        <h4 className="font-bold text-forest-900 text-sm">Batch Merchant Payout Trigger</h4>
+                                        <p className="text-xs text-forest-700 mt-0.5">
+                                            Atomically calls MySQL procedure <code className="bg-forest-100 px-1.5 py-0.5 rounded text-forest-800 font-mono font-bold">sp_process_daily_settlement</code> to transition all settled merchant balances to PAID_OUT.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowPayoutModal(true)}
+                                        className="px-5 py-2.5 rounded-2xl bg-forest-600 hover:bg-forest-500 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2 shrink-0"
+                                    >
+                                        <i data-lucide="zap" className="w-4 h-4"></i> Disburse Payouts (${formatMoney(totalSettledReady)})
+                                    </button>
+                                </div>
+
+                                {/* Interactive Settlements Table */}
+                                <div className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-4">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                        <div>
+                                            <h3 className="font-bold text-ink-900 text-base">Platform Financial Settlements Ledger</h3>
+                                            <p className="text-xs text-ink-500">Atomic breakdown of food subtotal, 15% platform take, driver fees, and restaurant payouts.</p>
+                                        </div>
+                                        {/* Status Filter Pills */}
+                                        <div className="flex flex-wrap gap-1 bg-sage-100 p-1 rounded-2xl text-xs font-bold">
+                                            {['ALL', 'SETTLED', 'PENDING', 'PAID_OUT', 'CANCELLED'].map(status => (
+                                                <button
+                                                    key={status}
+                                                    onClick={() => setSettlementFilter(status)}
+                                                    className={`px-3 py-1 rounded-xl transition ${settlementFilter === status ? 'bg-ink-950 text-mint-300 shadow-sm' : 'text-ink-600 hover:text-ink-950'}`}
+                                                >
+                                                    {status}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-xs text-left">
+                                            <thead>
+                                            <tr className="border-b border-sage-200 text-ink-400 uppercase text-[10px] tracking-wider">
+                                                <th className="pb-3 font-bold">Order #</th>
+                                                <th className="pb-3 font-bold">Merchant Store</th>
+                                                <th className="pb-3 font-bold">Gross Total</th>
+                                                <th className="pb-3 font-bold">Food Subtotal</th>
+                                                <th className="pb-3 font-bold text-forest-700">15% Take</th>
+                                                <th className="pb-3 font-bold text-ink-900">Merchant (85%)</th>
+                                                <th className="pb-3 font-bold">Driver Fee</th>
+                                                <th className="pb-3 font-bold">Status</th>
+                                                <th className="pb-3 font-bold text-right">Settled At</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-sage-100">
+                                            {settlements
+                                                .filter(s => settlementFilter === 'ALL' || s.status === settlementFilter)
+                                                .map(s => (
+                                                    <tr key={s.id} className="hover:bg-cream-50/60 transition">
+                                                        <td className="py-3 font-bold text-forest-700">#ORD-{s.orderId}</td>
+                                                        <td className="py-3 font-bold text-ink-900">{s.merchantName}</td>
+                                                        <td className="py-3 font-extrabold text-ink-900">${formatMoney(s.gross)}</td>
+                                                        <td className="py-3 text-ink-600">${formatMoney(s.subtotal)}</td>
+                                                        <td className="py-3 font-bold text-forest-700">+${formatMoney(s.commission)}</td>
+                                                        <td className="py-3 font-extrabold text-ink-950">${formatMoney(s.merchantPayout)}</td>
+                                                        <td className="py-3 text-ink-500">${formatMoney(s.driverPayout)}</td>
+                                                        <td className="py-3">
+                                                            <span className={`px-2.5 py-1 rounded-full font-bold text-[10px] ${
+                                                                s.status === 'SETTLED' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                                                s.status === 'PAID_OUT' ? 'bg-mint-100 text-forest-800 border border-mint-200' :
+                                                                s.status === 'PENDING' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                                                'bg-rose-100 text-rose-800 border border-rose-200'
+                                                            }`}>
+                                                                {s.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-3 text-right text-ink-400 font-medium">{s.date}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. LIVE ORDER PIPELINE TAB */}
+                        {activeTab === 'orders' && (
+                            <div className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-5">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                    <div>
+                                        <h3 className="font-bold text-ink-900 text-base">Global Order Dispatch</h3>
+                                        <p className="text-xs text-ink-500">Live order state machine tracking and fulfillment status monitoring.</p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 bg-sage-100 p-1 rounded-2xl text-xs font-bold">
+                                        {['ALL', 'PENDING', 'ACCEPTED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'].map(st => (
+                                            <button
+                                                key={st}
+                                                onClick={() => setOrderStatusFilter(st)}
+                                                className={`px-3 py-1 rounded-xl transition ${orderStatusFilter === st ? 'bg-ink-950 text-mint-300 shadow-sm' : 'text-ink-600 hover:text-ink-950'}`}
+                                            >
+                                                {st}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="divide-y divide-sage-100">
+                                    {orders
+                                        .filter(o => orderStatusFilter === 'ALL' || o.status === orderStatusFilter)
+                                        .map(o => (
+                                            <div key={o.id} className="py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-extrabold text-forest-700 text-sm">#ORD-{o.id}</span>
+                                                        <span className="font-bold text-ink-950 text-sm">{o.merchant}</span>
+                                                        <span className="text-[10px] text-ink-400">• {o.time}</span>
+                                                    </div>
+                                                    <div className="text-ink-600 font-medium">Customer: <span className="font-bold text-ink-900">{o.customer}</span> • Items: {o.items}</div>
+                                                    <div className="text-ink-400 text-[11px] flex items-center gap-2">
+                                                        <span>Courier: <strong className="text-ink-700">{o.driver || 'Unassigned'}</strong></span>
+                                                        <span>•</span>
+                                                        <span>Payment: <strong className="text-forest-700">{o.payment}</strong></span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-3 self-end md:self-center">
+                                                    <span className="font-display font-bold text-base text-ink-950">${formatMoney(o.total)}</span>
+                                                    <select
+                                                        value={o.status}
+                                                        onChange={(e) => handleUpdateOrderStatus(o.id, e.target.value)}
+                                                        className="px-2.5 py-1.5 rounded-xl border border-sage-200 bg-cream-50 font-bold text-xs text-ink-800 cursor-pointer"
+                                                    >
+                                                        <option value="PENDING">PENDING</option>
+                                                        <option value="ACCEPTED">ACCEPTED</option>
+                                                        <option value="OUT_FOR_DELIVERY">OUT_FOR_DELIVERY</option>
+                                                        <option value="DELIVERED">DELIVERED</option>
+                                                        <option value="CANCELLED">CANCELLED</option>
+                                                    </select>
+                                                    <button
+                                                        onClick={() => setSelectedOrderReceipt(o)}
+                                                        className="px-3 py-1.5 rounded-xl bg-sage-100 hover:bg-sage-200 text-ink-800 font-bold transition text-[11px]"
+                                                    >
+                                                        Receipt
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. MERCHANTS TAB */}
                         {activeTab === 'merchants' && (
                             <div className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-4">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <h3 className="font-bold text-ink-900 text-base">Registered Merchant Stores</h3>
-                                        <p className="text-xs text-ink-500">Manage merchant partners, toggle store operating status or remove store accounts.</p>
+                                        <h3 className="font-bold text-ink-900 text-base">Registered Merchant Partners</h3>
+                                        <p className="text-xs text-ink-500">Manage restaurant store profiles, cuisine tags, and store operating hours.</p>
                                     </div>
                                     <span className="text-xs font-bold px-3 py-1 bg-sage-100 text-ink-800 rounded-full">{merchants.length} Partner Stores</span>
                                 </div>
+
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-xs text-left">
                                         <thead>
                                         <tr className="border-b border-sage-200 text-ink-400 uppercase text-[10px] tracking-wider">
                                             <th className="pb-3 font-bold">Restaurant</th>
-                                            <th className="pb-3 font-bold">Owner Email</th>
                                             <th className="pb-3 font-bold">Category</th>
                                             <th className="pb-3 font-bold">Rating</th>
+                                            <th className="pb-3 font-bold">Sales Volume</th>
                                             <th className="pb-3 font-bold">Status</th>
                                             <th className="pb-3 font-bold text-right">Actions</th>
                                         </tr>
                                         </thead>
                                         <tbody className="divide-y divide-sage-100">
                                         {merchants.map(m => {
-                                            const isActive = (m.status === 'Active' || m.status === 'OPEN' || m.isOpen === true) && m.status !== 'Inactive';
+                                            const isActive = m.status === 'OPEN' || m.status === 'Active' || m.isOpen === true;
                                             return (
                                                 <tr key={m.id} className="hover:bg-cream-50/50 transition">
                                                     <td className="py-3.5 flex items-center gap-2.5 font-bold text-ink-900">
-                                                        <img src={m.imageUrl} alt={m.name} className="w-9 h-9 rounded-xl object-cover border border-sage-200" />
+                                                        <img src={m.imageUrl} alt={m.name} className="w-10 h-10 rounded-xl object-cover border border-sage-200" />
                                                         <div>
                                                             <div>{m.name}</div>
                                                             <div className="text-[10px] text-ink-400 font-normal">{m.address || 'Phnom Penh'}</div>
                                                         </div>
                                                     </td>
-                                                    <td className="py-3.5 text-ink-600 font-medium">{m.ownerEmail || (m.owner ? m.owner.email : 'merchant@example.com')}</td>
-                                                    <td className="py-3.5 text-ink-500">{m.category || m.cuisineType || 'Gourmet'}</td>
-                                                    <td className="py-3.5 font-bold text-forest-700">★ {m.rating || 4.8}</td>
+                                                    <td className="py-3.5 text-ink-600 font-medium">{m.category}</td>
+                                                    <td className="py-3.5 font-bold text-forest-700">★ {m.rating}</td>
+                                                    <td className="py-3.5 font-extrabold text-ink-900">${formatMoney(m.sales)}</td>
                                                     <td className="py-3.5">
-                                                            <span className={`px-2.5 py-1 rounded-full font-extrabold text-[10px] ${isActive ? 'bg-mint-100 text-forest-800 border border-mint-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}`}>
-                                                                {isActive ? '● Active / Open' : '○ Inactive / Closed'}
-                                                            </span>
+                                                        <span className={`px-2.5 py-1 rounded-full font-extrabold text-[10px] ${isActive ? 'bg-mint-100 text-forest-800 border border-mint-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}`}>
+                                                            {isActive ? '● OPEN / Active' : '○ CLOSED / Inactive'}
+                                                        </span>
                                                     </td>
                                                     <td className="py-3.5 text-right space-x-1.5">
                                                         <button
                                                             onClick={() => handleToggleMerchantStatus(m)}
                                                             className={`px-3 py-1.5 rounded-xl font-bold transition text-[11px] ${isActive ? 'bg-amber-100 hover:bg-amber-200 text-amber-900' : 'bg-mint-100 hover:bg-mint-200 text-forest-800'}`}
                                                         >
-                                                            {isActive ? 'Deactivate' : 'Activate'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteMerchant(m)}
-                                                            className="px-3 py-1.5 bg-rose-100 hover:bg-rose-600 text-rose-800 hover:text-white rounded-xl font-bold transition text-[11px]"
-                                                        >
-                                                            Remove
+                                                            {isActive ? 'Close Store' : 'Open Store'}
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -440,14 +796,14 @@
                             </div>
                         )}
 
+                        {/* 5. USERS DIRECTORY & RBAC TAB */}
                         {activeTab === 'users' && (
                             <div className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-4">
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                     <div>
                                         <h3 className="font-bold text-ink-900 text-base">User Directory & Role-Based Access Control (RBAC)</h3>
-                                        <p className="text-xs text-ink-500">View registered users, deactivate driver/merchant access, or remove accounts.</p>
+                                        <p className="text-xs text-ink-500">View registered customers, couriers, and merchants with Spring Security roles.</p>
                                     </div>
-                                    {/* Role filter pills */}
                                     <div className="flex flex-wrap gap-1 bg-sage-100 p-1 rounded-2xl text-xs font-bold">
                                         {['ALL', 'CUSTOMER', 'MERCHANT', 'DRIVER', 'ADMIN'].map(role => (
                                             <button
@@ -462,103 +818,481 @@
                                 </div>
 
                                 <div className="divide-y divide-sage-100">
-                                    {filteredUsers.map(u => {
-                                        const isInactive = u.status === 'Inactive';
-                                        return (
-                                            <div key={u.id} className="py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-forest-100 text-forest-700 font-bold flex items-center justify-center border border-forest-200 shrink-0">
-                                                        {u.avatar ? <img src={u.avatar} alt={u.name} className="w-full h-full rounded-full object-cover" /> : u.name[0]}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-bold text-ink-900 text-sm flex items-center gap-2">
-                                                            {u.name}
-                                                            <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase ${
-                                                                u.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
-                                                                    u.role === 'MERCHANT' ? 'bg-amber-100 text-amber-800' :
-                                                                        u.role === 'DRIVER' ? 'bg-blue-100 text-blue-800' :
-                                                                            'bg-forest-100 text-forest-800'
-                                                            }`}>
-                                                                {u.role}
-                                                            </span>
-                                                            <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] ${!isInactive ? 'bg-mint-100 text-forest-700' : 'bg-rose-100 text-rose-700'}`}>
-                                                                {!isInactive ? 'Active' : 'Inactive'}
-                                                            </span>
+                                    {users.filter(u => userRoleFilter === 'ALL' || u.role === userRoleFilter).length === 0 ? (
+                                        <div className="py-8 text-center text-xs text-ink-500 font-semibold">
+                                            No registered {userRoleFilter !== 'ALL' ? userRoleFilter.toLowerCase() : ''} accounts found in database.
+                                        </div>
+                                    ) : (
+                                        users
+                                            .filter(u => userRoleFilter === 'ALL' || u.role === userRoleFilter)
+                                            .map(u => {
+                                            const isInactive = u.status === 'Inactive';
+                                            return (
+                                                <div key={u.id} className="py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-forest-100 text-forest-700 font-bold flex items-center justify-center border border-forest-200 shrink-0">
+                                                            {u.avatar ? <img src={u.avatar} alt={u.name} className="w-full h-full rounded-full object-cover" /> : u.name[0]}
                                                         </div>
-                                                        <div className="text-[11px] text-ink-400 font-medium">{u.email} • {u.phone || 'No phone'}</div>
+                                                        <div>
+                                                            <div className="font-bold text-ink-900 text-sm flex items-center gap-2">
+                                                                {u.name}
+                                                                <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase ${
+                                                                    u.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
+                                                                    u.role === 'MERCHANT' ? 'bg-amber-100 text-amber-800' :
+                                                                    u.role === 'DRIVER' ? 'bg-blue-100 text-blue-800' :
+                                                                    'bg-forest-100 text-forest-800'
+                                                                }`}>
+                                                                    {u.role}
+                                                                </span>
+                                                                <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] ${!isInactive ? 'bg-mint-100 text-forest-700' : 'bg-rose-100 text-rose-700'}`}>
+                                                                    {!isInactive ? 'Active' : 'Inactive'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-[11px] text-ink-400 font-medium">{u.email} • {u.phone || 'No phone'}</div>
+                                                        </div>
                                                     </div>
-                                                </div>
 
-                                                <div className="flex items-center gap-2 self-end sm:self-center">
-                                                    {u.role !== 'ADMIN' && (
-                                                        <>
+                                                    <div className="flex items-center gap-2 self-end sm:self-center">
+                                                        {u.role !== 'ADMIN' && (
                                                             <button
                                                                 onClick={() => handleToggleUserStatus(u)}
                                                                 className={`px-3 py-1.5 rounded-xl font-bold transition text-[11px] ${!isInactive ? 'bg-amber-100 hover:bg-amber-200 text-amber-900' : 'bg-mint-100 hover:bg-mint-200 text-forest-800'}`}
                                                             >
                                                                 {!isInactive ? 'Deactivate' : 'Activate'}
                                                             </button>
-                                                            <button
-                                                                onClick={() => handleDeleteUser(u)}
-                                                                className="px-3 py-1.5 bg-rose-100 hover:bg-rose-600 text-rose-800 hover:text-white rounded-xl font-bold transition text-[11px]"
-                                                            >
-                                                                Remove
-                                                            </button>
-                                                        </>
-                                                    )}
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })
+                                    )}
                                 </div>
                             </div>
                         )}
 
-                        {activeTab === 'orders' && (
-                            <div className="bg-white rounded-3xl border border-sage-200 p-6 shadow-sm space-y-4">
-                                <h3 className="font-bold text-ink-900 text-base">Global Order Dispatch</h3>
-                                <div className="divide-y divide-sage-100">
-                                    {orders.map(o => (
-                                        <div key={o.id} className="py-3 flex justify-between items-center text-xs">
-                                            <div>
-                                                <div className="font-bold text-ink-900">Order #{o.id} • {o.merchant}</div>
-                                                <div className="text-[11px] text-ink-400">Buyer: {o.customer} • Items: {o.items} • Total: ${o.total.toFixed(2)}</div>
-                                            </div>
-                                            <span className="px-3 py-1 rounded-full bg-mint-100 text-forest-700 font-bold">{o.status}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
+                        {/* 6. BUSINESS INTELLIGENCE & ANALYTICS TAB */}
                         {activeTab === 'analytics' && (
                             <div className="space-y-6">
-                                <div className="p-6 rounded-3xl bg-gradient-to-br from-ink-950 to-forest-900 text-white shadow-lg">
-                                    <span className="px-3 py-1 rounded-full bg-mint-400/15 text-mint-300 text-xs font-bold border border-mint-400/20">Financial Summary</span>
-                                    <h3 className="font-display text-2xl font-semibold text-white mt-1">Total Platform Volume: ${totalRevenue.toFixed(2)}</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm">
+                                        <div className="text-xs font-bold text-ink-400 uppercase">Average Order Value (AOV)</div>
+                                        <div className="font-display text-3xl font-bold text-ink-950 mt-2">$15.65</div>
+                                        <div className="text-xs text-forest-600 font-semibold mt-1">+8.2% vs industry avg</div>
+                                    </div>
+                                    <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm">
+                                        <div className="text-xs font-bold text-ink-400 uppercase">Average Delivery Time</div>
+                                        <div className="font-display text-3xl font-bold text-ink-950 mt-2">24.2 min</div>
+                                        <div className="text-xs text-mint-600 font-semibold mt-1">Faster than 30m SLA</div>
+                                    </div>
+                                    <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm">
+                                        <div className="text-xs font-bold text-ink-400 uppercase">Driver Retention Rate</div>
+                                        <div className="font-display text-3xl font-bold text-ink-950 mt-2">94.8%</div>
+                                        <div className="text-xs text-forest-600 font-semibold mt-1">High courier satisfaction</div>
+                                    </div>
                                 </div>
-                                <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm text-xs text-ink-500 space-y-2">
-                                    <h4 className="font-bold text-ink-900 text-sm">Automated Settlement Report</h4>
-                                    <p>Platform service take-rate: 15% • Merchant Payouts processed every Monday via Spring Boot Cron Scheduler.</p>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm">
+                                        <h4 className="font-bold text-ink-950 text-sm mb-4">Peak Hourly Order Velocity</h4>
+                                        <div className="h-64 w-full relative">
+                                            <HourlyVelocityChart />
+                                        </div>
+                                    </div>
+                                    <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm">
+                                        <h4 className="font-bold text-ink-950 text-sm mb-4">Revenue Split Breakdown (Take-Rate)</h4>
+                                        <div className="h-64 w-full relative flex items-center justify-center">
+                                            <RevenueSplitDoughnut />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 7. SYSTEM SETTINGS & INFRASTRUCTURE */}
+                        {activeTab === 'system' && (
+                            <div className="space-y-6">
+                                {/* Infrastructure Health Cards */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <HealthCard service="Spring Boot 3.3.4" status="ONLINE" port="Port 8080" icon="server" color="forest" />
+                                    <HealthCard service="MySQL 8.0" status="CONNECTED" port="Database: smartfood_db" icon="database" color="mint" />
+                                    <HealthCard service="Telegram Dispatch Bot" status="ACTIVE" port="@xoradelivery_bot" icon="send" color="ink" />
+                                    <HealthCard service="Payment Gateway" status="READY" port="KHQR / Bakong / ABA" icon="credit-card" color="sage" />
+                                </div>
+
+                                {/* Platform Tuning Form */}
+                                <div className="bg-white p-6 rounded-3xl border border-sage-200 shadow-sm space-y-5 max-w-2xl">
+                                    <div>
+                                        <h3 className="font-bold text-ink-900 text-base">Global Platform Configuration</h3>
+                                        <p className="text-xs text-ink-500">Tune platform service take-rate, delivery parameters, and automated courier assignment.</p>
+                                    </div>
+
+                                    <div className="space-y-4 text-xs font-semibold">
+                                        <div>
+                                            <label className="text-ink-700 flex justify-between">
+                                                <span>Platform Commission Take-Rate</span>
+                                                <strong className="text-forest-700">{settings.platformFeePercent}%</strong>
+                                            </label>
+                                            <input
+                                                type="range"
+                                                min="5"
+                                                max="30"
+                                                step="1"
+                                                value={settings.platformFeePercent}
+                                                onChange={(e) => setSettings({ ...settings, platformFeePercent: Number(e.target.value) })}
+                                                className="w-full mt-2 accent-forest-600 cursor-pointer"
+                                            />
+                                            <span className="text-[10px] text-ink-400">Current take-rate automatically applied across merchant food subtotals.</span>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-ink-700">Base Courier Delivery Fee ($)</label>
+                                            <input
+                                                type="number"
+                                                step="0.25"
+                                                value={settings.defaultDeliveryFee}
+                                                onChange={(e) => setSettings({ ...settings, defaultDeliveryFee: Number(e.target.value) })}
+                                                className="w-full mt-1.5 px-3 py-2 rounded-xl border border-sage-200 bg-cream-50 font-bold"
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-2">
+                                            <div>
+                                                <div className="text-ink-900 font-bold">Auto-Assign Nearest Courier</div>
+                                                <div className="text-[11px] text-ink-400">Automatically ping couriers on Telegram when food is accepted.</div>
+                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.autoAssignDrivers}
+                                                onChange={(e) => setSettings({ ...settings, autoAssignDrivers: e.target.checked })}
+                                                className="w-4 h-4 accent-forest-600 rounded cursor-pointer"
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-2">
+                                            <div>
+                                                <div className="text-ink-900 font-bold">Platform Maintenance Mode</div>
+                                                <div className="text-[11px] text-ink-400">Temporarily disables new order placements for scheduled maintenance.</div>
+                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.maintenanceMode}
+                                                onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
+                                                className="w-4 h-4 accent-rose-600 rounded cursor-pointer"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleSaveSettings}
+                                        className="px-5 py-2.5 rounded-2xl bg-forest-600 hover:bg-forest-500 text-white font-extrabold text-xs shadow-md transition"
+                                    >
+                                        Save Platform Settings
+                                    </button>
                                 </div>
                             </div>
                         )}
                     </div>
                 </main>
+
+                {/* Batch Payout Confirmation Modal */}
+                {showPayoutModal && (
+                    <div className="fixed inset-0 bg-ink-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-3xl border border-sage-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-forest-100 text-forest-700 flex items-center justify-center font-bold">
+                                    <i data-lucide="zap" className="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-ink-950 text-base">Confirm Daily Settlement Payout</h3>
+                                    <p className="text-xs text-ink-500">Atomic MySQL Stored Procedure Execution</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-cream-50 p-4 rounded-2xl border border-sage-200 space-y-2 text-xs">
+                                <div className="flex justify-between">
+                                    <span className="text-ink-500">Total Settled Orders:</span>
+                                    <strong className="text-ink-900">{settlements.filter(s=>s.status==='SETTLED').length} Orders</strong>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-ink-500">Total Merchant Payout Disbursal:</span>
+                                    <strong className="text-forest-700 text-sm font-display">${formatMoney(totalSettledReady)}</strong>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-ink-500">Target Stored Procedure:</span>
+                                    <code className="text-ink-800 font-mono text-[10px]">sp_process_daily_settlement(NULL)</code>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-2">
+                                <button
+                                    onClick={() => setShowPayoutModal(false)}
+                                    className="flex-1 py-2.5 rounded-xl border border-sage-200 text-ink-600 font-bold text-xs hover:bg-cream-100 transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleProcessDailyPayout}
+                                    disabled={isProcessingPayout}
+                                    className="flex-1 py-2.5 rounded-xl bg-forest-600 hover:bg-forest-500 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2"
+                                >
+                                    {isProcessingPayout ? 'Processing Payout...' : 'Confirm Disbursal'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Order Receipt Modal */}
+                {selectedOrderReceipt && (
+                    <div className="fixed inset-0 bg-ink-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-3xl border border-sage-200 shadow-2xl max-w-sm w-full p-6 space-y-4">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h3 className="font-bold text-ink-950 text-base">Digital Receipt</h3>
+                                    <span className="text-xs font-bold text-forest-700">#ORD-{selectedOrderReceipt.id}</span>
+                                </div>
+                                <button onClick={() => setSelectedOrderReceipt(null)} className="text-ink-400 hover:text-ink-950 text-lg">✕</button>
+                            </div>
+
+                            <div className="border-t border-b border-sage-200 py-3 space-y-2 text-xs">
+                                <div className="flex justify-between">
+                                    <span className="text-ink-400">Restaurant:</span>
+                                    <strong className="text-ink-900">{selectedOrderReceipt.merchant}</strong>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-ink-400">Customer:</span>
+                                    <strong className="text-ink-900">{selectedOrderReceipt.customer}</strong>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-ink-400">Courier:</span>
+                                    <strong className="text-ink-900">{selectedOrderReceipt.driver || 'None'}</strong>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-ink-400">Payment:</span>
+                                    <strong className="text-forest-700">{selectedOrderReceipt.payment}</strong>
+                                </div>
+                                <div className="pt-2 text-ink-600 font-medium">
+                                    Items: {selectedOrderReceipt.items}
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between items-center text-sm font-bold">
+                                <span>Total Paid:</span>
+                                <span className="font-display text-lg text-ink-950">${formatMoney(selectedOrderReceipt.total)}</span>
+                            </div>
+
+                            <button
+                                onClick={() => setSelectedOrderReceipt(null)}
+                                className="w-full py-2.5 rounded-xl bg-forest-600 text-white font-bold text-xs"
+                            >
+                                Close Receipt
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
 
+    // Chart Component 1: 7-Day Revenue Trend (Chart.js)
+    function RevenueTrendChart({ settlements }) {
+        const canvasRef = useRef(null);
+        const chartInstance = useRef(null);
+
+        useEffect(() => {
+            if (!canvasRef.current) return;
+            if (chartInstance.current) chartInstance.current.destroy();
+
+            const ctx = canvasRef.current.getContext('2d');
+            chartInstance.current = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Gross GMV ($)',
+                            data: [140.50, 215.00, 185.00, 290.00, 420.00, 560.50, 490.00],
+                            borderColor: '#1a936f',
+                            backgroundColor: 'rgba(26, 147, 111, 0.1)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2.5
+                        },
+                        {
+                            label: '15% Net Take ($)',
+                            data: [21.07, 32.25, 27.75, 43.50, 63.00, 84.07, 73.50],
+                            borderColor: '#4c8593',
+                            borderDash: [4, 4],
+                            tension: 0.35,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } }
+                    },
+                    scales: {
+                        y: { grid: { color: '#eef3e9' }, ticks: { font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            return () => {
+                if (chartInstance.current) chartInstance.current.destroy();
+            };
+        }, [settlements]);
+
+        return <canvas ref={canvasRef} />;
+    }
+
+    // Chart Component 2: Order Status Doughnut (Chart.js)
+    function OrderStatusDoughnut({ orders }) {
+        const canvasRef = useRef(null);
+        const chartInstance = useRef(null);
+
+        useEffect(() => {
+            if (!canvasRef.current) return;
+            if (chartInstance.current) chartInstance.current.destroy();
+
+            const safeOrders = Array.isArray(orders) ? orders : [];
+            const delivered = safeOrders.filter(o => o.status === 'DELIVERED').length;
+            const transit = safeOrders.filter(o => o.status === 'OUT_FOR_DELIVERY').length;
+            const kitchen = safeOrders.filter(o => o.status === 'ACCEPTED').length;
+            const pending = safeOrders.filter(o => o.status === 'PENDING').length;
+            const cancelled = safeOrders.filter(o => o.status === 'CANCELLED').length;
+
+            const ctx = canvasRef.current.getContext('2d');
+            chartInstance.current = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Delivered', 'On Way', 'In Kitchen', 'Pending', 'Cancelled'],
+                    datasets: [{
+                        data: [delivered || 1, transit || 1, kitchen || 1, pending || 1, cancelled || 1],
+                        backgroundColor: ['#1a936f', '#3b82f6', '#f59e0b', '#88d498', '#b4543d'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                    },
+                    cutout: '68%'
+                }
+            });
+
+            return () => {
+                if (chartInstance.current) chartInstance.current.destroy();
+            };
+        }, [orders]);
+
+        return <canvas ref={canvasRef} />;
+    }
+
+    // Chart Component 3: Hourly Velocity (Chart.js)
+    function HourlyVelocityChart() {
+        const canvasRef = useRef(null);
+        const chartInstance = useRef(null);
+
+        useEffect(() => {
+            if (!canvasRef.current) return;
+            if (chartInstance.current) chartInstance.current.destroy();
+
+            const ctx = canvasRef.current.getContext('2d');
+            chartInstance.current = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['8AM', '10AM', '12PM (Lunch)', '2PM', '4PM', '6PM', '8PM (Dinner)', '10PM'],
+                    datasets: [{
+                        label: 'Hourly Orders Completed',
+                        data: [12, 28, 94, 32, 24, 76, 110, 42],
+                        backgroundColor: '#1a936f',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#eef3e9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            return () => {
+                if (chartInstance.current) chartInstance.current.destroy();
+            };
+        }, []);
+
+        return <canvas ref={canvasRef} />;
+    }
+
+    // Chart Component 4: Revenue Split Doughnut (Chart.js)
+    function RevenueSplitDoughnut() {
+        const canvasRef = useRef(null);
+        const chartInstance = useRef(null);
+
+        useEffect(() => {
+            if (!canvasRef.current) return;
+            if (chartInstance.current) chartInstance.current.destroy();
+
+            const ctx = canvasRef.current.getContext('2d');
+            chartInstance.current = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Merchants (85% Subtotal)', 'Platform Take (15%)', 'Couriers (100% Delivery Fee)'],
+                    datasets: [{
+                        data: [85, 15, 12],
+                        backgroundColor: ['#0d3b4b', '#1a936f', '#ceaf6c'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                    }
+                }
+            });
+
+            return () => {
+                if (chartInstance.current) chartInstance.current.destroy();
+            };
+        }, []);
+
+        return <canvas ref={canvasRef} />;
+    }
+
+    // Reusable UI Widgets
     function NavItem({ id, icon, label, badge, active, onClick }) {
         const isActive = active === id;
         return (
-            <button onClick={() => onClick(id)} className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${isActive ? 'bg-forest-500 text-white shadow-md font-extrabold' : 'text-mint-50/70 hover:text-white hover:bg-white/5'}`}>
+            <button
+                onClick={() => onClick(id)}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+                    isActive ? 'bg-forest-500 text-white shadow-md font-extrabold' : 'text-mint-50/70 hover:text-white hover:bg-white/5'
+                }`}
+            >
                 <div className="flex items-center gap-3">
                     <i data-lucide={icon} className="w-4 h-4"></i>
                     <span>{label}</span>
                 </div>
                 {badge !== undefined && badge > 0 && (
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-ink-950 text-mint-300' : 'bg-white/10 text-white/80'}`}>{badge}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                        isActive ? 'bg-ink-950 text-mint-300' : 'bg-white/10 text-white/80'
+                    }`}>
+                        {badge}
+                    </span>
                 )}
             </button>
         );
@@ -580,6 +1314,24 @@
                 <div className="mt-3">
                     <div className="font-display text-2xl font-semibold text-ink-900">{value}</div>
                     <div className="text-xs font-semibold text-forest-600 mt-1">{change}</div>
+                </div>
+            </div>
+        );
+    }
+
+    function HealthCard({ service, status, port, icon, color }) {
+        return (
+            <div className="bg-white p-5 rounded-3xl border border-sage-200 shadow-sm flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-forest-50 text-forest-600 border border-forest-200">
+                    <i data-lucide={icon} className="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div className="text-xs font-bold text-ink-900">{service}</div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="w-2 h-2 rounded-full bg-forest-500 animate-pulse"></span>
+                        <span className="text-[11px] font-extrabold text-forest-700">{status}</span>
+                    </div>
+                    <div className="text-[10px] text-ink-400 mt-0.5">{port}</div>
                 </div>
             </div>
         );

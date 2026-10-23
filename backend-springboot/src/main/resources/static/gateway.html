@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" class="h-full bg-cream-50">
 <head>
     <meta charset="UTF-8">
@@ -137,7 +137,7 @@
                     setTimeout(() => {
                         if (user.role === 'ADMIN') window.location.href = 'admin.html';
                         else if (user.role === 'MERCHANT') window.location.href = 'merchant.html';
-                        else if (user.role === 'DRIVER') window.location.href = 'driver.html';
+                        else if (user.role === 'DRIVER') window.open('https://t.me/xoradelivery_bot', '_blank');
                         else window.location.href = 'index.html';
                     }, 600);
                     return;
@@ -159,7 +159,7 @@
             localStorage.setItem('foodeats_auth_user', JSON.stringify(fallbackUser));
             if (role === 'ADMIN') window.location.href = 'admin.html';
             else if (role === 'MERCHANT') window.location.href = 'merchant.html';
-            else if (role === 'DRIVER') window.location.href = 'driver.html';
+            else if (role === 'DRIVER') window.open('https://t.me/xoradelivery_bot', '_blank');
             else window.location.href = 'index.html';
         };
 
@@ -373,7 +373,7 @@
 
                         {/* 3. Driver Card */}
                         <a
-                            href="driver.html"
+                            href="https://t.me/xoradelivery_bot" target="_blank"
                             className="group bg-white rounded-3xl border border-sage-200 p-6 hover:border-forest-400 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
                         >
                             <div className="space-y-4">
@@ -473,7 +473,7 @@
                         <div className="flex items-center gap-4">
                             <a href="index.html" className="hover:text-white transition">Customer</a>
                             <a href="merchant.html" className="hover:text-white transition">Merchant</a>
-                            <a href="driver.html" className="hover:text-white transition">Driver</a>
+                            <a href="https://t.me/xoradelivery_bot" target="_blank" className="hover:text-white transition">Driver</a>
                             <a href="admin.html" className="hover:text-white transition">Admin</a>
                         </div>
                     </div>
@@ -550,41 +550,6 @@
                                         />
                                     </div>
 
-                                    {/* 1-Click Role Fill Buttons for Testing */}
-                                    <div className="p-3 bg-cream-100 rounded-2xl border border-sage-200 space-y-2">
-                                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-ink-500 block">⚡ Quick Demo Credentials:</span>
-                                        <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
-                                            <button
-                                                type="button"
-                                                onClick={() => { setAuthEmail('customer@example.com'); setAuthPassword('password123'); }}
-                                                className="p-1.5 bg-white rounded-lg border border-sage-200 hover:border-forest-400 text-forest-700 text-left truncate"
-                                            >
-                                                🛍️ Customer
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => { setAuthEmail('merchant@example.com'); setAuthPassword('password123'); }}
-                                                className="p-1.5 bg-white rounded-lg border border-sage-200 hover:border-amber-400 text-amber-700 text-left truncate"
-                                            >
-                                                🍳 Merchant
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => { setAuthEmail('driver@example.com'); setAuthPassword('password123'); }}
-                                                className="p-1.5 bg-white rounded-lg border border-sage-200 hover:border-blue-400 text-blue-700 text-left truncate"
-                                            >
-                                                🛵 Driver
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => { setAuthEmail('admin@example.com'); setAuthPassword('password123'); }}
-                                                className="p-1.5 bg-white rounded-lg border border-sage-200 hover:border-purple-400 text-purple-700 text-left truncate"
-                                            >
-                                                🛡️ Admin
-                                            </button>
-                                        </div>
-                                    </div>
-
                                     <button
                                         type="submit"
                                         className="w-full py-3 bg-forest-600 hover:bg-forest-700 text-white rounded-2xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2"
@@ -624,7 +589,7 @@
                                             required
                                             value={regEmail}
                                             onChange={e => setRegEmail(e.target.value)}
-                                            placeholder="sokha@example.com"
+                                            placeholder="user@foodeats.com"
                                             className="w-full bg-cream-50/70 border border-sage-200 rounded-2xl px-3.5 py-2 text-xs font-semibold text-ink-900 focus:outline-none focus:border-forest-500"
                                         />
                                     </div>

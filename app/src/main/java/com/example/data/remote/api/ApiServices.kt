@@ -41,6 +41,40 @@ interface AuthApiService {
 
     @GET("api/auth/profile")
     suspend fun getProfile(@Header("Authorization") token: String): Response<Map<String, Any>>
+
+    @PUT("api/auth/profile")
+    suspend fun updateProfile(
+        @Header("Authorization") token: String,
+        @Body body: Map<String, String>
+    ): Response<Map<String, Any>>
+
+    @POST("api/auth/change-password")
+    suspend fun changePassword(
+        @Header("Authorization") token: String,
+        @Body body: Map<String, String>
+    ): Response<Map<String, String>>
+
+    @DELETE("api/auth/account")
+    suspend fun deleteAccount(
+        @Header("Authorization") token: String
+    ): Response<Map<String, String>>
+
+    @GET("api/auth/addresses")
+    suspend fun getUserAddresses(
+        @Header("Authorization") token: String
+    ): Response<List<UserAddressDto>>
+
+    @POST("api/auth/addresses")
+    suspend fun addAddress(
+        @Header("Authorization") token: String,
+        @Body body: Map<String, Any>
+    ): Response<Map<String, Any>>
+
+    @DELETE("api/auth/addresses/{id}")
+    suspend fun deleteAddress(
+        @Header("Authorization") token: String,
+        @Path("id") id: Long
+    ): Response<Map<String, String>>
 }
 
 interface OrderApiService {

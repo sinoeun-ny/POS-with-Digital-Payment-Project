@@ -3,56 +3,28 @@ package com.example.ui.auth
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.security.UserRole
 import com.example.ui.components.ZandoOutlinedTextField
+import com.example.ui.theme.*
 
 @Composable
 fun RegisterScreen(
@@ -65,7 +37,6 @@ fun RegisterScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var selectedTab by remember { mutableStateOf(AuthTab.PHONE) }
-    var selectedRole by remember { mutableStateOf(UserRole.CUSTOMER) }
     var gender by remember { mutableStateOf("Male") }
 
     var firstName by remember { mutableStateOf("") }
@@ -76,9 +47,6 @@ fun RegisterScreen(
 
     var selectedCity by remember { mutableStateOf("Phnom Penh") }
     var isCityDropdownExpanded by remember { mutableStateOf(false) }
-
-    var storeName by remember { mutableStateOf("") }
-    var vehicleType by remember { mutableStateOf("Motorbike (125cc)") }
 
     var termsAgreed by remember { mutableStateOf(true) }
 
@@ -98,367 +66,375 @@ fun RegisterScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color.White
+        containerColor = Cream50
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
+                .background(Cream50)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-            // Back Arrow
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF111111)
-                )
+            // Top Bar Back Arrow
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .border(1.dp, Sage200, RoundedCornerShape(12.dp))
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Ink950,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Header Title
             Text(
-                text = "Create an account",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF111111)
+                text = "Create Account 🎉",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Black,
+                color = Ink950,
+                letterSpacing = (-0.5).sp
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Access your Bag & Orders on any of your devices",
-                fontSize = 14.sp,
-                color = Color(0xFF666666)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Account Type / Role Selection Tabs (Customer, Merchant, Driver, Admin)
-            Text(
-                text = "Account Type (Role)",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF111111)
-            )
             Spacer(modifier = Modifier.height(6.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                UserRole.values().forEach { role ->
-                    val isSelected = selectedRole == role
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(36.dp)
-                            .background(
-                                color = if (isSelected) Color.Black else Color(0xFFF2F2F2),
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                            .clickable { selectedRole = role },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = role.displayName.split(" ")[0],
-                            fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) Color.White else Color(0xFF444444)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Phone / Email Toggle Tabs
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier
-                        .clickable { selectedTab = AuthTab.PHONE }
-                        .padding(bottom = 8.dp)
-                ) {
-                    Text(
-                        text = "Phone",
-                        fontSize = 15.sp,
-                        fontWeight = if (selectedTab == AuthTab.PHONE) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selectedTab == AuthTab.PHONE) Color.Black else Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(50.dp)
-                            .height(2.dp)
-                            .background(if (selectedTab == AuthTab.PHONE) Color.Black else Color.Transparent)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(28.dp))
-
-                Column(
-                    modifier = Modifier
-                        .clickable { selectedTab = AuthTab.EMAIL }
-                        .padding(bottom = 8.dp)
-                ) {
-                    Text(
-                        text = "Email",
-                        fontSize = 15.sp,
-                        fontWeight = if (selectedTab == AuthTab.EMAIL) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selectedTab == AuthTab.EMAIL) Color.Black else Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(50.dp)
-                            .height(2.dp)
-                            .background(if (selectedTab == AuthTab.EMAIL) Color.Black else Color.Transparent)
-                    )
-                }
-            }
-
-            HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Gender Selector
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Gender (Required)",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF111111)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-
-                RadioButton(
-                    selected = gender == "Male",
-                    onClick = { gender = "Male" },
-                    colors = RadioButtonDefaults.colors(selectedColor = Color.Black)
-                )
-                Text(text = "Male", fontSize = 14.sp, color = Color(0xFF111111))
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                RadioButton(
-                    selected = gender == "Female",
-                    onClick = { gender = "Female" },
-                    colors = RadioButtonDefaults.colors(selectedColor = Color.Black)
-                )
-                Text(text = "Female", fontSize = 14.sp, color = Color(0xFF111111))
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // First Name & Last Name Grid
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ZandoOutlinedTextField(
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    label = "First name",
-                    placeholder = "Enter first name",
-                    modifier = Modifier.weight(1f)
-                )
-
-                ZandoOutlinedTextField(
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    label = "Last name",
-                    placeholder = "Enter last name",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Contact Info
-            if (selectedTab == AuthTab.PHONE) {
-                ZandoOutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = "Phone",
-                    placeholder = "Enter phone number",
-                    isPhonePrefix = true,
-                    phonePrefix = "+855",
-                    keyboardType = KeyboardType.Phone
-                )
-            } else {
-                ZandoOutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = "Email Address",
-                    placeholder = "Enter email address",
-                    keyboardType = KeyboardType.Email
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Password
-            ZandoOutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = "Password",
-                placeholder = "Enter password",
-                isPassword = true
-            )
-
-            // Role-Specific Onboarding Details
-            if (selectedRole == UserRole.MERCHANT) {
-                Spacer(modifier = Modifier.height(16.dp))
-                ZandoOutlinedTextField(
-                    value = storeName,
-                    onValueChange = { storeName = it },
-                    label = "Store / Restaurant Name",
-                    placeholder = "e.g., Kimsour Khmer Cuisine"
-                )
-            } else if (selectedRole == UserRole.DRIVER) {
-                Spacer(modifier = Modifier.height(16.dp))
-                ZandoOutlinedTextField(
-                    value = vehicleType,
-                    onValueChange = { vehicleType = it },
-                    label = "Vehicle Type & Model",
-                    placeholder = "e.g., Motorbike (Honda Dream 125)"
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // City / Province Dropdown
             Text(
-                text = "City/province (Required)",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF111111),
-                modifier = Modifier.padding(bottom = 6.dp)
+                text = "Join FoodEats to order gourmet meals, save multiple delivery addresses, and track orders live.",
+                fontSize = 14.sp,
+                color = Ink600,
+                lineHeight = 20.sp
             )
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .border(1.dp, Color(0xFF222222), RoundedCornerShape(8.dp))
-                        .clickable { isCityDropdownExpanded = true }
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = selectedCity,
-                            fontSize = 14.sp,
-                            color = Color(0xFF111111)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = "Select City",
-                            tint = Color(0xFF333333)
-                        )
-                    }
-                }
-
-                DropdownMenu(
-                    expanded = isCityDropdownExpanded,
-                    onDismissRequest = { isCityDropdownExpanded = false }
-                ) {
-                    cities.forEach { city ->
-                        DropdownMenuItem(
-                            text = { Text(city) },
-                            onClick = {
-                                selectedCity = city
-                                isCityDropdownExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Terms Checkbox
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Checkbox(
-                    checked = termsAgreed,
-                    onCheckedChange = { termsAgreed = it },
-                    colors = CheckboxDefaults.colors(checkedColor = Color.Black)
-                )
-                Text(
-                    text = "I have read and agree to the ",
-                    fontSize = 13.sp,
-                    color = Color(0xFF333333)
-                )
-                Text(
-                    text = "Term and Conditions",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF3F51B5),
-                    textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable { }
-                )
-            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // REGISTER Primary Button
-            Button(
-                onClick = {
-                    val fullPhone = if (selectedTab == AuthTab.PHONE) "+855$phone" else phone
-                    viewModel.register(
-                        firstName = firstName,
-                        lastName = lastName,
-                        phone = fullPhone,
-                        email = email,
-                        password = password,
-                        cityProvince = selectedCity,
-                        gender = gender,
-                        selectedRole = selectedRole,
-                        storeName = storeName,
-                        vehicleType = vehicleType
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = com.example.ui.theme.Forest500,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(6.dp),
-                enabled = !uiState.isLoading && termsAgreed
+            // Main Registration Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(22.dp),
-                        strokeWidth = 2.dp
+                Column(
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    // Modern Segmented Toggle Tabs (Phone / Email)
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Cream100,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            // Phone Tab Pill
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { selectedTab = AuthTab.PHONE },
+                                color = if (selectedTab == AuthTab.PHONE) Forest500 else Color.Transparent,
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Phone,
+                                        contentDescription = null,
+                                        tint = if (selectedTab == AuthTab.PHONE) Color.White else Ink600,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Mobile Phone",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (selectedTab == AuthTab.PHONE) Color.White else Ink600
+                                    )
+                                }
+                            }
+
+                            // Email Tab Pill
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { selectedTab = AuthTab.EMAIL },
+                                color = if (selectedTab == AuthTab.EMAIL) Forest500 else Color.Transparent,
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Email,
+                                        contentDescription = null,
+                                        tint = if (selectedTab == AuthTab.EMAIL) Color.White else Ink600,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Email",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (selectedTab == AuthTab.EMAIL) Color.White else Ink600
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // First Name & Last Name Grid
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        ZandoOutlinedTextField(
+                            value = firstName,
+                            onValueChange = { firstName = it },
+                            label = "First Name",
+                            placeholder = "Sok",
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        ZandoOutlinedTextField(
+                            value = lastName,
+                            onValueChange = { lastName = it },
+                            label = "Last Name",
+                            placeholder = "Chan",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Contact Info
+                    if (selectedTab == AuthTab.PHONE) {
+                        ZandoOutlinedTextField(
+                            value = phone,
+                            onValueChange = { phone = it },
+                            label = "Mobile Number",
+                            placeholder = "12 345 678",
+                            isPhonePrefix = true,
+                            phonePrefix = "+855",
+                            keyboardType = KeyboardType.Phone
+                        )
+                    } else {
+                        ZandoOutlinedTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = "Email Address",
+                            placeholder = "name@example.com",
+                            isPhonePrefix = false,
+                            keyboardType = KeyboardType.Email
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Password
+                    ZandoOutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = "Password",
+                        placeholder = "Create a secure password (min 6 chars)",
+                        isPassword = true
                     )
-                } else {
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Gender Selector
                     Text(
-                        text = "REGISTER",
-                        fontSize = 15.sp,
+                        text = "Gender",
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
+                        color = Ink700
                     )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("Male", "Female").forEach { g ->
+                            val isSel = gender == g
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { gender = g },
+                                color = if (isSel) Forest100 else Sage50,
+                                shape = RoundedCornerShape(10.dp),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    if (isSel) Forest500 else Sage200
+                                )
+                            ) {
+                                Text(
+                                    text = if (isSel) "✓ $g" else g,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSel) Forest800 else Ink700,
+                                    modifier = Modifier
+                                        .padding(vertical = 10.dp)
+                                        .wrapContentWidth(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // City / Province Dropdown
+                    Text(
+                        text = "City / Delivery Zone",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Ink700
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable { isCityDropdownExpanded = true },
+                            color = Sage50,
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Sage200)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = selectedCity,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Ink950
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Select City",
+                                    tint = Ink600
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = isCityDropdownExpanded,
+                            onDismissRequest = { isCityDropdownExpanded = false }
+                        ) {
+                            cities.forEach { city ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = city,
+                                            fontWeight = if (selectedCity == city) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (selectedCity == city) Forest700 else Ink950
+                                        )
+                                    },
+                                    onClick = {
+                                        selectedCity = city
+                                        isCityDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Terms Checkbox
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Checkbox(
+                            checked = termsAgreed,
+                            onCheckedChange = { termsAgreed = it },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Forest500,
+                                uncheckedColor = Sage400
+                            )
+                        )
+                        Text(
+                            text = "I agree to FoodEats Terms of Service & Privacy Policy",
+                            fontSize = 12.sp,
+                            color = Ink700
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // REGISTER Primary Button
+                    Button(
+                        onClick = {
+                            val fullPhone = if (selectedTab == AuthTab.PHONE) "+855$phone" else phone
+                            viewModel.register(
+                                firstName = firstName.trim(),
+                                lastName = lastName.trim(),
+                                phone = fullPhone.trim(),
+                                email = email.trim(),
+                                password = password,
+                                cityProvince = selectedCity,
+                                gender = gender,
+                                selectedRole = UserRole.CUSTOMER
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Forest500,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
+                        enabled = !uiState.isLoading && termsAgreed && (firstName.isNotBlank() || lastName.isNotBlank())
+                    ) {
+                        if (uiState.isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(22.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = "Create Account",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Already have an account link
             Row(
@@ -469,13 +445,13 @@ fun RegisterScreen(
                 Text(
                     text = "Already have an account? ",
                     fontSize = 14.sp,
-                    color = Color(0xFF555555)
+                    color = Ink600
                 )
                 Text(
-                    text = "Login",
+                    text = "Sign In",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = Forest600,
                     modifier = Modifier.clickable { onNavigateToLogin() }
                 )
             }

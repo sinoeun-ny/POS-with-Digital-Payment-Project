@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-cream-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | FoodEats Phnom Penh</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: { 50: '#eef4f5', 100: '#d7e6e9', 700: '#16455a', 900: '#0d3b4b', 950: '#082530' },
+                        forest: { 50: '#eefaf5', 100: '#d3f2e3', 500: '#1a936f', 600: '#157a5c', 700: '#12634c' },
+                        mint: { 300: '#a2e0b9', 400: '#88d498' },
+                        cream: { 50: '#fdfbf7', 100: '#f8f2e6', 200: '#f3e9d2' },
+                        sage: { 100: '#eef3e9', 200: '#dde9d4' },
+                        rust: { 500: '#b4543d', 600: '#96422f' }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Fraunces', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-display { font-family: 'Fraunces', serif; }
+    </style>
+</head>
+<body class="min-h-screen bg-cream-50 text-ink-900 flex flex-col items-center justify-center p-6 antialiased">
+    <div class="max-w-md w-full bg-white rounded-3xl border-2 border-sage-200 shadow-2xl p-8 sm:p-10 text-center space-y-6">
+        
+        {/* Brand Badge */}
+        <div className="flex items-center justify-center gap-2.5">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-forest-500 to-forest-700 text-white flex items-center justify-center font-black shadow-md">
+                <i data-lucide="utensils" class="w-5 h-5"></i>
+            </div>
+            <span class="font-display font-black text-2xl text-ink-950">FoodEats</span>
+        </div>
+
+        {/* 404 Illustration */}
+        <div class="relative w-28 h-28 mx-auto flex items-center justify-center">
+            <div class="w-28 h-28 rounded-full bg-rust-500/10 border-2 border-rust-500/20 flex items-center justify-center animate-pulse">
+                <i data-lucide="utensils-crossed" class="w-14 h-14 text-rust-600"></i>
+            </div>
+            <span class="absolute -top-1 -right-1 px-2.5 py-0.5 rounded-full bg-rust-600 text-white font-black text-xs shadow-md">
+                404
+            </span>
+        </div>
+
+        {/* Text Details */}
+        <div class="space-y-2">
+            <h1 class="font-display font-black text-3xl text-ink-950">Oops! Dish Not Found</h1>
+            <p class="text-xs text-ink-700 font-medium leading-relaxed">
+                The food page or restaurant route you are looking for has been moved, eaten, or doesn't exist on our server.
+            </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div class="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="/index.html" class="flex-1 py-3 px-5 bg-forest-600 hover:bg-forest-700 text-white font-bold text-xs rounded-2xl transition shadow-lg shadow-forest-600/30 flex items-center justify-center gap-2">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Return to Discovery</span>
+            </a>
+            <a href="/merchant.html" class="py-3 px-4 bg-cream-100 hover:bg-cream-200 text-ink-900 border border-sage-200 font-bold text-xs rounded-2xl transition flex items-center justify-center gap-1.5">
+                <i data-lucide="chef-hat" class="w-4 h-4 text-forest-600"></i>
+                <span>Kitchen Hub</span>
+            </a>
+        </div>
+
+        {/* Footer info */}
+        <div class="pt-4 border-t border-sage-100 text-[11px] text-ink-400 font-semibold">
+            FoodEats Platform • Phnom Penh, Cambodia
+        </div>
+    </div>
+
+    <script>
+        if (window.lucide) window.lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -57,6 +57,9 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
 
                     // Fetch user and address with isolated coroutines
                     observeUserData(session.userId)
+
+                    // Fetch real customer orders from MySQL database via Spring Boot!
+                    FoodEatsRepository.fetchOrdersFromBackend(session.jwtToken)
                 } else {
                     userDataJob?.cancel()
                     userDataJob = null
@@ -174,17 +177,76 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun updateProfile(newName: String, newPhone: String, onResult: ((Boolean, String) -> Unit)? = null) {
+        val session = _uiState.value.activeSession ?: return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            when (val result = repository.updateProfile(session.userId, newName, newPhone, session.jwtToken)) {
+                is AuthResult.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        successMessage = "Profile updated in database!"
+                    )
+                    onResult?.invoke(true, "Profile updated successfully!")
+                }
+                is AuthResult.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
+                    onResult?.invoke(false, result.message)
+                }
+            }
+        }
+    }
+
+    fun changePassword(currentPw: String, newPw: String, onResult: ((Boolean, String) -> Unit)? = null) {
+        val session = _uiState.value.activeSession ?: return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            when (val result = repository.changePassword(currentPw, newPw, session.jwtToken)) {
+                is AuthResult.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        successMessage = "Password successfully changed in MySQL database!"
+                    )
+                    onResult?.invoke(true, "Password updated successfully!")
+                }
+                is AuthResult.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
+                    onResult?.invoke(false, result.message)
+                }
+            }
+        }
+    }
+
+    fun deleteAccount(onResult: ((Boolean) -> Unit)? = null) {
+        val session = _uiState.value.activeSession ?: return
+        viewModelScope.launch {
+            repository.deleteAccount(session.userId, session.jwtToken)
+            userDataJob?.cancel()
+            userDataJob = null
+            FoodEatsRepository.clearUserData()
+            _uiState.value = AuthUiState()
+            onResult?.invoke(true)
+        }
+    }
+
     fun addAddress(label: String, street: String, city: String, isDefault: Boolean) {
         val session = _uiState.value.activeSession ?: return
         viewModelScope.launch {
-            repository.addAddress(session.userId, label, street, city, isDefault)
+            repository.addAddress(session.userId, label, street, city, isDefault, session.jwtToken)
             _uiState.value = _uiState.value.copy(successMessage = "Address added to Address Book")
         }
     }
 
     fun deleteAddress(addressId: Long) {
+        val session = _uiState.value.activeSession
         viewModelScope.launch {
-            repository.deleteAddress(addressId)
+            repository.deleteAddress(addressId, session?.jwtToken)
         }
     }
 

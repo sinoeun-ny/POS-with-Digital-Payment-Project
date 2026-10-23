@@ -1,8 +1,12 @@
 package com.foodeats.controller;
 
 import com.foodeats.dto.CheckoutRequest;
+import com.foodeats.model.Merchant;
 import com.foodeats.model.Order;
 import com.foodeats.model.User;
+import com.foodeats.model.UserRole;
+import com.foodeats.repository.MerchantRepository;
+import com.foodeats.repository.UserRepository;
 import com.foodeats.security.JwtUtil;
 import com.foodeats.service.OrderService;
 import org.springframework.http.ResponseEntity;
@@ -18,16 +22,19 @@ public class OrderController {
     private final OrderService orderService;
     private final com.foodeats.service.DriverLocationService driverLocationService;
     private final JwtUtil jwtUtil;
-    private final com.foodeats.repository.UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final MerchantRepository merchantRepository;
 
     public OrderController(OrderService orderService,
                            com.foodeats.service.DriverLocationService driverLocationService,
                            JwtUtil jwtUtil,
-                           com.foodeats.repository.UserRepository userRepository) {
+                           UserRepository userRepository,
+                           MerchantRepository merchantRepository) {
         this.orderService = orderService;
         this.driverLocationService = driverLocationService;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
+        this.merchantRepository = merchantRepository;
     }
 
     private User getAuthenticatedUser(String authHeader) {
@@ -49,7 +56,7 @@ public class OrderController {
         user.setId(userId);
         if (roleStr != null) {
             try {
-                user.setRole(com.foodeats.model.UserRole.valueOf(roleStr.replace("ROLE_", "")));
+                user.setRole(UserRole.valueOf(roleStr.replace("ROLE_", "")));
             } catch (Exception ignored) {}
         }
         return user;
@@ -82,24 +89,35 @@ public class OrderController {
     public ResponseEntity<?> getOrders(@RequestHeader(value = "Authorization", required = false) String authHeader,
                                        @RequestParam(value = "merchantId", required = false) Long merchantId,
                                        @RequestParam(value = "all", required = false, defaultValue = "false") boolean all) {
-        if (all || (merchantId != null && merchantId <= 0)) {
-            return ResponseEntity.ok(orderService.getAllOrders());
+        User user = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            user = getAuthenticatedUser(authHeader);
+        }
+
+        if (all) {
+            if (user != null && user.getRole() == UserRole.ADMIN) {
+                return ResponseEntity.ok(orderService.getAllOrders());
+            }
+            return ResponseEntity.status(403).body(Map.of("message", "Admin access required for full order dump."));
         }
 
         if (merchantId != null && merchantId > 0) {
+            // Verify merchant ownership if caller is a merchant
+            if (user != null && user.getRole() == UserRole.MERCHANT) {
+                List<Merchant> ownedStores = merchantRepository.findByOwnerId(user.getId());
+                boolean ownsStore = ownedStores.stream().anyMatch(m -> m.getId().equals(merchantId));
+                if (!ownsStore) {
+                    return ResponseEntity.status(403).body(Map.of("message", "Access denied. You do not own this restaurant."));
+                }
+            }
             return ResponseEntity.ok(orderService.getOrdersByMerchantId(merchantId));
         }
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.ok(List.of());
-        }
-
-        User user = getAuthenticatedUser(authHeader);
         if (user == null) {
             return ResponseEntity.ok(List.of());
         }
 
-        if (user.getRole() == com.foodeats.model.UserRole.ADMIN) {
+        if (user.getRole() == UserRole.ADMIN) {
             return ResponseEntity.ok(orderService.getAllOrders());
         }
 

@@ -18,6 +18,12 @@ public class SettlementController {
         this.settlementService = settlementService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<Settlement>> getAllSettlements() {
+        List<Settlement> list = settlementService.getAllSettlements();
+        return ResponseEntity.ok(list);
+    }
+
     @GetMapping("/merchant/{merchantId}")
     public ResponseEntity<List<Settlement>> getMerchantSettlements(@PathVariable Long merchantId) {
         List<Settlement> list = settlementService.getSettlementsByMerchant(merchantId);
@@ -28,5 +34,13 @@ public class SettlementController {
     public ResponseEntity<Map<String, Object>> getMerchantSettlementSummary(@PathVariable Long merchantId) {
         Map<String, Object> summary = settlementService.getMerchantFinancialSummary(merchantId);
         return ResponseEntity.ok(summary);
+    }
+
+    @PostMapping("/process-payout")
+    public ResponseEntity<Map<String, Object>> triggerDailySettlementPayout(
+            @RequestParam(required = false) Long merchantId
+    ){
+        Map<String, Object> result = settlementService.processDailyPayout(merchantId);
+        return ResponseEntity.ok(result);
     }
 }

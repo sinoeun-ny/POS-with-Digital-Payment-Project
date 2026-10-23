@@ -1,0 +1,14 @@
+# FoodEats Search Engine Crawler Directives
+# https://www.robotstxt.org/
+
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /merchant.html
+
+# Prevent indexing of internal administrative hubs and private API endpoints
+Disallow: /admin.html
+Disallow: /api/
+
+# XML Sitemap Location
+Sitemap: http://localhost:8080/sitemap.xml

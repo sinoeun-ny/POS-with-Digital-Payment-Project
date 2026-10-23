@@ -2,6 +2,7 @@ package com.foodeats.controller;
 
 import com.foodeats.model.Merchant;
 import com.foodeats.model.User;
+import com.foodeats.model.UserRole;
 import com.foodeats.repository.MerchantRepository;
 import com.foodeats.repository.UserRepository;
 import com.foodeats.security.JwtUtil;
@@ -59,12 +60,7 @@ public class MerchantController {
                 }
             }
         }
-        // Fallback to first merchant if not authenticated or demoing
-        List<Merchant> merchants = merchantRepository.findAll();
-        if (!merchants.isEmpty()) {
-            return ResponseEntity.ok(merchants.get(0));
-        }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.status(401).body(Map.of("message", "Unauthorized or no store found for this account."));
     }
 
     @GetMapping("/my-stores")
@@ -74,7 +70,11 @@ public class MerchantController {
             String email = jwtUtil.extractEmail(token);
             Optional<User> userOpt = userRepository.findByEmail(email);
             if (userOpt.isPresent()) {
-                List<Merchant> merchantList = merchantRepository.findByOwnerId(userOpt.get().getId());
+                User user = userOpt.get();
+                if (user.getRole() == UserRole.ADMIN) {
+                    return ResponseEntity.ok(merchantRepository.findAll());
+                }
+                List<Merchant> merchantList = merchantRepository.findByOwnerId(user.getId());
                 return ResponseEntity.ok(merchantList);
             }
         }

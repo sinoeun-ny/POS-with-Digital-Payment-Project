@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoodEats - Merchant Kitchen & Menu Builder (Sprint 2)</title>
+
+    <!-- Production SEO & Portal Privacy (Items 2, 4, 5, 8 in Creator Checklist) -->
+    <meta name="description" content="FoodEats Merchant Hub - Kitchen console for restaurant storefront management, menu dish customization, inventory stock control, and real-time order processing.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="http://localhost:8080/merchant.html">
+
+    <!-- Open Graph Social Previews -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="FoodEats Merchant Hub - Kitchen Console">
+    <meta property="og:description" content="Manage restaurant storefronts, customize dish menus, update pricing, and accept live customer orders.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&auto=format&fit=crop&q=80">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -60,12 +71,14 @@
         *:focus-visible { outline: 2px solid #1a936f; outline-offset: 2px; }
     </style>
 </head>
-<body class="h-screen w-screen m-0 p-0 text-ink-900 bg-cream-50 overflow-hidden antialiased">
-<div id="root" class="w-full h-full overflow-hidden flex flex-col md:flex-row items-center justify-center">
-    <div class="text-center p-8 bg-white/80 backdrop-blur rounded-3xl border border-sage-200 shadow-xl max-w-sm">
-        <div class="w-12 h-12 border-4 border-forest-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <h2 class="font-display font-bold text-xl text-ink-950 mb-1">Loading Merchant Portal...</h2>
-        <p class="text-xs text-ink-500 font-semibold">Sprint 2: Storefront & Menu Builder</p>
+<body class="min-h-screen w-full m-0 p-0 text-ink-900 bg-cream-50 antialiased selection:bg-forest-500 selection:text-white">
+<div id="root" class="min-h-screen w-full flex flex-col">
+    <div class="min-h-screen flex items-center justify-center p-6 bg-cream-50">
+        <div class="text-center p-8 bg-white/80 backdrop-blur rounded-3xl border border-sage-200 shadow-xl max-w-sm">
+            <div class="w-12 h-12 border-4 border-forest-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 class="font-display font-bold text-xl text-ink-950 mb-1">Loading Merchant Portal...</h2>
+            <p class="text-xs text-ink-500 font-semibold">Sprint 2: Storefront & Menu Builder</p>
+        </div>
     </div>
 </div>
 
@@ -213,24 +226,27 @@
         const [editingItem, setEditingItem] = useState(null);
         const [showCategoryModal, setShowCategoryModal] = useState(false);
         const [editingCategory, setEditingCategory] = useState(null);
-        const [showAuthModal, setShowAuthModal] = useState(false);
 
-        // Auth state (Allows all roles)
+        // Merchant login barrier state (Strict database validation)
+        const [loginEmail, setLoginEmail] = useState('');
+        const [loginPassword, setLoginPassword] = useState('');
+        const [showPassword, setShowPassword] = useState(false);
+        const [loginError, setLoginError] = useState('');
+        const [loginLoading, setLoginLoading] = useState(false);
+
+        // Auth state (Requires valid DB-authenticated MERCHANT or ADMIN user)
         const [currentUser, setCurrentUser] = useState(() => {
             const savedToken = localStorage.getItem('foodeats_auth_token');
             const savedUser = localStorage.getItem('foodeats_auth_user');
-            if (savedUser) {
+            if (savedUser && savedToken) {
                 try {
                     const parsed = JSON.parse(savedUser);
-                    return { ...parsed, token: savedToken || parsed.token || '' };
+                    if (parsed && (parsed.role === 'MERCHANT' || parsed.role === 'ADMIN')) {
+                        return { ...parsed, token: savedToken };
+                    }
                 } catch (e) {}
             }
-            return {
-                name: "Bopha Merchant",
-                email: "merchant@example.com",
-                role: "MERCHANT",
-                token: savedToken || ""
-            };
+            return null; // Forces sign-in if not authenticated in DB
         });
 
         // Orders state
@@ -238,19 +254,91 @@
         const [ordersLoading, setOrdersLoading] = useState(false);
 
         // Active Store
-        const currentStore = stores.find(s => s.id === selectedStoreId) || stores[0];
+        const currentStore = (stores && stores.find(s => s.id === selectedStoreId)) || (stores && stores.length > 0 ? stores[0] : null);
 
         const showToast = (msg, type = 'success') => {
             setToast({ msg, type });
             setTimeout(() => setToast(null), 3200);
         };
 
+        const handleMerchantLogin = async (e) => {
+            e.preventDefault();
+            setLoginLoading(true);
+            setLoginError('');
+
+            const email = loginEmail.trim().toLowerCase();
+            const password = loginPassword.trim();
+
+            if (!email || !password) {
+                setLoginError('Please enter both your merchant email and password.');
+                setLoginLoading(false);
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.role !== 'MERCHANT' && data.role !== 'ADMIN') {
+                        setLoginError(`Access Denied: Your account role is "${data.role}". Only MERCHANT or ADMIN accounts stored in the database can access this portal.`);
+                        setLoginLoading(false);
+                        return;
+                    }
+
+                    const loggedUser = {
+                        id: data.id || data.userId,
+                        name: data.name,
+                        email: data.email,
+                        role: data.role,
+                        token: data.token
+                    };
+
+                    localStorage.setItem('foodeats_auth_token', data.token);
+                    localStorage.setItem('foodeats_auth_user', JSON.stringify(loggedUser));
+                    setCurrentUser(loggedUser);
+                    showToast(`Welcome back, ${loggedUser.name}!`);
+
+                    // Immediately fetch owner's stores from backend
+                    try {
+                        const storeRes = await fetch(`${API_BASE}/api/merchants/my-stores`, {
+                            headers: { 'Authorization': `Bearer ${data.token}` }
+                        });
+                        if (storeRes.ok) {
+                            const storeData = await storeRes.json();
+                            if (Array.isArray(storeData)) {
+                                setStores(storeData);
+                                if (storeData.length > 0) {
+                                    setSelectedStoreId(storeData[0].id);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.log("Error loading stores after login", err);
+                    }
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    setLoginError(errData.message || 'Invalid email or password. Please verify your merchant account is in the database.');
+                }
+            } catch (err) {
+                setLoginError('Cannot connect to authentication service. Please ensure the backend server is running.');
+            } finally {
+                setLoginLoading(false);
+            }
+        };
+
         const fetchOrdersFromBackend = async () => {
+            if (!currentUser) return;
             try {
                 setOrdersLoading(true);
-                const url = (selectedStoreId === 0 || !selectedStoreId)
+                const activeId = currentStore ? currentStore.id : selectedStoreId;
+                const url = (activeId === 0 || !activeId)
                     ? `${API_BASE}/api/orders?all=true`
-                    : `${API_BASE}/api/orders?merchantId=${selectedStoreId}`;
+                    : `${API_BASE}/api/orders?merchantId=${activeId}`;
                 const res = await fetch(url);
                 if (res.ok) {
                     const data = await res.json();
@@ -267,7 +355,7 @@
 
         const handleUpdateOrderStatus = async (orderId, newStatus) => {
             try {
-                const token = localStorage.getItem('foodeats_auth_token') || currentUser.token;
+                const token = localStorage.getItem('foodeats_auth_token') || currentUser?.token;
                 const res = await fetch(`${API_BASE}/api/orders/${orderId}/status`, {
                     method: 'PUT',
                     headers: {
@@ -288,45 +376,88 @@
         };
 
         useEffect(() => {
-            fetchStoresFromBackend();
-            fetchCategoriesFromBackend(selectedStoreId);
-            fetchMenuFromBackend(selectedStoreId);
-        }, [selectedStoreId]);
+            if (currentUser) {
+                fetchStoresFromBackend();
+            }
+        }, [currentUser]);
 
         useEffect(() => {
-            fetchOrdersFromBackend();
-            const interval = setInterval(fetchOrdersFromBackend, 3500);
-            return () => clearInterval(interval);
-        }, [selectedStoreId]);
+            if (currentUser && currentStore?.id) {
+                fetchCategoriesFromBackend(currentStore.id);
+                fetchMenuFromBackend(currentStore.id);
+            }
+        }, [currentUser, currentStore?.id]);
+
+        useEffect(() => {
+            if (currentUser) {
+                fetchOrdersFromBackend();
+                const interval = setInterval(fetchOrdersFromBackend, 3500);
+                return () => clearInterval(interval);
+            }
+        }, [currentUser, currentStore?.id, selectedStoreId]);
 
         useEffect(() => {
             if (window.lucide) window.lucide.createIcons();
-        }, [activeTab, stores, selectedStoreId, categories, menuItems, orders, toast, showItemModal, showCategoryModal, showAuthModal]);
+        });
 
         const handleLogout = () => {
+            const userName = currentUser && currentUser.name ? currentUser.name : "Merchant";
+            const confirmed = window.confirm(`Are you sure you want to sign out, ${userName}?`);
+            if (!confirmed) {
+                return;
+            }
             localStorage.removeItem('foodeats_auth_token');
             localStorage.removeItem('foodeats_auth_user');
-            window.location.href = 'index.html';
+            setCurrentUser(null);
+            setStores([]);
+            setSelectedStoreId(0);
+            setLoginEmail('');
+            setLoginPassword('');
+            setLoginError('');
+            showToast("Signed out successfully.", "info");
         };
 
         // ==========================================
-        // BACKEND REST API CALLS
+        // BACKEND REST API CALLS (Owner store isolation)
         // ==========================================
         const fetchStoresFromBackend = async () => {
+            const token = localStorage.getItem('foodeats_auth_token') || currentUser?.token;
+            if (!token) {
+                setStores([]);
+                setSelectedStoreId(0);
+                return;
+            }
             try {
-                const res = await fetch(`${API_BASE}/api/merchants`);
+                const res = await fetch(`${API_BASE}/api/merchants/my-stores`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.length > 0) setStores(data);
+                    if (Array.isArray(data)) {
+                        setStores(data);
+                        if (data.length > 0) {
+                            setSelectedStoreId(prev => (data.some(s => s.id === prev) ? prev : data[0].id));
+                        } else {
+                            setSelectedStoreId(0);
+                        }
+                        return;
+                    }
+                } else if (res.status === 401 || res.status === 403) {
+                    localStorage.removeItem('foodeats_auth_token');
+                    localStorage.removeItem('foodeats_auth_user');
+                    setCurrentUser(null);
+                    setStores([]);
+                    setSelectedStoreId(0);
                 }
             } catch (err) {
-                console.log("Using cached stores data", err);
+                console.log("Error loading merchant stores", err);
             }
         };
 
         const fetchCategoriesFromBackend = async (merchantId) => {
+            if (!merchantId) return;
             try {
-                const url = merchantId ? `${API_BASE}/api/categories?merchantId=${merchantId}` : `${API_BASE}/api/categories`;
+                const url = `${API_BASE}/api/categories?merchantId=${merchantId}`;
                 const res = await fetch(url);
                 if (res.ok) {
                     const data = await res.json();
@@ -340,11 +471,12 @@
         };
 
         const fetchMenuFromBackend = async (merchantId) => {
+            if (!merchantId) return;
             try {
                 const res = await fetch(`${API_BASE}/api/menu?merchantId=${merchantId}`);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.length > 0) setMenuItems(data);
+                    if (data && Array.isArray(data)) setMenuItems(data);
                 }
             } catch (err) {
                 console.log("Using cached menu data", err);
@@ -353,6 +485,7 @@
 
         // US-005: Store Open/Closed Toggle
         const toggleStoreStatus = async () => {
+            if (!currentStore) return;
             const nextStatus = !currentStore.isOpen;
             try {
                 await fetch(`${API_BASE}/api/merchants/${currentStore.id}/status?isOpen=${nextStatus}`, { method: 'PATCH' });
@@ -366,6 +499,10 @@
         // US-005: Update Store Profile
         const handleSaveStoreProfile = async (e) => {
             e.preventDefault();
+            if (!currentStore) {
+                showToast("No store selected to update.", "warn");
+                return;
+            }
             const form = e.target;
             const updated = {
                 ...currentStore,
@@ -377,8 +514,8 @@
                 openingHours: form.openingHours.value,
                 deliveryFee: parseFloat(form.deliveryFee.value) || 1.50,
                 deliveryTimeMins: parseInt(form.deliveryTimeMins.value) || 20,
-                imageUrl: form.imageUrl.value,
-                bannerUrl: form.bannerUrl.value
+                imageUrl: form.imageUrl.value || currentStore.imageUrl,
+                bannerUrl: form.bannerUrl.value || currentStore.bannerUrl
             };
 
             try {
@@ -423,7 +560,7 @@
                 const newItem = {
                     ...itemData,
                     id: Date.now(),
-                    merchantId: currentStore.id,
+                    merchantId: currentStore?.id || selectedStoreId || 1,
                     isAvailable: true
                 };
 
@@ -538,8 +675,183 @@
                 return cat ? cat.name === selectedCategoryFilter : m.categoryName === selectedCategoryFilter;
             });
 
+        // STRICT DATABASE AUTHENTICATION BARRIER:
+        // Anyone entering merchant.html must sign in to an account stored in the DB first!
+        if (!currentUser) {
+            return (
+                <div className="min-h-screen w-full bg-gradient-to-br from-ink-950 via-forest-950 to-ink-900 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+                    {/* Toast Notification */}
+                    {toast && (
+                        <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border text-sm font-semibold bg-ink-950 text-mint-300 border-forest-700 animate-bounce">
+                            <i data-lucide={toast.type === 'warn' ? 'alert-triangle' : 'check-circle-2'} className="w-5 h-5 text-mint-400"></i>
+                            <span>{toast.msg}</span>
+                        </div>
+                    )}
+
+                    <div className="max-w-md w-full bg-white rounded-3xl border-2 border-sage-200 shadow-2xl overflow-hidden my-auto transition-all">
+                        {/* Header Banner */}
+                        <div className="bg-gradient-to-r from-ink-950 via-forest-900 to-ink-900 text-white p-7 text-center relative overflow-hidden">
+                            <div className="relative z-10 space-y-3">
+                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-forest-500 to-forest-700 text-white flex items-center justify-center mx-auto shadow-xl shadow-forest-500/40 ring-4 ring-forest-400/20">
+                                    <i data-lucide="chef-hat" className="w-8 h-8"></i>
+                                </div>
+                                <div>
+                                    <h2 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">FoodEats Merchant Hub</h2>
+                                    <p className="text-xs text-mint-200 font-semibold mt-1">
+                                        Kitchen Console & Restaurant Management
+                                    </p>
+                                </div>
+                                <div className="pt-1">
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest-500/25 text-mint-300 text-[10px] font-black uppercase tracking-wider border border-forest-400/30">
+                                        <i data-lucide="shield-check" className="w-3.5 h-3.5 text-mint-400"></i> Database Verified Authentication
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="absolute -right-8 -top-8 w-28 h-28 bg-forest-500/20 rounded-full blur-2xl pointer-events-none"></div>
+                        </div>
+
+                        {/* Sign In Form */}
+                        <div className="p-6 sm:p-8 space-y-4">
+                            {loginError && (
+                                <div className="p-3.5 rounded-2xl bg-rust-500/10 border border-rust-500/30 text-xs font-semibold text-rust-600 flex items-start gap-2.5">
+                                    <i data-lucide="alert-circle" className="w-4 h-4 shrink-0 mt-0.5"></i>
+                                    <span className="leading-snug">{loginError}</span>
+                                </div>
+                            )}
+
+                            <form onSubmit={handleMerchantLogin} className="space-y-4">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-ink-700 uppercase tracking-wider mb-1.5">
+                                        Merchant Email Address
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-ink-400">
+                                            <i data-lucide="mail" className="w-4 h-4"></i>
+                                        </div>
+                                        <input
+                                            type="email"
+                                            required
+                                            value={loginEmail}
+                                            onChange={e => setLoginEmail(e.target.value)}
+                                            placeholder="merchant@example.com"
+                                            className="w-full bg-sage-50/70 hover:bg-white focus:bg-white border-2 border-sage-200 focus:border-forest-500 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-bold text-ink-900 focus:outline-none focus:ring-4 focus:ring-forest-500/10 transition"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-bold text-ink-700 uppercase tracking-wider mb-1.5">
+                                        Password
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-ink-400">
+                                            <i data-lucide="lock" className="w-4 h-4"></i>
+                                        </div>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            required
+                                            value={loginPassword}
+                                            onChange={e => setLoginPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full bg-sage-50/70 hover:bg-white focus:bg-white border-2 border-sage-200 focus:border-forest-500 rounded-2xl pl-10 pr-10 py-2.5 text-xs font-bold text-ink-900 focus:outline-none focus:ring-4 focus:ring-forest-500/10 transition"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-ink-400 hover:text-ink-700 transition"
+                                        >
+                                            <i data-lucide={showPassword ? "eye-off" : "eye"} className="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Quick Demo Merchant Selectors */}
+                                <div className="p-3.5 rounded-2xl bg-cream-100/70 border border-sage-200/80 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-bold text-ink-800 text-[11px] uppercase tracking-wider">
+                                            ⚡ Quick Select Verified Merchant:
+                                        </span>
+                                        <span className="text-[10px] text-ink-500 font-semibold">PW: password123</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setLoginEmail('merchant@example.com');
+                                                setLoginPassword('password123');
+                                                setLoginError('');
+                                            }}
+                                            className="p-2 bg-white hover:bg-forest-50 hover:border-forest-400 text-ink-900 border border-sage-300 rounded-xl text-left transition shadow-sm"
+                                        >
+                                            <div className="font-bold text-[11px] text-forest-800 truncate">🍔 Bopha</div>
+                                            <div className="text-[9px] text-ink-500 truncate">Burger Shack</div>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setLoginEmail('sakura@example.com');
+                                                setLoginPassword('password123');
+                                                setLoginError('');
+                                            }}
+                                            className="p-2 bg-white hover:bg-forest-50 hover:border-forest-400 text-ink-900 border border-sage-300 rounded-xl text-left transition shadow-sm"
+                                        >
+                                            <div className="font-bold text-[11px] text-forest-800 truncate">🍜 Sakura</div>
+                                            <div className="text-[9px] text-ink-500 truncate">Ramen Bar</div>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setLoginEmail('khmer@example.com');
+                                                setLoginPassword('password123');
+                                                setLoginError('');
+                                            }}
+                                            className="p-2 bg-white hover:bg-forest-50 hover:border-forest-400 text-ink-900 border border-sage-300 rounded-xl text-left transition shadow-sm"
+                                        >
+                                            <div className="font-bold text-[11px] text-forest-800 truncate">🍲 Sophea</div>
+                                            <div className="text-[9px] text-ink-500 truncate">Malis Khmer</div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loginLoading}
+                                    className="w-full py-3.5 bg-gradient-to-r from-forest-600 via-forest-600 to-forest-700 hover:from-forest-700 hover:to-forest-800 text-white rounded-2xl text-xs font-black shadow-lg shadow-forest-600/30 hover:shadow-forest-600/40 hover:scale-[1.01] transition flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {loginLoading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <span>Verifying Database Account...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i data-lucide="log-in" className="w-4 h-4"></i>
+                                            <span>Sign In to Kitchen Dashboard</span>
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+
+                            <div className="pt-4 border-t border-sage-100 flex items-center justify-between text-xs">
+                                <a
+                                    href="index.html"
+                                    className="text-ink-600 hover:text-forest-700 font-bold flex items-center gap-1.5 transition text-xs"
+                                >
+                                    <i data-lucide="arrow-left" className="w-3.5 h-3.5 text-forest-600"></i>
+                                    <span>Return to Customer Portal</span>
+                                </a>
+                                <span className="text-[10px] text-ink-400 font-bold uppercase tracking-wider">
+                                    Secure MySQL Auth
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
         return (
-            <div className="flex flex-col md:flex-row w-full h-full overflow-hidden bg-cream-50">
+            <div className="flex-1 flex flex-col md:flex-row w-full min-h-screen bg-cream-50">
                 {/* Toast Notification */}
                 {toast && (
                     <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border text-sm font-semibold bg-ink-950 text-mint-300 border-forest-700 animate-bounce">
@@ -564,25 +876,20 @@
                             </div>
                         </div>
 
-                        {/* Multi-Role Quick Switch */}
+                        {/* Merchant Profile Badge */}
                         <div className="mt-4 p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full bg-forest-500/30 border border-forest-400 flex items-center justify-center text-xs font-bold text-mint-300">
-                                    {currentUser.name[0]}
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-full bg-forest-500/30 border border-forest-400 flex items-center justify-center text-xs font-bold text-mint-300">
+                                    {currentUser?.name ? currentUser.name[0].toUpperCase() : 'M'}
                                 </div>
                                 <div className="leading-tight">
-                                    <div className="text-xs font-bold text-white truncate w-28">{currentUser.name}</div>
-                                    <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-mint-400/20 text-mint-300 border border-mint-400/30 uppercase tracking-wider">
-                                        {currentUser.role}
-                                    </span>
+                                    <div className="text-xs font-bold text-white truncate w-32">{currentUser?.name || 'Merchant Owner'}</div>
+                                    <div className="text-[10px] text-mint-200/70 truncate w-32">{currentUser?.email || ''}</div>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => setShowAuthModal(true)}
-                                className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-bold text-mint-200 transition"
-                            >
-                                Switch Role
-                            </button>
+                            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-mint-400/20 text-mint-300 border border-mint-400/30 uppercase tracking-wider">
+                                {currentUser?.role || 'MERCHANT'}
+                            </span>
                         </div>
 
                         {/* Active Restaurant Selector */}
@@ -595,14 +902,24 @@
                                 onChange={e => setSelectedStoreId(parseInt(e.target.value))}
                                 className="w-full bg-white/10 border border-white/20 text-white rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:bg-ink-900 cursor-pointer"
                             >
-                                <option value={0} className="bg-ink-950 text-mint-300 font-extrabold">
-                                    🌟 All Stores (All Kitchen Tickets)
-                                </option>
-                                {stores.map(s => (
-                                    <option key={s.id} value={s.id} className="bg-ink-950 text-white font-medium">
-                                        {s.name} ({s.isOpen ? '🟢 Open' : '🔴 Closed'})
+                                {stores.length === 0 ? (
+                                    <option value={0} className="bg-ink-950 text-mint-300 font-extrabold">
+                                        (No Restaurant Linked)
                                     </option>
-                                ))}
+                                ) : (
+                                    <>
+                                        {currentUser?.role === 'ADMIN' && (
+                                            <option value={0} className="bg-ink-950 text-mint-300 font-extrabold">
+                                                🌟 All Stores (Admin Overview)
+                                            </option>
+                                        )}
+                                        {stores.map(s => (
+                                            <option key={s.id} value={s.id} className="bg-ink-950 text-white font-medium">
+                                                {s.name} ({s.isOpen ? '🟢 Open' : '🔴 Closed'})
+                                            </option>
+                                        ))}
+                                    </>
+                                )}
                             </select>
                         </div>
 
@@ -623,16 +940,16 @@
                             Switch Role Portals
                         </div>
                         <div className="space-y-1 text-xs">
-                            <a href="customer.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                            <a href="index.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
                                 <i data-lucide="shopping-bag" className="w-4 h-4 text-mint-300"></i> Customer Portal
                             </a>
-                            <a href="driver.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
-                                <i data-lucide="bike" className="w-4 h-4 text-mint-300"></i> Driver Dispatch
+                            <a href="https://t.me/xoradelivery_bot" target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                                <i data-lucide="bike" className="w-4 h-4 text-mint-300"></i> Courier Telegram Bot
                             </a>
                             <a href="admin.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
                                 <i data-lucide="shield-check" className="w-4 h-4 text-mint-300"></i> Admin Hub
                             </a>
-                            <a href="index.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
+                            <a href="gateway.html" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-mint-100/70 hover:text-white hover:bg-white/5 transition font-semibold">
                                 <i data-lucide="layout-grid" className="w-4 h-4 text-mint-300"></i> Platform Gateway
                             </a>
                         </div>
@@ -640,21 +957,28 @@
 
                     {/* Bottom Status Card */}
                     <div className="pt-4 border-t border-white/10 space-y-2">
-                        <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10">
-                            <div className="flex items-center gap-2.5">
-                                <img src={currentStore.imageUrl} alt="Store" className="w-8 h-8 rounded-full object-cover ring-2 ring-forest-400/50" />
-                                <div>
-                                    <div className="text-xs font-bold text-white truncate w-24">{currentStore.name}</div>
-                                    <div className="text-[10px] text-mint-300 font-semibold">{currentStore.isOpen ? '🟢 Open for Orders' : '🔴 Closed'}</div>
+                        {currentStore ? (
+                            <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10">
+                                <div className="flex items-center gap-2.5">
+                                    <img src={currentStore.imageUrl || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600"} alt="Store" className="w-8 h-8 rounded-full object-cover ring-2 ring-forest-400/50" />
+                                    <div>
+                                        <div className="text-xs font-bold text-white truncate w-24">{currentStore.name}</div>
+                                        <div className="text-[10px] text-mint-300 font-semibold">{currentStore.isOpen ? '🟢 Open for Orders' : '🔴 Closed'}</div>
+                                    </div>
                                 </div>
+                                <button
+                                    onClick={toggleStoreStatus}
+                                    className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold transition ${currentStore.isOpen ? 'bg-rust-900 text-cream-100 hover:bg-rust-600' : 'bg-forest-500 text-white hover:bg-forest-600'}`}
+                                >
+                                    {currentStore.isOpen ? 'Close' : 'Open'}
+                                </button>
                             </div>
-                            <button
-                                onClick={toggleStoreStatus}
-                                className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold transition ${currentStore.isOpen ? 'bg-rust-900 text-cream-100 hover:bg-rust-600' : 'bg-forest-500 text-white hover:bg-forest-600'}`}
-                            >
-                                {currentStore.isOpen ? 'Close' : 'Open'}
-                            </button>
-                        </div>
+                        ) : (
+                            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-center">
+                                <div className="text-xs font-bold text-white/80">No Store Linked</div>
+                                <div className="text-[10px] text-mint-300/60">Register or assign a store</div>
+                            </div>
+                        )}
                         <button onClick={handleLogout} className="w-full py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-bold text-xs flex items-center justify-center gap-2 transition">
                             <i data-lucide="log-out" className="w-4 h-4"></i> Sign Out to Customer View
                         </button>
@@ -674,34 +998,64 @@
                                 {activeTab === 'earnings' && 'Settlement & Revenue Analytics'}
                             </h2>
                             <p className="text-xs text-ink-600 font-medium">
-                                Active Store: <strong className="text-ink-900">{currentStore.name}</strong> • Cuisine: {currentStore.cuisineType}
+                                Active Store: <strong className="text-ink-900">{currentStore?.name || 'No Store Selected'}</strong> • Cuisine: {currentStore?.cuisineType || 'N/A'}
                             </p>
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setShowAuthModal(true)}
-                                className="px-3.5 py-2 rounded-2xl text-xs font-bold bg-white hover:bg-sage-100 text-ink-900 border border-sage-300 flex items-center gap-2 transition shadow-sm"
-                            >
-                                <i data-lucide="user-plus" className="w-4 h-4 text-forest-600"></i>
-                                <span>Register / Sign In</span>
-                                <span className="text-[10px] bg-mint-100 text-forest-800 px-2 py-0.5 rounded-full font-extrabold uppercase">
-                                    {currentUser.role}
-                                </span>
-                            </button>
+                            <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-white border border-sage-200 text-xs font-bold text-ink-900 shadow-sm">
+                                <div className="w-7 h-7 rounded-xl bg-forest-600 text-white flex items-center justify-center font-bold text-xs">
+                                    {currentUser?.name ? currentUser.name[0].toUpperCase() : 'M'}
+                                </div>
+                                <div className="text-left hidden sm:block">
+                                    <div className="text-xs font-bold text-ink-950">{currentUser?.name || 'Merchant'}</div>
+                                    <span className="text-[9px] font-extrabold text-forest-700 uppercase tracking-wider">{currentUser?.role || 'MERCHANT'}</span>
+                                </div>
+                            </div>
+
+                            {currentStore && (
+                                <button
+                                    onClick={toggleStoreStatus}
+                                    className={`px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition shadow-sm ${currentStore.isOpen ? 'bg-mint-100 text-forest-800 border border-mint-300 hover:bg-mint-200' : 'bg-rust-900 text-cream-100 hover:bg-rust-600'}`}
+                                >
+                                    <span className={`w-2.5 h-2.5 rounded-full ${currentStore.isOpen ? 'bg-forest-500 animate-ping' : 'bg-rust-500'}`}></span>
+                                    <span>{currentStore.isOpen ? 'Accepting Orders' : 'Store Currently Closed'}</span>
+                                </button>
+                            )}
 
                             <button
-                                onClick={toggleStoreStatus}
-                                className={`px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition shadow-sm ${currentStore.isOpen ? 'bg-mint-100 text-forest-800 border border-mint-300 hover:bg-mint-200' : 'bg-rust-900 text-cream-100 hover:bg-rust-600'}`}
+                                onClick={handleLogout}
+                                title="Sign Out to Login Barrier"
+                                className="p-2 bg-rust-50 hover:bg-rust-100 text-rust-600 hover:text-rust-700 border border-rust-200 rounded-2xl transition flex items-center justify-center hover:scale-105"
                             >
-                                <span className={`w-2.5 h-2.5 rounded-full ${currentStore.isOpen ? 'bg-forest-500 animate-ping' : 'bg-rust-500'}`}></span>
-                                <span>{currentStore.isOpen ? 'Accepting Orders' : 'Store Currently Closed'}</span>
+                                <i data-lucide="log-out" className="w-4 h-4"></i>
                             </button>
                         </div>
                     </header>
 
                     {/* Content Views */}
                     <div className="p-6 flex-1 space-y-6">
+
+                        {/* Fallback if user has no store registered */}
+                        {!currentStore && stores.length === 0 && (
+                            <div className="p-8 max-w-xl mx-auto my-12 text-center bg-white rounded-3xl border border-sage-200 shadow-sm space-y-4">
+                                <div className="w-16 h-16 rounded-3xl bg-forest-50 border border-forest-200 flex items-center justify-center mx-auto text-forest-700 shadow-sm">
+                                    <i data-lucide="store" className="w-8 h-8"></i>
+                                </div>
+                                <h3 className="font-display font-bold text-xl text-ink-950">No Restaurant Store Linked</h3>
+                                <p className="text-xs text-ink-600 max-w-sm mx-auto">
+                                    Your account ({currentUser?.email || 'current merchant'}) does not currently own any restaurant storefronts in the database.
+                                </p>
+                                <div className="pt-2 flex justify-center gap-3">
+                                    <a
+                                        href="index.html"
+                                        className="px-5 py-2.5 bg-forest-600 hover:bg-forest-700 text-white rounded-2xl text-xs font-bold transition shadow-md flex items-center gap-2"
+                                    >
+                                        <i data-lucide="arrow-left" className="w-4 h-4"></i> Return to Customer Portal
+                                    </a>
+                                </div>
+                            </div>
+                        )}
 
                         {/* ======================================================== */}
                         {/* TAB 1: MENU BUILDER & INVENTORY (US-007 & US-008) */}
@@ -755,6 +1109,7 @@
                                                     <img
                                                         src={item.imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600"}
                                                         alt={item.name}
+                                                        loading="lazy"
                                                         className="w-full h-40 rounded-2xl object-cover"
                                                     />
                                                     <div className="absolute top-2.5 left-2.5 flex gap-1.5">
@@ -897,13 +1252,13 @@
                             <form onSubmit={handleSaveStoreProfile} className="space-y-6 max-w-4xl">
                                 {/* Hero Preview Card */}
                                 <div className="relative rounded-3xl overflow-hidden border border-sage-200 shadow-md h-52 bg-ink-950">
-                                    <img src={currentStore.bannerUrl || currentStore.imageUrl} alt="Banner" className="w-full h-full object-cover opacity-80" />
+                                    <img src={currentStore?.bannerUrl || currentStore?.imageUrl || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200"} alt="Banner" loading="lazy" className="w-full h-full object-cover opacity-80" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/40 to-transparent flex items-end p-6">
                                         <div className="flex items-center gap-4">
-                                            <img src={currentStore.imageUrl} alt="Logo" className="w-16 h-16 rounded-2xl object-cover ring-4 ring-white shadow-xl" />
+                                            <img src={currentStore?.imageUrl || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600"} alt="Logo" loading="lazy" className="w-16 h-16 rounded-2xl object-cover ring-4 ring-white shadow-xl" />
                                             <div>
-                                                <h3 className="font-display text-2xl font-bold text-white leading-tight">{currentStore.name}</h3>
-                                                <p className="text-xs text-mint-200 font-semibold">{currentStore.cuisineType} • {currentStore.address}</p>
+                                                <h3 className="font-display text-2xl font-bold text-white leading-tight">{currentStore?.name || 'Restaurant Storefront'}</h3>
+                                                <p className="text-xs text-mint-200 font-semibold">{currentStore?.cuisineType || 'Cuisine'} • {currentStore?.address || 'Phnom Penh'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -913,61 +1268,61 @@
                                     <div className="space-y-3">
                                         <div>
                                             <label className="block font-bold text-ink-800 mb-1">Restaurant Store Name</label>
-                                            <input name="storeName" defaultValue={currentStore.name} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                            <input name="storeName" defaultValue={currentStore?.name || ''} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
                                         </div>
 
                                         <div>
                                             <label className="block font-bold text-ink-800 mb-1">Cuisine / Category Style</label>
-                                            <input name="cuisineType" defaultValue={currentStore.cuisineType || "Gourmet Dining"} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                            <input name="cuisineType" defaultValue={currentStore?.cuisineType || "Gourmet Dining"} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
                                         </div>
 
                                         <div>
                                             <label className="block font-bold text-ink-800 mb-1">Street Address</label>
-                                            <input name="address" defaultValue={currentStore.address} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                            <input name="address" defaultValue={currentStore?.address || ''} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
                                         </div>
 
                                         <div>
                                             <label className="block font-bold text-ink-800 mb-1">Store Phone Contact</label>
-                                            <input name="phone" defaultValue={currentStore.phone || "+855 23 888 999"} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                            <input name="phone" defaultValue={currentStore?.phone || "+855 23 888 999"} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
                                         </div>
                                     </div>
 
                                     <div className="space-y-3">
                                         <div>
                                             <label className="block font-bold text-ink-800 mb-1">Operating Hours</label>
-                                            <input name="openingHours" defaultValue={currentStore.openingHours || "09:00 AM - 10:00 PM"} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                            <input name="openingHours" defaultValue={currentStore?.openingHours || "09:00 AM - 10:00 PM"} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className="block font-bold text-ink-800 mb-1">Delivery Fee ($)</label>
-                                                <input name="deliveryFee" type="number" step="0.10" defaultValue={currentStore.deliveryFee} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                                <input name="deliveryFee" type="number" step="0.10" defaultValue={currentStore?.deliveryFee != null ? currentStore?.deliveryFee : 1.50} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
                                             </div>
                                             <div>
                                                 <label className="block font-bold text-ink-800 mb-1">Avg Cook Time (mins)</label>
-                                                <input name="deliveryTimeMins" type="number" defaultValue={currentStore.deliveryTimeMins} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
+                                                <input name="deliveryTimeMins" type="number" defaultValue={currentStore?.deliveryTimeMins != null ? currentStore?.deliveryTimeMins : 20} required className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-bold text-ink-900" />
                                             </div>
                                         </div>
 
                                         <div>
                                             <label className="block font-bold text-ink-800 mb-1">Store Avatar Image URL</label>
-                                            <input name="imageUrl" defaultValue={currentStore.imageUrl} className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-medium text-ink-900" />
+                                            <input name="imageUrl" defaultValue={currentStore?.imageUrl || ''} className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-medium text-ink-900" />
                                         </div>
 
                                         <div>
                                             <label className="block font-bold text-ink-800 mb-1">Hero Banner Image URL</label>
-                                            <input name="bannerUrl" defaultValue={currentStore.bannerUrl} className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-medium text-ink-900" />
+                                            <input name="bannerUrl" defaultValue={currentStore?.bannerUrl || ''} className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-medium text-ink-900" />
                                         </div>
                                     </div>
 
                                     <div className="md:col-span-2">
                                         <label className="block font-bold text-ink-800 mb-1">Store Story & Bio Description</label>
-                                        <textarea name="description" rows="3" defaultValue={currentStore.description} className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-medium text-ink-900" />
+                                        <textarea name="description" rows="3" defaultValue={currentStore?.description || ''} className="w-full bg-cream-50 border border-sage-300 rounded-2xl px-3 py-2 text-xs font-medium text-ink-900" />
                                     </div>
                                 </div>
 
                                 <div className="flex justify-end">
-                                    <button type="submit" className="px-6 py-3 bg-forest-500 hover:bg-forest-600 text-white font-extrabold text-xs rounded-2xl shadow-md transition flex items-center gap-2">
+                                    <button type="submit" disabled={!currentStore} className="px-6 py-3 bg-forest-500 hover:bg-forest-600 disabled:opacity-50 text-white font-extrabold text-xs rounded-2xl shadow-md transition flex items-center gap-2">
                                         <i data-lucide="save" className="w-4 h-4"></i> Save Storefront Changes (REST API)
                                     </button>
                                 </div>
@@ -1132,7 +1487,7 @@
                                     Sprint 2 Merchant Financials
                                 </span>
                                 <h3 className="font-display text-3xl font-bold text-white">$1,428.50</h3>
-                                <p className="text-xs text-mint-100/80">Total weekly settled earnings for <strong>{currentStore.name}</strong>.</p>
+                                <p className="text-xs text-mint-100/80">Total weekly settled earnings for <strong>{currentStore?.name || 'All Active Stores'}</strong>.</p>
                             </div>
                         )}
                     </div>
@@ -1181,32 +1536,6 @@
                             </form>
                         </div>
                     </div>
-                )}
-
-                {/* ======================================================== */}
-                {/* MODAL: FULL MULTI-ROLE REGISTRATION & LOGIN (US-001, US-002, US-003) */}
-                {/* ======================================================== */}
-                {showAuthModal && (
-                    <MultiRoleAuthModal
-                        currentUser={currentUser}
-                        onClose={() => setShowAuthModal(false)}
-                        onSuccessLogin={(user) => {
-                            setCurrentUser(user);
-                            setShowAuthModal(false);
-                            showToast(`Welcome back, ${user.name}! Signed in as ${user.role}.`);
-                            fetchStoresFromBackend();
-                        }}
-                        onSuccessRegister={(user, newStore) => {
-                            setCurrentUser(user);
-                            if (newStore) {
-                                setStores([newStore, ...stores]);
-                                setSelectedStoreId(newStore.id);
-                            }
-                            setShowAuthModal(false);
-                            showToast(`🎉 Account created! Welcome, ${user.name} (${user.role}).`);
-                        }}
-                        showToast={showToast}
-                    />
                 )}
             </div>
         );
@@ -1543,34 +1872,7 @@
                     setErrorMsg(err.message || "Registration failed. Email might already exist.");
                 }
             } catch (err) {
-                // Fallback simulation mode
-                const simulatedUser = {
-                    name: payload.name,
-                    email: payload.email,
-                    role: payload.role,
-                    token: "jwt_token_" + Date.now(),
-                    id: Date.now()
-                };
-                let simStore = null;
-                if (payload.role === 'MERCHANT') {
-                    simStore = {
-                        id: Date.now(),
-                        name: payload.restaurantName || payload.name + " Eatery",
-                        cuisineType: payload.cuisineType || "Specialty Kitchen",
-                        description: "Freshly registered merchant kitchen on FoodEats platform.",
-                        address: payload.address || "Phnom Penh Central",
-                        city: "Phnom Penh",
-                        phone: payload.phone,
-                        openingHours: "08:00 AM - 10:00 PM",
-                        rating: 5.0,
-                        deliveryFee: 1.50,
-                        deliveryTimeMins: 20,
-                        isOpen: true,
-                        imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600",
-                        bannerUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200"
-                    };
-                }
-                onSuccessRegister(simUser, simStore);
+                setErrorMsg("Cannot connect to server. Please ensure the backend is running.");
             } finally {
                 setLoading(false);
             }
@@ -1590,25 +1892,24 @@
 
                 if (res.ok) {
                     const data = await res.json();
+                    if (data.role !== 'MERCHANT' && data.role !== 'ADMIN') {
+                        setErrorMsg(`Access Denied: Account role is "${data.role}". Only Merchant accounts can access this console.`);
+                        setLoading(false);
+                        return;
+                    }
                     onSuccessLogin({
                         name: data.name,
                         email: data.email,
                         role: data.role,
                         token: data.token,
-                        id: data.userId
+                        id: data.id || data.userId
                     });
                 } else {
                     const err = await res.json().catch(() => ({}));
                     setErrorMsg(err.message || "Invalid email or password. Please try again.");
                 }
             } catch (err) {
-                // Fallback
-                onSuccessLogin({
-                    name: loginEmail.split('@')[0],
-                    email: loginEmail,
-                    role: "MERCHANT",
-                    token: "jwt_token_demo"
-                });
+                setErrorMsg("Cannot connect to server. Please ensure the backend is running.");
             } finally {
                 setLoading(false);
             }
@@ -1881,43 +2182,6 @@
                             >
                                 {loading ? 'Authenticating...' : 'Sign In with JWT'}
                             </button>
-
-                            {/* 1-Click Quick Accounts */}
-                            <div className="pt-3 border-t border-sage-100 space-y-2">
-                                <label className="block text-[11px] font-bold text-ink-500 uppercase tracking-wider">
-                                    ⚡ Quick 1-Click Demo Accounts:
-                                </label>
-                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                    <button
-                                        type="button"
-                                        onClick={() => onSuccessLogin({ name: "Bopha Merchant", email: "merchant@example.com", role: "MERCHANT", token: "jwt_bopha" })}
-                                        className="p-2 rounded-xl bg-mint-50 border border-mint-200 hover:bg-mint-100 text-left font-bold text-forest-900"
-                                    >
-                                        👨‍🍳 Bopha (Merchant)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => onSuccessLogin({ name: "Dara Driver", email: "driver@example.com", role: "DRIVER", token: "jwt_dara" })}
-                                        className="p-2 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-left font-bold text-amber-900"
-                                    >
-                                        🛵 Dara (Driver)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => onSuccessLogin({ name: "Sokha Customer", email: "customer@example.com", role: "CUSTOMER", token: "jwt_sokha" })}
-                                        className="p-2 rounded-xl bg-sage-50 border border-sage-200 hover:bg-sage-100 text-left font-bold text-ink-800"
-                                    >
-                                        🛍️ Sokha (Customer)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => onSuccessLogin({ name: "System Admin", email: "admin@example.com", role: "ADMIN", token: "jwt_admin" })}
-                                        className="p-2 rounded-xl bg-ink-950 text-mint-300 border border-ink-800 text-left font-bold"
-                                    >
-                                        🛡️ System Admin
-                                    </button>
-                                </div>
-                            </div>
                         </form>
                     )}
                 </div>

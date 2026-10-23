@@ -83,6 +83,17 @@ data class PlacedOrder(
     val driver: String = "Dara K. Express (Auto-assigned)"
 )
 
+data class Voucher(
+    val code: String,
+    val title: String,
+    val discountPercent: Double = 0.0,
+    val discountAmount: Double = 0.0,
+    val minSpend: Double,
+    val expiryDate: String,
+    val description: String,
+    val isFreeDelivery: Boolean = false
+)
+
 object FoodEatsRepository {
 
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -262,6 +273,68 @@ object FoodEatsRepository {
     private val _orders = MutableStateFlow<List<PlacedOrder>>(emptyList())
     val orders: StateFlow<List<PlacedOrder>> = _orders.asStateFlow()
 
+    private val _favoriteRestaurantIds = MutableStateFlow<Set<Long>>(emptySet())
+    val favoriteRestaurantIds: StateFlow<Set<Long>> = _favoriteRestaurantIds.asStateFlow()
+
+    private val _appliedVoucher = MutableStateFlow<Voucher?>(null)
+    val appliedVoucher: StateFlow<Voucher?> = _appliedVoucher.asStateFlow()
+
+    val availableVouchers: List<Voucher> = listOf(
+        Voucher(
+            code = "FOODEATS20",
+            title = "20% OFF Entire Order",
+            discountPercent = 0.20,
+            minSpend = 10.00,
+            expiryDate = "Dec 31, 2026",
+            description = "Valid across all restaurants in Phnom Penh. Minimum spend $10.00."
+        ),
+        Voucher(
+            code = "FREEDELIVERY",
+            title = "Free Courier Delivery",
+            isFreeDelivery = true,
+            minSpend = 15.00,
+            expiryDate = "Nov 30, 2026",
+            description = "Get 100% off courier delivery fee for orders above $15.00."
+        ),
+        Voucher(
+            code = "WELCOME5",
+            title = "$5.00 Welcome Discount",
+            discountAmount = 5.00,
+            minSpend = 20.00,
+            expiryDate = "Dec 31, 2026",
+            description = "Enjoy $5.00 off your food bag for orders $20.00 or higher."
+        )
+    )
+
+    fun toggleFavorite(restaurantId: Long) {
+        val current = _favoriteRestaurantIds.value.toMutableSet()
+        if (current.contains(restaurantId)) {
+            current.remove(restaurantId)
+        } else {
+            current.add(restaurantId)
+        }
+        _favoriteRestaurantIds.value = current
+    }
+
+    fun isFavorite(restaurantId: Long): Boolean = _favoriteRestaurantIds.value.contains(restaurantId)
+
+    fun applyVoucherCode(code: String, subtotal: Double): Pair<Boolean, String> {
+        val clean = code.trim().uppercase()
+        val match = availableVouchers.find { it.code.equals(clean, ignoreCase = true) }
+            ?: return Pair(false, "Voucher code '$code' is invalid or expired.")
+
+        if (subtotal < match.minSpend) {
+            return Pair(false, "Voucher requires a minimum spend of $${String.format(Locale.US, "%.2f", match.minSpend)}.")
+        }
+
+        _appliedVoucher.value = match
+        return Pair(true, "Voucher '${match.code}' applied! ${match.title}")
+    }
+
+    fun removeAppliedVoucher() {
+        _appliedVoucher.value = null
+    }
+
     private val _serverStatus = MutableStateFlow("Ready")
     val serverStatus: StateFlow<String> = _serverStatus.asStateFlow()
 
@@ -344,6 +417,8 @@ object FoodEatsRepository {
     fun clearUserData() {
         _orders.value = emptyList()
         _cart.value = emptyList()
+        _favoriteRestaurantIds.value = emptySet()
+        _appliedVoucher.value = null
         _activeDriverJob.value = null
     }
     private fun findSeedMenu(merchantId: Long): List<DishItem> {

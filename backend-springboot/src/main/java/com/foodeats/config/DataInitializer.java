@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -16,24 +17,28 @@ public class DataInitializer implements CommandLineRunner {
     private final CategoryRepository categoryRepository;
     private final MenuItemRepository menuItemRepository;
     private final ItemOptionRepository itemOptionRepository;
-    private final UserAddressRepository userAddressRepository;
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
+    private final UserAddressRepository userAddressRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataInitializer(UserRepository userRepository, MerchantRepository merchantRepository,
-                           CategoryRepository categoryRepository, MenuItemRepository menuItemRepository,
-                           ItemOptionRepository itemOptionRepository, UserAddressRepository userAddressRepository,
-                           OrderRepository orderRepository, PaymentRepository paymentRepository,
+    public DataInitializer(UserRepository userRepository,
+                           MerchantRepository merchantRepository,
+                           CategoryRepository categoryRepository,
+                           MenuItemRepository menuItemRepository,
+                           ItemOptionRepository itemOptionRepository,
+                           OrderRepository orderRepository,
+                           PaymentRepository paymentRepository,
+                           UserAddressRepository userAddressRepository,
                            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.merchantRepository = merchantRepository;
         this.categoryRepository = categoryRepository;
         this.menuItemRepository = menuItemRepository;
         this.itemOptionRepository = itemOptionRepository;
-        this.userAddressRepository = userAddressRepository;
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
+        this.userAddressRepository = userAddressRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -44,7 +49,9 @@ public class DataInitializer implements CommandLineRunner {
 
             // 1. Create Users for all roles
             User customer = userRepository.save(new User("Sokha Customer", "customer@example.com", encodedPassword, "+85512345678", UserRole.CUSTOMER));
-            User merchantOwner = userRepository.save(new User("Bopha Merchant", "merchant@example.com", encodedPassword, "+85598765432", UserRole.MERCHANT));
+            User merchantBopha = userRepository.save(new User("Bopha Merchant", "merchant@example.com", encodedPassword, "+85598765432", UserRole.MERCHANT));
+            User merchantSakura = userRepository.save(new User("Kenji Sakura", "sakura@example.com", encodedPassword, "+85523777666", UserRole.MERCHANT));
+            User merchantKhmer = userRepository.save(new User("Sophea Khmer", "khmer@example.com", encodedPassword, "+85523555444", UserRole.MERCHANT));
             User driver = userRepository.save(new User("Dara Driver", "driver@example.com", encodedPassword, "+85588776655", UserRole.DRIVER));
             User admin = userRepository.save(new User("System Admin", "admin@example.com", encodedPassword, "+85511223344", UserRole.ADMIN));
 
@@ -52,9 +59,9 @@ public class DataInitializer implements CommandLineRunner {
             userAddressRepository.save(new UserAddress(customer, "Home (BKK1)", "Building 42, St. 302, BKK1", 11.5510, 104.9220, true));
             userAddressRepository.save(new UserAddress(customer, "Office (Toul Kork)", "Vattanac Tower Level 14, Monivong Blvd", 11.5720, 104.9190, false));
 
-            // 2. Create Merchants with full profile setup
+            // 2. Create Merchants with full profile setup and isolated owners
             Merchant m1 = new Merchant(
-                    merchantOwner,
+                    merchantBopha,
                     "Zando Burger & Grill",
                     "Juicy artisan smash burgers, crispy truffle fries, and premium thick milkshakes crafted daily.",
                     "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80",
@@ -67,7 +74,7 @@ public class DataInitializer implements CommandLineRunner {
             m1 = merchantRepository.save(m1);
 
             Merchant m2 = new Merchant(
-                    merchantOwner,
+                    merchantSakura,
                     "Sakura Sushi & Ramen Bar",
                     "Authentic Japanese tonkotsu ramen bowls, torched salmon aburi rolls, and fresh seasonal sashimi.",
                     "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&auto=format&fit=crop&q=80",
@@ -80,7 +87,7 @@ public class DataInitializer implements CommandLineRunner {
             m2 = merchantRepository.save(m2);
 
             Merchant m3 = new Merchant(
-                    merchantOwner,
+                    merchantKhmer,
                     "Khmer Coffee & Patisserie",
                     "Traditional slow-drip Mondulkiri iced coffee, French butter croissants, and fresh coconut pandan waffles.",
                     "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80",

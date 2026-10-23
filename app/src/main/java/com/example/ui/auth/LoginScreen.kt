@@ -3,50 +3,29 @@ package com.example.ui.auth
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.DirectionsBike
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.ZandoOutlinedTextField
+import com.example.ui.theme.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
@@ -58,11 +37,12 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableStateOf(AuthTab.EMAIL) }
-    var phoneNumber by remember { mutableStateOf("12345678") }
-    var emailAddress by remember { mutableStateOf("customer@example.com") }
-    var password by remember { mutableStateOf("password123") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var emailAddress by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.errorMessage, uiState.successMessage) {
         uiState.errorMessage?.let {
@@ -78,363 +58,333 @@ fun LoginScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color.White
+        containerColor = Cream50
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
+                .background(Cream50)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
             // Top Bar Back Arrow
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onNavigateBack) {
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .border(1.dp, Sage200, RoundedCornerShape(12.dp))
+                ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color(0xFF111111)
+                        tint = Ink950,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Header Title
+            // Brand / Header Title
             Text(
-                text = "Welcome back!",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF111111)
+                text = "Welcome back 👋",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Black,
+                color = Ink950,
+                letterSpacing = (-0.5).sp
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Sign in to enjoy a seamless food ordering & delivery experience.",
+                text = "Sign in to access your favorite restaurants, track real-time deliveries, and manage your account.",
                 fontSize = 14.sp,
-                color = Color(0xFF555555),
+                color = Ink600,
                 lineHeight = 20.sp
             )
 
-            // Quick Demo Accounts from Database
-            Text(
-                text = "DATABASE DEMO ACCOUNTS (TAP TO FILL)",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = com.example.ui.theme.Forest700,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            androidx.compose.foundation.lazy.LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item {
-                    Surface(
-                        modifier = Modifier.clickable {
-                            selectedTab = AuthTab.EMAIL
-                            emailAddress = "customer@example.com"
-                            password = "password123"
-                        },
-                        color = com.example.ui.theme.Forest100,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "Customer: customer@example.com",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = com.example.ui.theme.Forest800,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                        )
-                    }
-                }
-                item {
-                    Surface(
-                        modifier = Modifier.clickable {
-                            selectedTab = AuthTab.EMAIL
-                            emailAddress = "merchant@example.com"
-                            password = "password123"
-                        },
-                        color = com.example.ui.theme.Mint100,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "Merchant: merchant@example.com",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = com.example.ui.theme.Forest700,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                        )
-                    }
-                }
-                item {
-                    Surface(
-                        modifier = Modifier.clickable {
-                            selectedTab = AuthTab.EMAIL
-                            emailAddress = "driver@example.com"
-                            password = "password123"
-                        },
-                        color = com.example.ui.theme.Cream200,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "Driver: driver@example.com",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = com.example.ui.theme.Ink800,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                        )
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(28.dp))
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Dedicated Delivery Partner Login Banner
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onNavigateToDeliveryLogin() },
-                color = com.example.ui.theme.Mint50,
-                shape = RoundedCornerShape(10.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, com.example.ui.theme.Forest300)
+            // Main Login Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Column(
+                    modifier = Modifier.padding(20.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    // Modern Segmented Toggle Tabs
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Cream100,
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Box(
+                        Row(
+                            modifier = Modifier.padding(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            // Email Tab Pill
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { selectedTab = AuthTab.EMAIL },
+                                color = if (selectedTab == AuthTab.EMAIL) Forest500 else Color.Transparent,
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Email,
+                                        contentDescription = null,
+                                        tint = if (selectedTab == AuthTab.EMAIL) Color.White else Ink600,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Email",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (selectedTab == AuthTab.EMAIL) Color.White else Ink600
+                                    )
+                                }
+                            }
+
+                            // Phone Tab Pill
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { selectedTab = AuthTab.PHONE },
+                                color = if (selectedTab == AuthTab.PHONE) Forest500 else Color.Transparent,
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Phone,
+                                        contentDescription = null,
+                                        tint = if (selectedTab == AuthTab.PHONE) Color.White else Ink600,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Mobile Phone",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (selectedTab == AuthTab.PHONE) Color.White else Ink600
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Input Fields
+                    if (selectedTab == AuthTab.PHONE) {
+                        ZandoOutlinedTextField(
+                            value = phoneNumber,
+                            onValueChange = { phoneNumber = it },
+                            label = "Mobile Number",
+                            placeholder = "12 345 678",
+                            isPhonePrefix = true,
+                            phonePrefix = "+855",
+                            keyboardType = KeyboardType.Phone
+                        )
+                    } else {
+                        ZandoOutlinedTextField(
+                            value = emailAddress,
+                            onValueChange = { emailAddress = it },
+                            label = "Email Address",
+                            placeholder = "name@example.com",
+                            isPhonePrefix = false,
+                            keyboardType = KeyboardType.Email
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    ZandoOutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = "Password",
+                        placeholder = "Enter your password",
+                        isPassword = true
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Forgot Password
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Text(
+                            text = "Forgot password?",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Forest700,
                             modifier = Modifier
-                                .size(36.dp)
-                                .background(com.example.ui.theme.Forest500, RoundedCornerShape(8.dp)),
-                            contentAlignment = Alignment.Center
+                                .clickable {
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Password reset link will be sent to your registered contact.")
+                                    }
+                                }
+                                .padding(vertical = 4.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Primary LOGIN Button
+                    Button(
+                        onClick = {
+                            val identifier = if (selectedTab == AuthTab.PHONE) "+855$phoneNumber" else emailAddress
+                            if (identifier.isBlank() || password.isBlank()) {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Please enter both your identifier and password.")
+                                }
+                            } else {
+                                viewModel.login(identifier, password)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Forest500,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
+                        enabled = !uiState.isLoading
+                    ) {
+                        if (uiState.isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(22.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = "Sign In",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 1-Tap Quick Fill Demo Account
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable {
+                                selectedTab = AuthTab.EMAIL
+                                emailAddress = "customer@example.com"
+                                password = "password123"
+                            },
+                        color = Forest50,
+                        shape = RoundedCornerShape(10.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Forest200)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.DirectionsBike,
+                                imageVector = Icons.Default.Bolt,
                                 contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                tint = Forest600,
+                                modifier = Modifier.size(16.dp)
                             )
-                        }
-                        Column {
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Delivery Partner Portal",
-                                fontSize = 13.sp,
+                                text = "1-Tap Fill Demo Account (customer@example.com)",
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = com.example.ui.theme.Forest900
-                            )
-                            Text(
-                                text = "Rider login with vehicle & license preview",
-                                fontSize = 11.sp,
-                                color = com.example.ui.theme.Forest700
+                                color = Forest800
                             )
                         }
                     }
-                    Text(
-                        text = "Rider Login →",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = com.example.ui.theme.Forest800
-                    )
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Phone / Email Toggle Tabs
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(width = 0.dp, color = Color.Transparent)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .clickable { selectedTab = AuthTab.EMAIL }
-                        .padding(bottom = 8.dp)
-                ) {
-                    Text(
-                        text = "Email",
-                        fontSize = 15.sp,
-                        fontWeight = if (selectedTab == AuthTab.EMAIL) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selectedTab == AuthTab.EMAIL) com.example.ui.theme.Forest600 else Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(50.dp)
-                            .height(2.dp)
-                            .background(if (selectedTab == AuthTab.EMAIL) com.example.ui.theme.Forest500 else Color.Transparent)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(28.dp))
-
-                Column(
-                    modifier = Modifier
-                        .clickable { selectedTab = AuthTab.PHONE }
-                        .padding(bottom = 8.dp)
-                ) {
-                    Text(
-                        text = "Phone",
-                        fontSize = 15.sp,
-                        fontWeight = if (selectedTab == AuthTab.PHONE) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selectedTab == AuthTab.PHONE) com.example.ui.theme.Forest600 else Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(50.dp)
-                            .height(2.dp)
-                            .background(if (selectedTab == AuthTab.PHONE) com.example.ui.theme.Forest500 else Color.Transparent)
-                    )
-                }
-            }
-
-            HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            // Input Fields
-            if (selectedTab == AuthTab.PHONE) {
-                ZandoOutlinedTextField(
-                    value = phoneNumber,
-                    onValueChange = { phoneNumber = it },
-                    label = "Mobile number",
-                    placeholder = "Enter phone number",
-                    isPhonePrefix = true,
-                    phonePrefix = "+855",
-                    keyboardType = KeyboardType.Phone
-                )
-            } else {
-                ZandoOutlinedTextField(
-                    value = emailAddress,
-                    onValueChange = { emailAddress = it },
-                    label = "Email address",
-                    placeholder = "Enter email address",
-                    isPhonePrefix = false,
-                    keyboardType = KeyboardType.Email
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            ZandoOutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = "Password",
-                placeholder = "Enter password",
-                isPassword = true
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Primary LOGIN Button
-            Button(
-                onClick = {
-                    val identifier = if (selectedTab == AuthTab.PHONE) "+855$phoneNumber" else emailAddress
-                    viewModel.login(identifier, password)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = com.example.ui.theme.Forest500,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(6.dp),
-                enabled = !uiState.isLoading
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(22.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(
-                        text = "LOGIN",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Forgot Password
-            Text(
-                text = "Forgot your password?",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF111111),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { }
-                    .padding(vertical = 4.dp),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
 
             // OR Divider
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE0E0E0))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Sage200)
                 Text(
                     text = "OR",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF888888),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Ink400,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE0E0E0))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Sage200)
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Continue with Google Button
-            Box(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                    .border(1.dp, Color(0xFF222222), RoundedCornerShape(6.dp))
                     .clickable {
-                        // Quick demo shortcut for login as customer
-                        viewModel.login("customer@example.com", "password123")
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Google Sign-In is coming soon. Please sign in with email or phone.")
+                        }
                     },
-                contentAlignment = Alignment.Center
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White,
+                border = androidx.compose.foundation.BorderStroke(1.dp, Sage300)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Google Colored G Symbol
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Text(
                         text = "G",
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 20.sp,
                         color = Color(0xFF4285F4)
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "Continue with Google",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF111111)
+                        color = Ink950
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Register Link
             Row(
@@ -443,20 +393,20 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "New to Smart Food Delivery? ",
+                    text = "Don't have an account? ",
                     fontSize = 14.sp,
-                    color = Color(0xFF555555)
+                    color = Ink600
                 )
                 Text(
-                    text = "Register",
+                    text = "Create Account",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = Forest600,
                     modifier = Modifier.clickable { onNavigateToRegister() }
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }

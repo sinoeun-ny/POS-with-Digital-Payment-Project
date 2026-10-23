@@ -94,51 +94,7 @@ class AuthRepository(
         }
 
         val user = if (cleanIdentifier.contains("@")) {
-            var found = userDao.getUserByEmail(cleanIdentifier.lowercase())
-            if (found == null) {
-                // If account is one of the database pre-seeded accounts from DataInitializer, auto-create locally
-                val lowerEmail = cleanIdentifier.lowercase()
-                if (lowerEmail == "customer@example.com" ||
-                    lowerEmail == "merchant@example.com" ||
-                    lowerEmail == "driver@example.com" ||
-                    lowerEmail == "admin@example.com") {
-                    val roleCode = when {
-                        lowerEmail.contains("admin") -> "ROLE_ADMIN"
-                        lowerEmail.contains("merchant") -> "ROLE_MERCHANT"
-                        lowerEmail.contains("driver") -> "ROLE_DRIVER"
-                        else -> "ROLE_CUSTOMER"
-                    }
-                    val name = when {
-                        lowerEmail.contains("admin") -> "System Admin"
-                        lowerEmail.contains("merchant") -> "Bopha Merchant"
-                        lowerEmail.contains("driver") -> "Dara Driver"
-                        else -> "Sokha Customer"
-                    }
-                    val newId = userDao.insertUser(
-                        UserEntity(
-                            fullName = name,
-                            email = lowerEmail,
-                            phone = if (lowerEmail.contains("driver")) "+85588776655" else "+85512345678",
-                            passwordHash = "password123",
-                            currentActiveRole = roleCode
-                        )
-                    )
-                    if (lowerEmail.contains("driver")) {
-                        driverProfileDao.insertDriverProfile(
-                            DriverProfileEntity(
-                                userId = newId,
-                                vehicleType = "Motorbike (Honda Dream 125)",
-                                licensePlate = "PP-1AB-9988",
-                                phone = "+85588776655",
-                                totalDeliveries = 142,
-                                rating = 4.9
-                            )
-                        )
-                    }
-                    found = userDao.getUserById(newId)
-                }
-            }
-            found
+            userDao.getUserByEmail(cleanIdentifier.lowercase())
         } else {
             userDao.getUserByPhone(cleanIdentifier)
         }
@@ -338,7 +294,64 @@ class AuthRepository(
         return AuthResult.Success(Unit)
     }
 
-    suspend fun addAddress(userId: Long, label: String, street: String, city: String, isDefault: Boolean) {
+    suspend fun updateProfile(userId: Long, newName: String, newPhone: String, token: String?): AuthResult<Unit> {
+        val user = userDao.getUserById(userId) ?: return AuthResult.Error("User record not found in local database.")
+        userDao.updateUserProfile(
+            userId = userId,
+            fullName = newName,
+            phone = newPhone,
+            activeRole = user.currentActiveRole
+        )
+
+        if (!token.isNullOrBlank()) {
+            try {
+                val res = com.example.data.remote.ApiClient.authApi.updateProfile(
+                    token = "Bearer $token",
+                    body = mapOf("name" to newName, "phone" to newPhone)
+                )
+                if (!res.isSuccessful) {
+                    return AuthResult.Error(res.errorBody()?.string() ?: "Failed to update profile in database.")
+                }
+            } catch (e: Exception) {
+                // Local SQLite update succeeded, log connection warning
+            }
+        }
+        return AuthResult.Success(Unit)
+    }
+
+    suspend fun changePassword(oldPw: String, newPw: String, token: String?): AuthResult<Unit> {
+        if (token.isNullOrBlank()) {
+            return AuthResult.Error("Please log in to change your password.")
+        }
+        return try {
+            val res = com.example.data.remote.ApiClient.authApi.changePassword(
+                token = "Bearer $token",
+                body = mapOf("currentPassword" to oldPw, "newPassword" to newPw)
+            )
+            if (res.isSuccessful) {
+                AuthResult.Success(Unit)
+            } else {
+                val errorMsg = res.errorBody()?.string() ?: "Incorrect current password"
+                AuthResult.Error(errorMsg)
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(e.localizedMessage ?: "Failed to connect to backend server")
+        }
+    }
+
+    suspend fun deleteAccount(userId: Long, token: String?): AuthResult<Unit> {
+        if (!token.isNullOrBlank()) {
+            try {
+                com.example.data.remote.ApiClient.authApi.deleteAccount("Bearer $token")
+            } catch (e: Exception) {
+                // Ignore network failure and clear local session
+            }
+        }
+        sessionDao.clearSession()
+        return AuthResult.Success(Unit)
+    }
+
+    suspend fun addAddress(userId: Long, label: String, street: String, city: String, isDefault: Boolean, token: String? = null) {
         if (isDefault) {
             addressDao.clearDefaultAddresses(userId)
         }
@@ -351,30 +364,39 @@ class AuthRepository(
                 isDefault = isDefault
             )
         )
+
+        // Sync with Spring Boot / MySQL database
+        if (!token.isNullOrBlank()) {
+            try {
+                com.example.data.remote.ApiClient.authApi.addAddress(
+                    token = "Bearer $token",
+                    body = mapOf(
+                        "label" to label,
+                        "address" to street,
+                        "city" to city,
+                        "isDefault" to isDefault
+                    )
+                )
+            } catch (e: Exception) {
+                // Ignore network glitch
+            }
+        }
     }
 
-    suspend fun deleteAddress(addressId: Long) {
+    suspend fun deleteAddress(addressId: Long, token: String? = null) {
         addressDao.deleteAddress(addressId)
+        if (!token.isNullOrBlank()) {
+            try {
+                com.example.data.remote.ApiClient.authApi.deleteAddress("Bearer $token", addressId)
+            } catch (e: Exception) {
+                // Ignore network glitch
+            }
+        }
     }
 
     suspend fun getDriverProfileByIdentifier(identifier: String): DriverProfileEntity? {
         val clean = identifier.trim()
-        val fromDb = driverProfileDao.getDriverProfileByIdentifier(clean)
-        if (fromDb != null) return fromDb
-
-        if (clean.equals("driver@example.com", ignoreCase = true) || clean.contains("88776655") || clean.contains("driver", ignoreCase = true)) {
-            return DriverProfileEntity(
-                userId = 0,
-                vehicleType = "Motorbike (Honda Dream 125)",
-                licensePlate = "PP-1AB-9988",
-                phone = "+85588776655",
-                totalDeliveries = 142,
-                rating = 4.9,
-                isVerified = true,
-                isAvailable = true
-            )
-        }
-        return null
+        return driverProfileDao.getDriverProfileByIdentifier(clean)
     }
 
     suspend fun logout() {
