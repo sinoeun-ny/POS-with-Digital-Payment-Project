@@ -1,8 +1,9 @@
 package com.example.ui.theme
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -10,6 +11,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 
 private val FoodEatsDarkColorScheme = darkColorScheme(
     primary = Forest400,
@@ -28,11 +30,11 @@ private val FoodEatsDarkColorScheme = darkColorScheme(
 )
 
 private val FoodEatsLightColorScheme = lightColorScheme(
-    primary = Forest500,
+    primary = Forest700,
     onPrimary = Color.White,
     primaryContainer = Forest100,
     onPrimaryContainer = Forest800,
-    secondary = Mint500,
+    secondary = Forest600,
     onSecondary = Color.White,
     secondaryContainer = Mint100,
     onSecondaryContainer = Ink950,
@@ -42,12 +44,18 @@ private val FoodEatsLightColorScheme = lightColorScheme(
     onSurface = Ink900,
     surfaceVariant = Cream100,
     onSurfaceVariant = Ink700,
-    outline = Sage200
+    outline = Ink400,
+    outlineVariant = Sage200,
+    error = Rust600,
+    onError = Color.White,
+    errorContainer = Color(0xFFFFEDE7),
+    onErrorContainer = Rust900
 )
 
 @Composable
 fun MyApplicationTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    // Customer screens use the branded cream/light palette throughout.
+    darkTheme: Boolean = false,
     dynamicColor: Boolean = false, // Default false to preserve FoodEats signature emerald & cream colors
     content: @Composable () -> Unit,
 ) {
@@ -60,5 +68,16 @@ fun MyApplicationTheme(
         else -> FoodEatsLightColorScheme
     }
 
-    MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        shapes = Shapes(
+            extraSmall = RoundedCornerShape(8.dp),
+            small = RoundedCornerShape(12.dp),
+            medium = RoundedCornerShape(16.dp),
+            large = RoundedCornerShape(24.dp),
+            extraLarge = RoundedCornerShape(28.dp)
+        ),
+        content = content
+    )
 }

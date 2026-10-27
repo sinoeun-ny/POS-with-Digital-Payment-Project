@@ -618,7 +618,7 @@ fun DeliveryLoginScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Want to drive with FoodEats?",
+                            text = "Want to drive with Xora?",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = Ink950

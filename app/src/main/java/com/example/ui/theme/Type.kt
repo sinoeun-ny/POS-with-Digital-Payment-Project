@@ -6,31 +6,25 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Set of Material typography styles to start with
-val Typography =
-  Typography(
-    bodyLarge =
-      TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp,
-      )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    )
-    */
-  )
+private fun foodEatsText(size: Int, height: Int, weight: FontWeight = FontWeight.Normal) = TextStyle(
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = weight,
+    fontSize = size.sp,
+    lineHeight = height.sp,
+    letterSpacing = 0.sp
+)
+
+val Typography = Typography(
+    headlineLarge = foodEatsText(32, 40, FontWeight.Bold),
+    headlineMedium = foodEatsText(28, 36, FontWeight.Bold),
+    headlineSmall = foodEatsText(24, 32, FontWeight.Bold),
+    titleLarge = foodEatsText(22, 28, FontWeight.Bold),
+    titleMedium = foodEatsText(17, 24, FontWeight.SemiBold),
+    titleSmall = foodEatsText(15, 22, FontWeight.SemiBold),
+    bodyLarge = foodEatsText(16, 24),
+    bodyMedium = foodEatsText(14, 22),
+    bodySmall = foodEatsText(12, 18),
+    labelLarge = foodEatsText(14, 20, FontWeight.SemiBold),
+    labelMedium = foodEatsText(12, 18, FontWeight.SemiBold),
+    labelSmall = foodEatsText(11, 16, FontWeight.Medium)
+)

@@ -1,35 +1,40 @@
 package com.example.ui.restaurant
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.data.repository.DishItem
 import com.example.data.repository.DishOption
 import com.example.data.repository.FoodEatsRepository
 import com.example.data.repository.Restaurant
 import com.example.ui.theme.*
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,479 +44,243 @@ fun RestaurantDetailScreen(
     onNavigateToCart: () -> Unit
 ) {
     val cart by FoodEatsRepository.cart.collectAsState()
-    var selectedCategoryTab by remember { mutableStateOf("ALL") }
+    var selectedCategory by rememberSaveable(restaurant.id) { mutableStateOf("All") }
+    var searchQuery by rememberSaveable(restaurant.id) { mutableStateOf("") }
     var itemForCustomization by remember { mutableStateOf<DishItem?>(null) }
-    var showMerchantConflictDialog by remember { mutableStateOf(false) }
-    var pendingDishToAdd by remember { mutableStateOf<Pair<DishItem, List<DishOption>>?>(null) }
-
-    val categories = remember(restaurant.menu) {
-        listOf("ALL") + restaurant.menu.map { it.category }.distinct()
+    var pendingDish by remember { mutableStateOf<Pair<DishItem, List<DishOption>>?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val categories = remember(restaurant.menu) { listOf("All") + restaurant.menu.map { it.category }.distinct() }
+    val filteredMenu = remember(selectedCategory, searchQuery, restaurant.menu) {
+        restaurant.menu.filter { dish ->
+            (selectedCategory == "All" || dish.category == selectedCategory) &&
+                (searchQuery.isBlank() || dish.name.contains(searchQuery.trim(), ignoreCase = true) ||
+                    dish.description.contains(searchQuery.trim(), ignoreCase = true))
+        }
     }
-
-    val filteredMenu = remember(selectedCategoryTab, restaurant.menu) {
-        if (selectedCategoryTab == "ALL") restaurant.menu
-        else restaurant.menu.filter { it.category == selectedCategoryTab }
-    }
-
     val cartCount = cart.sumOf { it.quantity }
     val cartSubtotal = cart.sumOf { it.totalPrice }
 
+    fun addDish(dish: DishItem, options: List<DishOption>) {
+        if (FoodEatsRepository.addToCart(dish, restaurant, options)) {
+            scope.launch {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar("${dish.name} added to your bag")
+            }
+        } else {
+            pendingDish = dish to options
+        }
+    }
+
     Scaffold(
         containerColor = Cream50,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Restaurant menu", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to restaurants")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onNavigateToCart) {
+                        BadgedBox(badge = { if (cartCount > 0) Badge { Text(cartCount.toString()) } }) {
+                            Icon(Icons.Default.ShoppingBag, contentDescription = "Shopping bag, $cartCount items")
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Cream50),
+                windowInsets = WindowInsets(0, 0, 0, 0)
+            )
+        },
         bottomBar = {
             if (cartCount > 0) {
-                Surface(
-                    color = Color.White,
-                    shadowElevation = 16.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                Surface(color = Color.White, shadowElevation = 8.dp) {
+                    Button(
+                        onClick = onNavigateToCart,
+                        modifier = Modifier.fillMaxWidth().padding(16.dp).heightIn(min = 56.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Forest600),
+                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp)
                     ) {
-                        Column {
-                            Text(
-                                text = "$cartCount items in cart",
-                                fontSize = 12.sp,
-                                color = Ink500,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = "$${String.format(java.util.Locale.US, "%.2f", cartSubtotal)}",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Ink950
-                            )
+                        Icon(Icons.Default.ShoppingBag, contentDescription = null)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("View bag", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("$cartCount ${if (cartCount == 1) "item" else "items"}", fontSize = 12.sp)
                         }
-                        Button(
-                            onClick = onNavigateToCart,
-                            colors = ButtonDefaults.buttonColors(containerColor = Forest500),
-                            shape = RoundedCornerShape(14.dp),
-                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ShoppingCart,
-                                contentDescription = "View Cart",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "View Cart",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                        }
+                        Text(menuMoney(cartSubtotal), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
                 }
             }
         }
-    ) { paddingValues ->
+    ) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header Image Banner with Overlay Actions
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(240.dp)
-                ) {
+                Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).heightIn(min = 200.dp).clip(RoundedCornerShape(24.dp))) {
                     AsyncImage(
                         model = restaurant.bannerUrl.ifEmpty { restaurant.imageUrl },
-                        contentDescription = restaurant.name,
-                        modifier = Modifier.fillMaxSize(),
+                        contentDescription = null,
+                        modifier = Modifier.matchParentSize().background(Forest800),
                         contentScale = ContentScale.Crop
                     )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Black.copy(alpha = 0.5f),
-                                        Color.Transparent,
-                                        Color.Black.copy(alpha = 0.7f)
-                                    )
-                                )
-                            )
-                    )
-
-                    // Navigation Actions
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .statusBarsPadding()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(
-                            onClick = onNavigateBack,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.9f))
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Ink950
-                            )
-                        }
-
-                        if (cartCount > 0) {
-                            IconButton(
-                                onClick = onNavigateToCart,
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(Forest500)
-                            ) {
-                                BadgedBox(
-                                    badge = {
-                                        Badge(containerColor = Rust500, contentColor = Color.White) {
-                                            Text(cartCount.toString())
-                                        }
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ShoppingCart,
-                                        contentDescription = "Cart",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Restaurant Title & Cuisine over Banner
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = restaurant.name,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(top = 4.dp)
-                        ) {
-                            Surface(
-                                color = Mint500,
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
-                                Text(
-                                    text = restaurant.cuisine,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Ink950,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                            Text(
-                                text = "⭐ ${restaurant.rating} (${restaurant.reviewsCount} reviews)",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White
-                            )
+                    Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Forest900.copy(alpha = 0.95f)))))
+                    Column(Modifier.padding(20.dp).padding(top = 64.dp)) {
+                        Text(restaurant.cuisine, color = Mint100, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text(restaurant.name, color = Color.White, fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold)
+                        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD479), modifier = Modifier.size(18.dp))
+                            Text(" ${restaurant.rating} · ${restaurant.reviewsCount} reviews", color = Color.White, fontSize = 13.sp)
                         }
                     }
                 }
             }
-
-            // Info Card
             item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                Surface(Modifier.padding(horizontal = 16.dp).fillMaxWidth(), color = Color.White, shape = RoundedCornerShape(20.dp)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            MenuInfo("Delivery", restaurant.deliveryTime, Modifier.weight(1f))
+                            MenuInfo("Delivery fee", menuMoney(restaurant.deliveryFee), Modifier.weight(1f))
+                            MenuInfo("Hours", restaurant.openingHours, Modifier.weight(1f))
+                        }
+                        if (restaurant.description.isNotBlank()) {
+                            HorizontalDivider(color = Sage100)
+                            Text(restaurant.description, style = MaterialTheme.typography.bodyMedium, color = Ink600)
+                        }
+                        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Default.LocationOn, contentDescription = null, tint = Forest600, modifier = Modifier.size(18.dp))
+                            Text(restaurant.address, style = MaterialTheme.typography.bodySmall, color = Ink600)
+                        }
+                    }
+                }
+            }
+            item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    placeholder = { Text("Find something on the menu") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Default.Close, contentDescription = "Clear menu search")
+                        }
+                    },
+                    singleLine = true,
                     shape = RoundedCornerShape(18.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(
-                            text = restaurant.description,
-                            fontSize = 13.sp,
-                            color = Ink700,
-                            lineHeight = 18.sp
+                    colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Sage200, focusedBorderColor = Forest600, unfocusedContainerColor = Color.White)
+                )
+            }
+            item {
+                LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(categories) { category ->
+                        FilterChip(
+                            selected = selectedCategory == category,
+                            onClick = { selectedCategory = category },
+                            label = { Text(category, fontWeight = FontWeight.SemiBold) },
+                            modifier = Modifier.heightIn(min = 48.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Forest600, selectedLabelColor = Color.White, containerColor = Color.White)
                         )
-
-                        HorizontalDivider(color = Sage100)
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(text = "DELIVERY TIME", fontSize = 10.sp, color = Ink500, fontWeight = FontWeight.Bold)
-                                Text(text = restaurant.deliveryTime, fontSize = 13.sp, color = Ink950, fontWeight = FontWeight.ExtraBold)
-                            }
-                            Column {
-                                Text(text = "DELIVERY FEE", fontSize = 10.sp, color = Ink500, fontWeight = FontWeight.Bold)
-                                Text(text = "$${String.format(java.util.Locale.US, "%.2f", restaurant.deliveryFee)}", fontSize = 13.sp, color = Forest600, fontWeight = FontWeight.ExtraBold)
-                            }
-                            Column {
-                                Text(text = "HOURS", fontSize = 10.sp, color = Ink500, fontWeight = FontWeight.Bold)
-                                Text(text = restaurant.openingHours, fontSize = 13.sp, color = Ink950, fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Location",
-                                tint = Forest500,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = restaurant.address,
-                                fontSize = 12.sp,
-                                color = Ink600,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
                     }
                 }
             }
-
-            // Category Filter Chips
             item {
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(categories) { cat ->
-                        val isSelected = selectedCategoryTab == cat
-                        Surface(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { selectedCategoryTab = cat },
-                            color = if (isSelected) Forest500 else Color.White,
-                            border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, Sage200),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(
-                                text = cat,
-                                fontSize = 13.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) Color.White else Ink700,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                            )
-                        }
+                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (selectedCategory == "All") "Explore the menu" else selectedCategory, Modifier.weight(1f), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Ink950)
+                    Text("${filteredMenu.size} ${if (filteredMenu.size == 1) "dish" else "dishes"}", fontSize = 13.sp, color = Ink500)
+                }
+            }
+            if (filteredMenu.isEmpty()) {
+                item {
+                    Column(Modifier.fillMaxWidth().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(Icons.Default.Search, contentDescription = null, tint = Forest600, modifier = Modifier.size(36.dp))
+                        Text("No dishes found", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Try another dish or category.", color = Ink600)
+                        TextButton(onClick = { searchQuery = ""; selectedCategory = "All" }) { Text("Show all dishes") }
                     }
                 }
             }
-
-            // Section Title
-            item {
-                Text(
-                    text = "Featured Gourmet Menu",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Ink950,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
-                )
-            }
-
-            // Menu Items List
-            items(filteredMenu) { dish ->
-                DishItemCard(
-                    dish = dish,
-                    onAddClick = {
-                        if (dish.options.isNotEmpty()) {
-                            itemForCustomization = dish
-                        } else {
-                            val success = FoodEatsRepository.addToCart(dish, restaurant)
-                            if (!success) {
-                                pendingDishToAdd = Pair(dish, emptyList())
-                                showMerchantConflictDialog = true
-                            }
-                        }
-                    }
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(30.dp))
+            items(filteredMenu, key = { it.id }) { dish ->
+                DishItemCard(dish = dish, onAddClick = {
+                    if (dish.options.isNotEmpty()) itemForCustomization = dish else addDish(dish, emptyList())
+                })
             }
         }
     }
 
-    // Customization Dialog for Menu Options (patty size, spice level, add-ons, etc.)
     itemForCustomization?.let { dish ->
-        DishCustomizationDialog(
-            dish = dish,
-            onDismiss = { itemForCustomization = null },
-            onConfirm = { selectedOptions ->
-                val success = FoodEatsRepository.addToCart(dish, restaurant, selectedOptions)
-                itemForCustomization = null
-                if (!success) {
-                    pendingDishToAdd = Pair(dish, selectedOptions)
-                    showMerchantConflictDialog = true
-                }
-            }
-        )
+        DishCustomizationDialog(dish, onDismiss = { itemForCustomization = null }, onConfirm = { options ->
+            itemForCustomization = null
+            addDish(dish, options)
+        })
     }
-
-    // Multi-merchant Warning Dialog
-    if (showMerchantConflictDialog) {
+    pendingDish?.let { (dish, options) ->
         AlertDialog(
-            onDismissRequest = { showMerchantConflictDialog = false },
-            title = {
-                Text(text = "Start new order?", fontWeight = FontWeight.Bold, color = Ink950)
-            },
-            text = {
-                Text(
-                    text = "Your cart already contains items from another restaurant. Would you like to clear your cart and start a new order with ${restaurant.name}?",
-                    color = Ink700,
-                    fontSize = 13.sp
-                )
-            },
+            onDismissRequest = { pendingDish = null },
+            icon = { Icon(Icons.Default.ShoppingBag, contentDescription = null) },
+            title = { Text("Start a new bag?") },
+            text = { Text("Your bag has items from another restaurant. Adding ${dish.name} will replace those items with a new order from ${restaurant.name}.") },
             confirmButton = {
-                Button(
-                    onClick = {
-                        pendingDishToAdd?.let { (dish, options) ->
-                            FoodEatsRepository.replaceCartAndAdd(dish, restaurant, options)
-                        }
-                        showMerchantConflictDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Forest500)
-                ) {
-                    Text("Clear Cart & Add")
-                }
+                TextButton(onClick = {
+                    FoodEatsRepository.replaceCartAndAdd(dish, restaurant, options)
+                    pendingDish = null
+                }) { Text("Replace bag", fontWeight = FontWeight.Bold) }
             },
-            dismissButton = {
-                TextButton(onClick = { showMerchantConflictDialog = false }) {
-                    Text("Cancel", color = Ink500)
-                }
-            }
+            dismissButton = { TextButton(onClick = { pendingDish = null }) { Text("Keep current bag") } }
         )
     }
 }
 
 @Composable
-fun DishItemCard(
-    dish: DishItem,
-    onAddClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+private fun MenuInfo(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, fontSize = 12.sp, color = Ink500)
+        Text(value, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Ink950)
+    }
+}
+
+@Composable
+fun DishItemCard(dish: DishItem, onAddClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, Sage100)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Dish Details
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 12.dp)
-            ) {
-                dish.dietaryTag?.let { tag ->
-                    Surface(
-                        color = Forest50,
-                        shape = RoundedCornerShape(6.dp),
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    ) {
-                        Text(
-                            text = tag,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Forest700,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    dish.dietaryTag?.takeIf { it.isNotBlank() }?.let { tag ->
+                        Text(tag, color = Forest700, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
+                    Text(dish.name, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Ink950)
+                    Text(dish.description, style = MaterialTheme.typography.bodyMedium, color = Ink600)
+                    Text("${dish.prepTimeMinutes} min preparation", fontSize = 12.sp, color = Ink500)
                 }
-
-                Text(
-                    text = dish.name,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Ink950
-                )
-
-                Text(
-                    text = dish.description,
-                    fontSize = 12.sp,
-                    color = Ink500,
-                    maxLines = 2,
-                    lineHeight = 16.sp,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "$${String.format(java.util.Locale.US, "%.2f", dish.price)}",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Forest600
-                    )
-                    Text(
-                        text = "• ${dish.prepTimeMinutes} mins",
-                        fontSize = 11.sp,
-                        color = Ink400
-                    )
-                }
-            }
-
-            // Image & Add Button
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
                 AsyncImage(
-                    model = dish.imageUrl,
-                    contentDescription = dish.name,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(12.dp)),
+                    model = dish.imageUrl, contentDescription = null,
+                    modifier = Modifier.size(88.dp).clip(RoundedCornerShape(16.dp)).background(Sage100),
                     contentScale = ContentScale.Crop
                 )
-
-                Button(
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(menuMoney(dish.price), fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Forest700)
+                FilledTonalButton(
                     onClick = onAddClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = Forest500),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                    modifier = Modifier.height(32.dp)
+                    modifier = Modifier.heightIn(min = 48.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = Forest50, contentColor = Forest700),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
-                    Text(
-                        text = if (dish.options.isNotEmpty()) "+ Customize" else "+ Add",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (dish.options.isNotEmpty()) "Choose options" else "Add to bag", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -519,148 +288,77 @@ fun DishItemCard(
 }
 
 @Composable
-fun DishCustomizationDialog(
-    dish: DishItem,
-    onDismiss: () -> Unit,
-    onConfirm: (List<DishOption>) -> Unit
-) {
-    val selectedOptions = remember {
-        mutableStateListOf<DishOption>().apply {
-            // Auto-select defaults
-            dish.options.filter { it.isDefault }.forEach { add(it) }
-        }
-    }
-
-    val groupedOptions = remember(dish.options) {
-        dish.options.groupBy { it.optionGroup }
-    }
-
+fun DishCustomizationDialog(dish: DishItem, onDismiss: () -> Unit, onConfirm: (List<DishOption>) -> Unit) {
+    val selectedOptions = remember(dish.id) { mutableStateListOf<DishOption>().apply { addAll(dish.options.filter { it.isDefault }) } }
+    val groupedOptions = remember(dish.options) { dish.options.groupBy { it.optionGroup } }
     val currentTotal = dish.price + selectedOptions.sumOf { it.priceAdjustment }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            modifier = Modifier.padding(16.dp).widthIn(max = 560.dp).fillMaxWidth().heightIn(max = 680.dp),
+            shape = RoundedCornerShape(24.dp), color = Cream50
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-            ) {
-                Text(
-                    text = "Customize ${dish.name}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Ink950
-                )
-                Text(
-                    text = "Select your preferred size, spice, or extra toppings",
-                    fontSize = 12.sp,
-                    color = Ink500,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                HorizontalDivider(color = Sage100)
-
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .heightIn(max = 340.dp)
-                        .padding(vertical = 8.dp)
-                ) {
+            Column(Modifier.padding(20.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Make it yours", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Forest700)
+                        Text(dish.name, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Ink950)
+                    }
+                    IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, contentDescription = "Close options") }
+                }
+                Text("Choose your options below.", color = Ink600, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp, bottom = 16.dp))
+                HorizontalDivider(color = Sage200)
+                LazyColumn(Modifier.weight(1f, fill = false).padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     groupedOptions.forEach { (group, options) ->
+                        val isSingleChoice = group.contains("Size", true) || group.contains("Level", true) || group.contains("Heat", true) || group.contains("Firmness", true)
                         item {
-                            Text(
-                                text = group.uppercase(),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Forest700,
-                                modifier = Modifier.padding(top = 10.dp, bottom = 4.dp)
-                            )
+                            Column(Modifier.padding(top = 12.dp, bottom = 6.dp)) {
+                                Text(group, fontWeight = FontWeight.Bold, color = Ink950, fontSize = 16.sp)
+                                Text(if (isSingleChoice) "Choose one" else "Choose any you like", color = Ink500, fontSize = 12.sp)
+                            }
                         }
-
-                        items(options) { opt ->
-                            val isSelected = selectedOptions.any { it.id == opt.id }
+                        items(options, key = { it.id }) { option ->
+                            val isSelected = selectedOptions.any { it.id == option.id }
+                            val onSelect: () -> Unit = {
+                                if (isSingleChoice) {
+                                    selectedOptions.removeAll { it.optionGroup == group }
+                                    selectedOptions.add(option)
+                                } else if (isSelected) selectedOptions.removeAll { it.id == option.id }
+                                else selectedOptions.add(option)
+                            }
+                            val selectionModifier = if (isSingleChoice) Modifier.selectable(isSelected, role = Role.RadioButton, onClick = onSelect)
+                            else Modifier.toggleable(isSelected, role = Role.Checkbox, onValueChange = { onSelect() })
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable {
-                                        // If single-choice style (e.g. Patty Size, Spice, Sweetness), remove others in same group
-                                        if (group.contains("Size", ignoreCase = true) ||
-                                            group.contains("Level", ignoreCase = true) ||
-                                            group.contains("Heat", ignoreCase = true) ||
-                                            group.contains("Firmness", ignoreCase = true)
-                                        ) {
-                                            selectedOptions.removeAll { it.optionGroup == group }
-                                            selectedOptions.add(opt)
-                                        } else {
-                                            if (isSelected) {
-                                                selectedOptions.removeAll { it.id == opt.id }
-                                            } else {
-                                                selectedOptions.add(opt)
-                                            }
-                                        }
-                                    }
-                                    .padding(vertical = 6.dp, horizontal = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) Forest50 else Color.White)
+                                    .then(selectionModifier).heightIn(min = 52.dp).padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    RadioButton(
-                                        selected = isSelected,
-                                        onClick = null,
-                                        colors = RadioButtonDefaults.colors(selectedColor = Forest500)
-                                    )
-                                    Text(
-                                        text = opt.optionName,
-                                        fontSize = 13.sp,
-                                        color = if (isSelected) Ink950 else Ink700,
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                                    )
-                                }
-                                if (opt.priceAdjustment > 0) {
-                                    Text(
-                                        text = "+$${String.format(java.util.Locale.US, "%.2f", opt.priceAdjustment)}",
-                                        fontSize = 12.sp,
-                                        color = Forest600,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                                if (isSingleChoice) RadioButton(selected = isSelected, onClick = null)
+                                else Checkbox(checked = isSelected, onCheckedChange = null)
+                                Text(option.optionName, Modifier.weight(1f), fontSize = 14.sp, color = Ink950)
+                                Text(
+                                    if (option.priceAdjustment > 0) "+${menuMoney(option.priceAdjustment)}" else if (option.priceAdjustment < 0) "−${menuMoney(-option.priceAdjustment)}" else "Included",
+                                    fontSize = 12.sp, color = Forest700, fontWeight = FontWeight.SemiBold
+                                )
                             }
                         }
                     }
                 }
-
-                HorizontalDivider(color = Sage100, modifier = Modifier.padding(vertical = 8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                HorizontalDivider(color = Sage200, modifier = Modifier.padding(vertical = 12.dp))
+                Button(
+                    onClick = { onConfirm(selectedOptions.toList()) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Forest600),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    TextButton(onClick = onDismiss) {
-                        Text("Cancel", color = Ink500)
-                    }
-
-                    Button(
-                        onClick = { onConfirm(selectedOptions.toList()) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Forest500),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text = "Add to Cart • $${String.format(java.util.Locale.US, "%.2f", currentTotal)}",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text("Add to bag", Modifier.weight(1f), fontWeight = FontWeight.Bold)
+                    Text(menuMoney(currentTotal), fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
 }
+
+private fun menuMoney(amount: Double) = "$${String.format(Locale.US, "%.2f", amount)}"

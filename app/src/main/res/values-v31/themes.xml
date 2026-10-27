@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.Light.NoActionBar">
+        <item name="android:windowBackground">#12634C</item>
+        <item name="android:statusBarColor">#12634C</item>
+        <item name="android:navigationBarColor">#12634C</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowSplashScreenBackground">#12634C</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/xora_mark_white</item>
+    </style>
+</resources>

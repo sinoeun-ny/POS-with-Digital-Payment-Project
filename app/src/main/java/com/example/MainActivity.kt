@@ -4,18 +4,23 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
 import androidx.lifecycle.ViewModelProvider
 import com.example.data.local.AppDatabase
 import com.example.data.repository.AuthRepository
 import com.example.ui.auth.AuthViewModel
 import com.example.ui.navigation.MainContainer
+import com.example.ui.intro.XoraLaunch
 import com.example.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+        )
 
         val db = AppDatabase.getInstance(applicationContext)
         com.example.data.remote.ApiClient.init(applicationContext)
@@ -41,7 +46,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MyApplicationTheme {
-                MainContainer(authViewModel = authViewModel)
+                XoraLaunch {
+                    MainContainer(authViewModel = authViewModel)
+                }
             }
         }
     }
