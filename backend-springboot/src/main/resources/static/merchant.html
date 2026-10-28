@@ -85,7 +85,7 @@
 <script type="text/babel">
     const { useState, useEffect } = React;
 
-    const API_BASE = window.location.origin.includes('http') ? window.location.origin : 'http://localhost:8080';
+    const API_BASE = window.location.port === '8080' ? '' : 'http://localhost:8080';
 
     const INITIAL_STORES = [
         {
@@ -345,7 +345,8 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (Array.isArray(data)) {
-                        setOrders(data);
+                        const sorted = [...data].sort((a, b) => (b.id || 0) - (a.id || 0));
+                        setOrders(sorted);
                     }
                 }
             } catch (err) {

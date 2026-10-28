@@ -338,26 +338,179 @@ public class TelegramDriverBotService {
                 ));
             }
 
-            // Edit message to remove Accept/Reject buttons and prompt for Live Location
+            // Edit message to provide Pickup Navigation and "Pickup Item" button
+            String merchantName = savedOrder.getMerchantName() != null ? savedOrder.getMerchantName() : "Restaurant Partner";
+            String merchantAddress = (savedOrder.getMerchant() != null && savedOrder.getMerchant().getAddress() != null)
+                    ? savedOrder.getMerchant().getAddress()
+                    : "Phnom Penh City Center";
+            String customerAddress = (savedOrder.getDeliveryAddress() != null && !savedOrder.getDeliveryAddress().isBlank())
+                    ? savedOrder.getDeliveryAddress()
+                    : "Customer Address";
+
             String confirmationText = String.format(
                     "✅ <b>Order #%s ACCEPTED</b>\n" +
                     "Assigned Driver: <b>%s</b>\n" +
-                    "Status: 🟢 <b>OUT FOR DELIVERY</b>\n\n" +
+                    "Status: 🛵 <b>HEADING TO MERCHANT</b>\n\n" +
                     "━━━━━━━━━━━━━━━━━━━━━━\n" +
-                    "📍 <b>Customer Delivery Address:</b>\n" +
+                    "🏪 <b>Merchant:</b> %s\n" +
+                    "📍 <b>Pickup Address:</b>\n" +
                     "%s\n\n" +
-                    "📡 <b>SHARE YOUR LIVE LOCATION NOW:</b>\n" +
-                    "1. Tap 📎 (Paperclip / Plus)\n" +
-                    "2. Tap 📍 <b>Location</b>\n" +
-                    "3. Select <b>'Share My Live Location for...'</b> (e.g., 1 hour)\n\n" +
-                    "This lets the customer & restaurant follow your delivery in real-time.",
+                    "🏁 <b>Customer Dropoff:</b>\n" +
+                    "%s\n\n" +
+                    "━━━━━━━━━━━━━━━━━━━━━━\n" +
+                    "1️⃣ Tap <b>🗺️ Open Pickup Navigation</b> to reach the restaurant.\n" +
+                    "2️⃣ When you collect the food, tap <b>📦 Pickup Item</b> below:",
                     savedOrder.getOrderNumber(),
                     escapeHtml(driverName),
-                    escapeHtml(savedOrder.getDeliveryAddress())
+                    escapeHtml(merchantName),
+                    escapeHtml(merchantAddress),
+                    escapeHtml(customerAddress)
             );
 
-            editMessageText(chatId, messageId, confirmationText, null);
-            log.info("Driver {} accepted order #{}", driverName, savedOrder.getOrderNumber());
+            // Build Google Maps Navigation URL to merchant pickup
+            String pickupMapsUrl = "https://www.google.com/maps/dir/?api=1&destination="
+                    + URLEncoder.encode(merchantAddress + ", Phnom Penh, Cambodia", StandardCharsets.UTF_8);
+
+            InlineKeyboardMarkup pickupMarkup = new InlineKeyboardMarkup();
+            pickupMarkup.addRow(List.of(
+                    InlineKeyboardButton.urlButton("🗺️ Open Pickup Navigation", pickupMapsUrl)
+            ));
+            pickupMarkup.addRow(List.of(
+                    InlineKeyboardButton.callbackButton("📦 Pickup Item", "pickup_" + savedOrder.getId())
+            ));
+
+            editMessageText(chatId, messageId, confirmationText, pickupMarkup);
+            log.info("Driver {} accepted order #{} and heading to pickup", driverName, savedOrder.getOrderNumber());
+
+        } else if (data.startsWith("pickup_")) {
+            Long orderId = parseOrderId(data, "pickup_");
+            if (orderId == null) return;
+
+            Optional<Order> orderOpt = orderRepository.findById(orderId);
+            if (orderOpt.isEmpty()) {
+                editMessageText(chatId, messageId, "⚠️ <b>Order not found or no longer available.</b>", null);
+                return;
+            }
+
+            Order order = orderOpt.get();
+
+            // Record pickup time and update delivery status
+            deliveryRepository.findByOrderId(order.getId()).ifPresent(del -> {
+                del.setStatus("PICKED_UP");
+                del.setPickupTime(LocalDateTime.now());
+                deliveryRepository.save(del);
+            });
+
+            order.setStatus(OrderStatus.OUT_FOR_DELIVERY);
+            Order savedOrder = orderRepository.save(order);
+
+            // Notify Customer in Database
+            if (savedOrder.getCustomer() != null) {
+                notificationRepository.save(new Notification(
+                        savedOrder.getCustomer(),
+                        "Order Picked Up! 🛵",
+                        driverName + " has picked up your order #" + savedOrder.getOrderNumber() + " and is heading to your delivery address."
+                ));
+            }
+
+            String customerAddress = (savedOrder.getDeliveryAddress() != null && !savedOrder.getDeliveryAddress().isBlank())
+                    ? savedOrder.getDeliveryAddress()
+                    : "Customer Address";
+
+            // Edit message to provide Dropoff Navigation and "Delivered" button
+            String inTransitText = String.format(
+                    "📦 <b>Order #%s PICKED UP</b>\n" +
+                    "Assigned Driver: <b>%s</b>\n" +
+                    "Status: 🟢 <b>OUT FOR DELIVERY</b>\n\n" +
+                    "━━━━━━━━━━━━━━━━━━━━━━\n" +
+                    "📍 <b>Customer Dropoff Address:</b>\n" +
+                    "%s\n\n" +
+                    "📡 <b>LIVE LOCATION TIP:</b>\n" +
+                    "Tap 📎 -> 📍 Location -> <i>Share My Live Location</i> so customer tracks your route in real time.\n\n" +
+                    "━━━━━━━━━━━━━━━━━━━━━━\n" +
+                    "1️⃣ Tap <b>🗺️ Open Dropoff Navigation</b> to reach the customer.\n" +
+                    "2️⃣ When food is successfully delivered, tap <b>🏁 Delivered</b> below:",
+                    savedOrder.getOrderNumber(),
+                    escapeHtml(driverName),
+                    escapeHtml(customerAddress)
+            );
+
+            // Build Google Maps Navigation URL to customer dropoff
+            String dropoffMapsUrl = "https://www.google.com/maps/dir/?api=1&destination="
+                    + URLEncoder.encode(customerAddress + ", Phnom Penh, Cambodia", StandardCharsets.UTF_8);
+
+            InlineKeyboardMarkup dropoffMarkup = new InlineKeyboardMarkup();
+            dropoffMarkup.addRow(List.of(
+                    InlineKeyboardButton.urlButton("🗺️ Open Dropoff Navigation", dropoffMapsUrl)
+            ));
+            dropoffMarkup.addRow(List.of(
+                    InlineKeyboardButton.callbackButton("🏁 Delivered", "delivered_" + savedOrder.getId())
+            ));
+
+            editMessageText(chatId, messageId, inTransitText, dropoffMarkup);
+            log.info("Driver {} picked up order #{} and is heading to dropoff", driverName, savedOrder.getOrderNumber());
+
+        } else if (data.startsWith("delivered_")) {
+            Long orderId = parseOrderId(data, "delivered_");
+            if (orderId == null) return;
+
+            Optional<Order> orderOpt = orderRepository.findById(orderId);
+            if (orderOpt.isEmpty()) {
+                editMessageText(chatId, messageId, "⚠️ <b>Order not found or no longer available.</b>", null);
+                return;
+            }
+
+            Order order = orderOpt.get();
+
+            if (order.getStatus() == OrderStatus.DELIVERED) {
+                answerCallbackQuery(callbackQuery.getId(), "Order is already marked as delivered!", false);
+                return;
+            }
+
+            // Update order status to DELIVERED
+            order.setStatus(OrderStatus.DELIVERED);
+            Order savedOrder = orderRepository.save(order);
+
+            // Update Delivery tracking entity
+            deliveryRepository.findByOrderId(savedOrder.getId()).ifPresent(del -> {
+                del.setStatus("DELIVERED");
+                del.setDeliveredTime(LocalDateTime.now());
+                deliveryRepository.save(del);
+            });
+
+            // Notify Customer in Database
+            if (savedOrder.getCustomer() != null) {
+                notificationRepository.save(new Notification(
+                        savedOrder.getCustomer(),
+                        "Order Delivered! 🎉",
+                        "Your order #" + savedOrder.getOrderNumber() + " has been successfully delivered by " + driverName + ". Enjoy your meal!"
+                ));
+            }
+
+            Double driverFee = savedOrder.getDeliveryFee() != null ? savedOrder.getDeliveryFee() : 1.50;
+            Double totalAmount = savedOrder.getTotalAmount() != null ? savedOrder.getTotalAmount() : 0.00;
+
+            String deliveredText = String.format(
+                    "🎉 <b>ORDER DELIVERED SUCCESSFULLY!</b>\n" +
+                    "━━━━━━━━━━━━━━━━━━━━━━\n" +
+                    "📦 <b>Order ID:</b> <code>#%s</code>\n" +
+                    "👤 <b>Driver:</b> %s\n" +
+                    "🏁 <b>Destination:</b> %s\n" +
+                    "Status: ✅ <b>DELIVERED</b>\n\n" +
+                    "━━━━━━━━━━━━━━━━━━━━━━\n" +
+                    "💵 <b>Driver Fee Earned:</b> $%.2f\n" +
+                    "🧾 <b>Order Total:</b> $%.2f\n\n" +
+                    "🌟 <i>Great job! Delivery marked as complete. You are ready for the next order.</i>",
+                    savedOrder.getOrderNumber(),
+                    escapeHtml(driverName),
+                    escapeHtml(savedOrder.getDeliveryAddress() != null ? savedOrder.getDeliveryAddress() : "Customer Address"),
+                    driverFee,
+                    totalAmount
+            );
+
+            // Edit message to remove Delivered button and display success summary
+            editMessageText(chatId, messageId, deliveredText, null);
+            log.info("Driver {} successfully delivered order #{}", driverName, savedOrder.getOrderNumber());
 
         } else if (data.startsWith("reject_")) {
             Long orderId = parseOrderId(data, "reject_");
@@ -505,19 +658,68 @@ public class TelegramDriverBotService {
                 sendMessage(chatId, "🟢 <b>You have no active orders in transit.</b>\nWaiting for next dispatch...");
             } else {
                 Order cur = active.get(0);
-                String msg = String.format(
-                        "🚚 <b>ACTIVE DELIVERY IN PROGRESS</b>\n" +
-                        "━━━━━━━━━━━━━━━━━━━━━━\n" +
-                        "📦 <b>Order:</b> <code>#%s</code>\n" +
-                        "🏪 <b>Merchant:</b> %s\n" +
-                        "🏁 <b>Destination:</b> %s\n" +
-                        "Status: 🟢 <b>OUT FOR DELIVERY</b>\n\n" +
-                        "Don't forget to keep sharing your <b>Live Location</b> until delivery is complete!",
-                        cur.getOrderNumber(),
-                        escapeHtml(cur.getMerchantName()),
-                        escapeHtml(cur.getDeliveryAddress())
-                );
-                sendMessage(chatId, msg);
+                Delivery del = deliveryRepository.findByOrderId(cur.getId()).orElse(null);
+                boolean isPickedUp = del != null && "PICKED_UP".equalsIgnoreCase(del.getStatus());
+
+                String merchantAddress = (cur.getMerchant() != null && cur.getMerchant().getAddress() != null)
+                        ? cur.getMerchant().getAddress()
+                        : "Phnom Penh City Center";
+                String customerAddress = (cur.getDeliveryAddress() != null && !cur.getDeliveryAddress().isBlank())
+                        ? cur.getDeliveryAddress()
+                        : "Phnom Penh City";
+
+                if (isPickedUp) {
+                    // Stage 2: Food picked up, heading to customer dropoff
+                    String msg = String.format(
+                            "🚚 <b>ACTIVE DELIVERY IN PROGRESS</b>\n" +
+                            "━━━━━━━━━━━━━━━━━━━━━━\n" +
+                            "📦 <b>Order:</b> <code>#%s</code>\n" +
+                            "🏁 <b>Destination:</b> %s\n" +
+                            "Status: 🟢 <b>OUT FOR DELIVERY</b>\n\n" +
+                            "Tap <b>Delivered</b> once you have handed the food to the customer:",
+                            cur.getOrderNumber(),
+                            escapeHtml(customerAddress)
+                    );
+
+                    String dropoffMapsUrl = "https://www.google.com/maps/dir/?api=1&destination="
+                            + URLEncoder.encode(customerAddress + ", Phnom Penh, Cambodia", StandardCharsets.UTF_8);
+
+                    InlineKeyboardMarkup statusMarkup = new InlineKeyboardMarkup();
+                    statusMarkup.addRow(List.of(
+                            InlineKeyboardButton.urlButton("🗺️ Open Dropoff Navigation", dropoffMapsUrl)
+                    ));
+                    statusMarkup.addRow(List.of(
+                            InlineKeyboardButton.callbackButton("🏁 Delivered", "delivered_" + cur.getId())
+                    ));
+
+                    sendMessage(chatId, msg, statusMarkup);
+                } else {
+                    // Stage 1: Heading to merchant for food pickup
+                    String msg = String.format(
+                            "🛵 <b>HEADING TO MERCHANT FOR PICKUP</b>\n" +
+                            "━━━━━━━━━━━━━━━━━━━━━━\n" +
+                            "📦 <b>Order:</b> <code>#%s</code>\n" +
+                            "🏪 <b>Merchant:</b> %s\n" +
+                            "📍 <b>Pickup Address:</b> %s\n\n" +
+                            "Tap <b>Pickup Item</b> once you collect the food:",
+                            cur.getOrderNumber(),
+                            escapeHtml(cur.getMerchantName() != null ? cur.getMerchantName() : "Restaurant Partner"),
+                            escapeHtml(merchantAddress)
+                    );
+
+                    String pickupMapsUrl = "https://www.google.com/maps/dir/?api=1&destination="
+                            + URLEncoder.encode(merchantAddress + ", Phnom Penh, Cambodia", StandardCharsets.UTF_8);
+
+                    InlineKeyboardMarkup statusMarkup = new InlineKeyboardMarkup();
+                    statusMarkup.addRow(List.of(
+                            InlineKeyboardButton.urlButton("🗺️ Open Pickup Navigation", pickupMapsUrl)
+                    ));
+                    statusMarkup.addRow(List.of(
+                            InlineKeyboardButton.callbackButton("📦 Pickup Item", "pickup_" + cur.getId())
+                    ));
+
+                    sendMessage(chatId, msg, statusMarkup);
+                }
             }
 
         } else if (text.equalsIgnoreCase("/help")) {
@@ -533,10 +735,14 @@ public class TelegramDriverBotService {
     }
 
     public boolean sendMessage(Object chatId, String text) {
+        return sendMessage(chatId, text, null);
+    }
+
+    public boolean sendMessage(Object chatId, String text, InlineKeyboardMarkup markup) {
         String baseUrl = getApiBaseUrl();
         if (baseUrl == null) return false;
 
-        SendMessageRequest request = new SendMessageRequest(chatId, text, "HTML", null);
+        SendMessageRequest request = new SendMessageRequest(chatId, text, "HTML", markup);
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
